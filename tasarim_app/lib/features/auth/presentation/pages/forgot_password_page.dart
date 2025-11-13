@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../../core/constants/api_constants.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({Key? key}) : super(key: key);
@@ -32,8 +33,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
+      final url = '${ApiConstants.baseUrl}${ApiConstants.forgotPassword}';
+
       final response = await http.post(
-        Uri.parse('http://172.19.224.1:5122/api/auth/forgot-password'),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,
@@ -46,7 +49,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         // Başarılı istek
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi!'),
+            content: Text(
+                'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi!'),
             backgroundColor: narposOrange,
           ),
         );

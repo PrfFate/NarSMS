@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../../core/constants/api_constants.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -41,28 +42,31 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
+      final url = '${ApiConstants.baseUrl}${ApiConstants.register}';
+
       final response = await http.post(
-        Uri.parse('http://172.19.224.1:5122/api/auth/register'),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'name': _nameController.text,
+          'username': _nameController.text,
           'email': _emailController.text,
           'phone': _phoneController.text,
           'password': _passwordController.text,
+          'roleId': 3, // Default role ID
         }),
       );
 
       if (!mounted) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Başarılı kayıt
+        // Başarılı kayıt - login sayfasına yönlendir
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Kayıt başarılı! Giriş yapabilirsiniz.'),
+            content: Text('Kayıt başarılı! Şimdi giriş yapabilirsiniz.'),
             backgroundColor: narposOrange,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context); // Login sayfasına geri dön
       } else {
         // Hata durumu
         ScaffoldMessenger.of(context).showSnackBar(

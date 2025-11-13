@@ -2,8 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/constants/storage_constants.dart';
+import '../../../../config/routes/app_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -42,8 +46,10 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      final url = '${ApiConstants.baseUrl}${ApiConstants.login}';
+
       final response = await http.post(
-        Uri.parse('http://172.19.224.1:5122/api/auth/login'),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,
@@ -54,8 +60,21 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        // Başarılı giriş
-        Navigator.pushReplacementNamed(context, '/home');
+        // Başarılı giriş - token'ı kaydet
+        final responseData = jsonDecode(response.body);
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString(StorageConstants.accessToken, responseData['accessToken']);
+        await prefs.setString(StorageConstants.refreshToken, responseData['refreshToken']);
+        await prefs.setString(StorageConstants.userEmail, responseData['email']);
+        await prefs.setString(StorageConstants.userName, responseData['username']);
+        await prefs.setString(StorageConstants.userRole, responseData['role']);
+        if (responseData['phone'] != null) {
+          await prefs.setString(StorageConstants.userPhone, responseData['phone']);
+        }
+        await prefs.setBool(StorageConstants.isLoggedIn, true);
+
+        Navigator.pushReplacementNamed(context, AppRouter.home);
       } else {
         // Hata durumu
         ScaffoldMessenger.of(context).showSnackBar(

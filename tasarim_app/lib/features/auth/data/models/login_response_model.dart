@@ -1,25 +1,28 @@
-import 'user_model.dart';
-
 class LoginResponseModel {
   final String accessToken;
   final String refreshToken;
-  final DateTime refreshTokenExpiration;
-  final UserModel user;
+  final String username;
+  final String email;
+  final String role;
+  final String? phone;
 
   LoginResponseModel({
     required this.accessToken,
     required this.refreshToken,
-    required this.refreshTokenExpiration,
-    required this.user,
+    required this.username,
+    required this.email,
+    required this.role,
+    this.phone,
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
-      refreshTokenExpiration:
-          DateTime.parse(json['refreshTokenExpiration'] as String),
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      username: json['username'] as String,
+      email: json['email'] as String,
+      role: json['role'] as String,
+      phone: json['phone'] as String?,
     );
   }
 }

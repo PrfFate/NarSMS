@@ -47,11 +47,26 @@ class AuthRepositoryImpl implements AuthRepository {
         refreshToken: response.refreshToken,
       );
 
-      // Save user info
-      await _saveUserInfo(response.user);
+      // Save user info directly from response
+      await sharedPreferences.setString(StorageConstants.userEmail, response.email);
+      await sharedPreferences.setString(StorageConstants.userName, response.username);
+      await sharedPreferences.setString(StorageConstants.userRole, response.role);
+      if (response.phone != null) {
+        await sharedPreferences.setString(StorageConstants.userPhone, response.phone!);
+      }
+      await sharedPreferences.setBool(StorageConstants.isLoggedIn, true);
 
-      // Return user entity
-      return Right(response.user);
+      // Create and return user entity
+      final user = UserEntity(
+        id: 0, // Backend doesn't return user ID in login response
+        email: response.email,
+        username: response.username,
+        phone: response.phone,
+        roleId: 0, // Backend returns role name, not ID
+        roleName: response.role,
+      );
+
+      return Right(user);
     } on UnauthorizedException catch (e) {
       return Left(UnauthorizedFailure(e.message));
     } on ValidationException catch (e) {
@@ -93,9 +108,25 @@ class AuthRepositoryImpl implements AuthRepository {
         refreshToken: response.refreshToken,
       );
 
-      await _saveUserInfo(response.user);
+      // Save user info directly from response
+      await sharedPreferences.setString(StorageConstants.userEmail, response.email);
+      await sharedPreferences.setString(StorageConstants.userName, response.username);
+      await sharedPreferences.setString(StorageConstants.userRole, response.role);
+      if (response.phone != null) {
+        await sharedPreferences.setString(StorageConstants.userPhone, response.phone!);
+      }
 
-      return Right(response.user);
+      // Create and return user entity
+      final user = UserEntity(
+        id: 0,
+        email: response.email,
+        username: response.username,
+        phone: response.phone,
+        roleId: 0,
+        roleName: response.role,
+      );
+
+      return Right(user);
     } on ValidationException catch (e) {
       return Left(ValidationFailure(e.message, errors: e.errors));
     } on ServerException catch (e) {
@@ -181,21 +212,4 @@ class AuthRepositoryImpl implements AuthRepository {
     await sharedPreferences.setBool(StorageConstants.isLoggedIn, true);
   }
 
-  /// Private helper method to save user info to local storage
-  Future<void> _saveUserInfo(UserEntity user) async {
-    await sharedPreferences.setInt(StorageConstants.userId, user.id);
-    await sharedPreferences.setString(StorageConstants.userEmail, user.email);
-    if (user.username != null) {
-      await sharedPreferences.setString(
-        StorageConstants.userName,
-        user.username!,
-      );
-    }
-    if (user.roleName != null) {
-      await sharedPreferences.setString(
-        StorageConstants.userRole,
-        user.roleName!,
-      );
-    }
-  }
 }

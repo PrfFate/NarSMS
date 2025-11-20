@@ -32,5 +32,30 @@ class Validators {
     return null;
   }
 
-  // Diğer validator'lar sonradan eklenecek
+  static String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Phone number is required';
+    }
+
+    final phoneRegex = RegExp(r'^[0-9]{10,11}$');
+    final cleanValue = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+    if (!phoneRegex.hasMatch(cleanValue)) {
+      return 'Enter a valid phone number (10-11 digits)';
+    }
+
+    return null;
+  }
+
+  static String? validateUsername(String? value, {int minLength = 3}) {
+    if (value == null || value.isEmpty) {
+      return 'Username is required';
+    }
+
+    if (value.length < minLength) {
+      return 'Username must be at least $minLength characters';
+    }
+
+    return null;
+  }
 }

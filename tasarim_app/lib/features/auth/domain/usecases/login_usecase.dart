@@ -18,7 +18,7 @@ class LoginUseCase {
   ///   - password: User's password
   ///
   /// Returns:
-  ///   - Either<Failure, UserEntity>: Left for error, Right for success
+  ///   - Either\<Failure, UserEntity\>: Left for error, Right for success
   Future<Either<Failure, UserEntity>> call({
     required String email,
     required String password,

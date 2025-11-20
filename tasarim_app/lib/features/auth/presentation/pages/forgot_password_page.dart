@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../../../../core/constants/api_constants.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({Key? key}) : super(key: key);
+  const ForgotPasswordPage({super.key});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
@@ -196,7 +196,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           style: TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.w600,
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 8.0),

@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://172.9.32.121:5122';
+  static const String baseUrl = 'http://172.25.128.1:5122';
   static const String apiVersion = '/api';
 
   // Auth endpoints

@@ -4,7 +4,7 @@ import '../entities/user_entity.dart';
 
 /// Abstract repository interface for authentication operations.
 /// This defines the contract that any auth data source must implement.
-/// Using Either<Failure, Success> pattern for error handling.
+/// Using Either\<Failure, Success\> pattern for error handling.
 abstract class AuthRepository {
   /// Authenticates a user with email and password.
   /// Returns Either a Failure (left) or UserEntity (right).

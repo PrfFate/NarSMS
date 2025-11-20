@@ -58,11 +58,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // Create and return user entity
       final user = UserEntity(
-        id: 0, // Backend doesn't return user ID in login response
         email: response.email,
         username: response.username,
         phone: response.phone,
-        roleId: 0, // Backend returns role name, not ID
         roleName: response.role,
       );
 
@@ -118,11 +116,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // Create and return user entity
       final user = UserEntity(
-        id: 0,
         email: response.email,
         username: response.username,
         phone: response.phone,
-        roleId: 0,
         roleName: response.role,
       );
 

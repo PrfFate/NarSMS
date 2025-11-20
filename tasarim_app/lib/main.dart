@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'config/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/di/injection.dart';
 import 'core/constants/storage_constants.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDependencies();
   runApp(const MyApp());
 }
 
@@ -26,7 +29,7 @@ class MyApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -40,18 +43,18 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 1)); // Splash screen için kısa bekleme
-
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool(StorageConstants.isLoggedIn) ?? false;
+    await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
 
-    if (isLoggedIn) {
-      // Token varsa direkt home'a git
+    // Token kontrolü yap
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(StorageConstants.accessToken);
+
+    // Token varsa home'a, yoksa login'e git
+    if (token != null && token.isNotEmpty) {
       Navigator.pushReplacementNamed(context, AppRouter.home);
     } else {
-      // Token yoksa login'e git
       Navigator.pushReplacementNamed(context, AppRouter.login);
     }
   }

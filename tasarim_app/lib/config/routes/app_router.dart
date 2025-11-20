@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/auth/presentation/pages/home_page.dart';
+import '../../features/home/presentation/bloc/home_bloc.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -11,8 +12,6 @@ class AppRouter {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
-
-  // Diğer route'lar sonradan eklenecek
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -35,10 +34,11 @@ class AppRouter {
 
       case home:
         return MaterialPageRoute(
-          builder: (_) => const HomePage(),
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<HomeBloc>(),
+            child: const HomePage(),
+          ),
         );
-
-      // register ve forgotPassword case'leri sonradan eklenecek
 
       default:
         return MaterialPageRoute(

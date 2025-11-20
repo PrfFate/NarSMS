@@ -9,7 +9,14 @@ import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/register_usecase.dart';
+import '../../features/auth/domain/usecases/forgot_password_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+
+// Home feature imports
+import '../../features/home/domain/usecases/get_user_info_usecase.dart';
+import '../../features/home/domain/usecases/logout_usecase.dart';
+import '../../features/home/presentation/bloc/home_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -45,9 +52,35 @@ Future<void> initializeDependencies() async {
 
   // Use cases
   getIt.registerLazySingleton(() => LoginUseCase(getIt<AuthRepository>()));
+  getIt.registerLazySingleton(() => RegisterUseCase(getIt<AuthRepository>()));
+  getIt.registerLazySingleton(
+    () => ForgotPasswordUseCase(getIt<AuthRepository>()),
+  );
 
   // BLoC (Factory pattern - yeni instance her seferinde)
   getIt.registerFactory(
-    () => AuthBloc(loginUseCase: getIt<LoginUseCase>()),
+    () => AuthBloc(
+      loginUseCase: getIt<LoginUseCase>(),
+      registerUseCase: getIt<RegisterUseCase>(),
+      forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
+    ),
+  );
+
+  // ===== HOME FEATURE =====
+
+  // Use cases
+  getIt.registerLazySingleton(
+    () => GetUserInfoUseCase(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton(
+    () => LogoutUseCase(getIt<AuthRepository>()),
+  );
+
+  // BLoC
+  getIt.registerFactory(
+    () => HomeBloc(
+      getUserInfoUseCase: getIt<GetUserInfoUseCase>(),
+      logoutUseCase: getIt<LogoutUseCase>(),
+    ),
   );
 }

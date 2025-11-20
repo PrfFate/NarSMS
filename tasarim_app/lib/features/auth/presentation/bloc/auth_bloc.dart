@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/forgot_password_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -27,16 +29,17 @@ import 'auth_state.dart';
 /// ```
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
-  // Add other use cases as needed
-  // final RegisterUseCase registerUseCase;
-  // final LogoutUseCase logoutUseCase;
-  // final ForgotPasswordUseCase forgotPasswordUseCase;
+  final RegisterUseCase registerUseCase;
+  final ForgotPasswordUseCase forgotPasswordUseCase;
 
   AuthBloc({
     required this.loginUseCase,
+    required this.registerUseCase,
+    required this.forgotPasswordUseCase,
   }) : super(AuthInitial()) {
     // Register event handlers
     on<LoginRequested>(_onLoginRequested);
+    on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
@@ -71,6 +74,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // Login successful - emit authenticated state
         emit(AuthAuthenticated(user));
       },
+    );
+  }
+
+  /// Handles register request event.
+  Future<void> _onRegisterRequested(
+    RegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await registerUseCase(
+      username: event.username,
+      email: event.email,
+      phone: event.phone,
+      password: event.password,
+      roleId: event.roleId,
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
     );
   }
 
@@ -117,15 +141,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    // TODO: Call forgot password use case when implemented
-    // final result = await forgotPasswordUseCase(event.email);
-    //
-    // result.fold(
-    //   (failure) => emit(AuthError(failure.message)),
-    //   (_) => emit(PasswordResetSent(event.email)),
-    // );
+    final result = await forgotPasswordUseCase(event.email);
 
-    await Future.delayed(const Duration(seconds: 1));
-    emit(PasswordResetSent(event.email));
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(PasswordResetSent(event.email)),
+    );
   }
 }

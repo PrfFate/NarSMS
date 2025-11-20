@@ -5,7 +5,7 @@ import 'dart:convert';
 import '../../../../core/constants/api_constants.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -257,7 +257,7 @@ class _RegisterPageState extends State<RegisterPage> {
           style: TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.w600,
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 8.0),

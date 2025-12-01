@@ -1,0 +1,6 @@
+dev/fluttercommunity/plus/connectivity/Connectivity.class
+dev/fluttercommunity/plus/connectivity/ConnectivityBroadcastReceiver$1.class
+dev/fluttercommunity/plus/connectivity/ConnectivityBroadcastReceiver.class
+dev/fluttercommunity/plus/connectivity/ConnectivityMethodChannelHandler.class
+dev/fluttercommunity/plus/connectivity/ConnectivityPlugin.class
+dev/fluttercommunity/plus/connectivity/R.class

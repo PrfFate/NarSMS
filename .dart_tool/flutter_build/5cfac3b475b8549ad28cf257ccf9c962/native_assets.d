@@ -1,0 +1,1 @@
+ C:\\Projects\\Tasarim\\tasarim_app\\.dart_tool\\flutter_build\\5cfac3b475b8549ad28cf257ccf9c962\\native_assets.yaml: 

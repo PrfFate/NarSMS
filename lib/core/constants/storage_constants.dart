@@ -1,0 +1,12 @@
+class StorageConstants {
+  static const String accessToken = 'access_token';
+  static const String refreshToken = 'refresh_token';
+  static const String userId = 'user_id';
+  static const String userEmail = 'user_email';
+  static const String userName = 'user_name';
+  static const String userRole = 'user_role';
+  static const String userPhone = 'user_phone';
+  static const String isLoggedIn = 'is_logged_in';
+  static const String languageCode = 'language_code';
+  static const String themeMode = 'theme_mode';
+}

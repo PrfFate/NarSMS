@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class MyCompletedTasksPage extends StatefulWidget {
-  const MyCompletedTasksPage({super.key});
+class ApprovalMechanismPage extends StatefulWidget {
+  const ApprovalMechanismPage({super.key});
 
   @override
-  State<MyCompletedTasksPage> createState() => _MyCompletedTasksPageState();
+  State<ApprovalMechanismPage> createState() => _ApprovalMechanismPageState();
 }
 
-class _MyCompletedTasksPageState extends State<MyCompletedTasksPage> {
+class _ApprovalMechanismPageState extends State<ApprovalMechanismPage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -16,7 +16,7 @@ class _MyCompletedTasksPageState extends State<MyCompletedTasksPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Tamamladığım Görevler',
+            'Onay Adımları',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -36,13 +36,21 @@ class _MyCompletedTasksPageState extends State<MyCompletedTasksPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.done_all,
+                      Icons.approval,
                       size: 64,
                       color: Color(0xFFF57C00),
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Tamamladığım görevler listesi buraya gelecek',
+                      'Onay Mekanizması',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Onay adımları yönetimi buraya gelecek',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,

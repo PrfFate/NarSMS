@@ -16,6 +16,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ToggleSidebar>(_onToggleSidebar);
     on<ChangeNavigation>(_onChangeNavigation);
     on<ExpandMenuItem>(_onExpandMenuItem);
+    on<ChangeSelectedPage>(_onChangeSelectedPage);
     on<LogoutRequested>(_onLogoutRequested);
   }
 
@@ -68,6 +69,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (state is HomeLoaded) {
       final currentState = state as HomeLoaded;
       emit(currentState.copyWith(expandedMenuItem: event.menuRoute));
+    }
+  }
+
+  void _onChangeSelectedPage(
+    ChangeSelectedPage event,
+    Emitter<HomeState> emit,
+  ) {
+    if (state is HomeLoaded) {
+      final currentState = state as HomeLoaded;
+      emit(currentState.copyWith(
+        selectedPageRoute: event.route,
+        expandedMenuItem: event.expandedMenuItem ?? currentState.expandedMenuItem,
+      ));
     }
   }
 

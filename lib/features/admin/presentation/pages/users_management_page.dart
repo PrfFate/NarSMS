@@ -10,43 +10,50 @@ class UsersManagementPage extends StatefulWidget {
 class _UsersManagementPageState extends State<UsersManagementPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kullanıcılar'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people,
-              size: 64,
-              color: Colors.blue,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Kullanıcılar',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            SizedBox(height: 16),
-            Text(
-              'Kullanıcı Yönetimi',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Card(
+              color: Colors.white,
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people,
+                      size: 64,
+                      color: Color(0xFFF57C00),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Kullanıcı listesi ve yönetimi buraya gelecek',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Kullanıcı listesi ve yönetimi buraya gelecek',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add new user
-        },
-        child: const Icon(Icons.person_add),
+          ),
+        ],
       ),
     );
   }

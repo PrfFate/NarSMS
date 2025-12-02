@@ -10,37 +10,50 @@ class MyAcceptedTasksPage extends StatefulWidget {
 class _MyAcceptedTasksPageState extends State<MyAcceptedTasksPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kabul Ettiğim Görevler'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.thumb_up,
-              size: 64,
-              color: Colors.green,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Kabul Ettiğim Görevler',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            SizedBox(height: 16),
-            Text(
-              'Kabul Ettiğim Görevler',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Card(
+              color: Colors.white,
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.thumb_up,
+                      size: 64,
+                      color: Color(0xFFF57C00),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Kabul ettiğim görevler listesi buraya gelecek',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Kabul ettiğim görevler listesi buraya gelecek',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

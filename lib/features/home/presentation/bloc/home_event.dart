@@ -33,6 +33,16 @@ class ExpandMenuItem extends HomeEvent {
   List<Object?> get props => [menuRoute];
 }
 
+class ChangeSelectedPage extends HomeEvent {
+  final String route;
+  final String? expandedMenuItem;
+
+  const ChangeSelectedPage(this.route, {this.expandedMenuItem});
+
+  @override
+  List<Object?> get props => [route, expandedMenuItem];
+}
+
 class LogoutRequested extends HomeEvent {
   const LogoutRequested();
 }

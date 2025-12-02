@@ -9,6 +9,7 @@ class HomeSidebarWidget extends StatefulWidget {
   final String userName;
   final String? expandedMenuItem;
   final Function(String?) onExpandMenuItem;
+  final Function(String, {bool closeDrawer, String? keepMenuExpanded}) onPageSelected; // Yeni callback
 
   const HomeSidebarWidget({
     super.key,
@@ -19,6 +20,7 @@ class HomeSidebarWidget extends StatefulWidget {
     required this.userName,
     this.expandedMenuItem,
     required this.onExpandMenuItem,
+    required this.onPageSelected,
   });
 
   @override
@@ -26,6 +28,14 @@ class HomeSidebarWidget extends StatefulWidget {
 }
 
 class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
+  String? _localExpandedMenuItem;
+
+  @override
+  void initState() {
+    super.initState();
+    _localExpandedMenuItem = widget.expandedMenuItem;
+  }
+
   List<Widget> _getMenuItems() {
     final items = <Widget>[];
 
@@ -79,16 +89,19 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             icon: Icons.list,
             title: 'Tüm Cihazlar',
             route: AppRouter.deviceList,
+            parentMenuKey: 'devices',
           ),
           _buildSubMenuItem(
             icon: Icons.warehouse_outlined,
             title: 'Depodaki Cihazlar',
             route: AppRouter.depotDevices,
+            parentMenuKey: 'devices',
           ),
           _buildSubMenuItem(
             icon: Icons.backup_outlined,
             title: 'Yedek Cihazlar',
             route: AppRouter.depotBackupDevices,
+            parentMenuKey: 'devices',
           ),
         ],
       ),
@@ -105,26 +118,31 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             icon: Icons.hourglass_empty,
             title: 'Onay Bekleyen Satışlar',
             route: AppRouter.pendingSales,
+            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
             icon: Icons.local_shipping,
             title: 'Kargolanan Satışlar',
             route: AppRouter.shippedSales,
+            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
             icon: Icons.inventory_2,
             title: 'Teslim Edilen Satışlar',
             route: AppRouter.deliveredSales,
+            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
             icon: Icons.done_all,
             title: 'Tamamlanan Satışlar',
             route: AppRouter.completedSales,
+            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
             icon: Icons.cancel_outlined,
             title: 'Reddedilen Satışlar',
             route: AppRouter.rejectedSales,
+            parentMenuKey: 'sales',
           ),
           // Sadece admin görebilir
           if (widget.userRole.toLowerCase() == 'admin')
@@ -132,6 +150,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
               icon: Icons.approval,
               title: 'Onay Adımları',
               route: AppRouter.approvalMechanism,
+              parentMenuKey: 'sales',
             ),
         ],
       ),
@@ -148,11 +167,13 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             icon: Icons.pending_actions,
             title: 'Kargolama Bekleyen Satışlar',
             route: AppRouter.approvedSales,
+            parentMenuKey: 'shipments',
           ),
           _buildSubMenuItem(
             icon: Icons.inventory,
             title: 'Kısmi Kargolanan Satışlar',
             route: AppRouter.partiallyShippedSales,
+            parentMenuKey: 'shipments',
           ),
         ],
       ),
@@ -169,21 +190,25 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             icon: Icons.app_registration,
             title: 'Servis Ön Kayıtları',
             route: AppRouter.servicePreRegistrations,
+            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
             icon: Icons.pending_actions,
             title: 'Devam Eden İşlemler',
             route: AppRouter.serviceOngoing,
+            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
             icon: Icons.fact_check,
             title: 'Son Kontroller',
             route: AppRouter.serviceFinalChecks,
+            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
             icon: Icons.check_circle,
             title: 'Tamamlanan İşlemler',
             route: AppRouter.serviceCompleted,
+            parentMenuKey: 'technicalservice',
           ),
         ],
       ),
@@ -201,26 +226,31 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
               icon: Icons.pending_actions,
               title: 'Bekleyen Görevler',
               route: AppRouter.pendingTasks,
+              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
               icon: Icons.task_alt,
               title: 'Kabul Edilen',
               route: AppRouter.acceptedTasks,
+              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
               icon: Icons.autorenew,
               title: 'Devam Eden Görevler',
               route: AppRouter.ongoingTasks,
+              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
               icon: Icons.check_circle,
               title: 'Tamamlanan Görevler',
               route: AppRouter.completedTasks,
+              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
               icon: Icons.cancel,
               title: 'Reddedilen Görevler',
               route: AppRouter.cancelledTasks,
+              parentMenuKey: 'fieldmanagement',
             ),
           ],
         ),
@@ -239,21 +269,25 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
               icon: Icons.assignment,
               title: 'Atanan Görevlerim',
               route: AppRouter.myAssignedTasks,
+              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
               icon: Icons.thumb_up,
               title: 'Kabul Edilen Görevlerim',
               route: AppRouter.myAcceptedTasks,
+              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
               icon: Icons.loop,
               title: 'Devam Eden Görevlerim',
               route: AppRouter.myOngoingTasks,
+              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
               icon: Icons.done_all,
               title: 'Tamamlanan Görevlerim',
               route: AppRouter.myCompletedTasks,
+              parentMenuKey: 'fieldtasks',
             ),
           ],
         ),
@@ -350,7 +384,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
               color: isActive ? const Color(0xFFF34723) : Colors.black87,
             ),
             onTap: () {
-              Navigator.pushNamed(context, route);
+              widget.onPageSelected(route, closeDrawer: true);
             },
             dense: true,
           ),
@@ -378,7 +412,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
         ),
         trailing: isActive ? null : const Icon(Icons.chevron_right, size: 20),
         onTap: () {
-          Navigator.pushNamed(context, route);
+          widget.onPageSelected(route, closeDrawer: true);
         },
       ),
     );
@@ -390,7 +424,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     required String menuKey,
     required List<Widget> children,
   }) {
-    final isExpanded = widget.expandedMenuItem == menuKey;
+    final isExpanded = _localExpandedMenuItem == menuKey;
 
     if (widget.isCollapsed) {
       return Tooltip(
@@ -429,6 +463,10 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
       ),
       initiallyExpanded: isExpanded,
       onExpansionChanged: (expanded) {
+        setState(() {
+          _localExpandedMenuItem = expanded ? menuKey : null;
+        });
+        // BLoC'a da bildir ama bu drawer'ı kapatmayacak
         widget.onExpandMenuItem(expanded ? menuKey : null);
       },
       children: children,
@@ -439,6 +477,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     required IconData icon,
     required String title,
     required String route,
+    String? parentMenuKey,
   }) {
     final isActive = widget.currentRoute == route;
 
@@ -459,7 +498,11 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
           ),
         ),
         onTap: () {
-          Navigator.pushNamed(context, route);
+          // Alt menüye tıklandığında parent menüyü açık tutmak için state'e kaydet
+          setState(() {
+            _localExpandedMenuItem = parentMenuKey;
+          });
+          widget.onPageSelected(route, closeDrawer: true, keepMenuExpanded: parentMenuKey);
         },
       ),
     );

@@ -10,37 +10,50 @@ class DepotDevicesPage extends StatefulWidget {
 class _DepotDevicesPageState extends State<DepotDevicesPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Depo Cihazları'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.warehouse,
-              size: 64,
-              color: Colors.purple,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Depodaki Cihazlar',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            SizedBox(height: 16),
-            Text(
-              'Depo Cihazları',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Card(
+              color: Colors.white,
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.warehouse,
+                      size: 64,
+                      color: Color(0xFFF57C00),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Depodaki cihazlar listesi buraya gelecek',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Depodaki cihazlar listesi buraya gelecek',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

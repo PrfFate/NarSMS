@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../config/routes/app_router.dart';
 
 class HomeSidebarWidget extends StatefulWidget {
   final bool isCollapsed;
@@ -58,101 +59,260 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
       ),
     );
 
-    // Dashboard - Seçili durum
+    // 🏠 Dashboard
     items.add(
       _buildMenuItem(
         icon: Icons.dashboard_outlined,
         title: 'Dashboard',
-        route: '/dashboard',
-        isSelected: true,
+        route: AppRouter.home,
       ),
     );
 
-    // Cihazlar - Alt Menülü
+    // 📱 Cihazlar (devices)
     items.add(
       _buildExpandableMenuItem(
         icon: Icons.devices_other_outlined,
         title: 'Cihazlar',
-        route: '/devices',
+        menuKey: 'devices',
         children: [
           _buildSubMenuItem(
-              icon: Icons.list, title: 'Tüm Cihazlar', route: '/devices/all'),
+            icon: Icons.list,
+            title: 'Tüm Cihazlar',
+            route: AppRouter.deviceList,
+          ),
           _buildSubMenuItem(
-              icon: Icons.warehouse_outlined,
-              title: 'Depodaki Cihazlar',
-              route: '/devices/warehouse'),
+            icon: Icons.warehouse_outlined,
+            title: 'Depodaki Cihazlar',
+            route: AppRouter.depotDevices,
+          ),
           _buildSubMenuItem(
-              icon: Icons.backup_outlined,
-              title: 'Yedek Cihazlar',
-              route: '/devices/backup'),
+            icon: Icons.backup_outlined,
+            title: 'Yedek Cihazlar',
+            route: AppRouter.depotBackupDevices,
+          ),
         ],
       ),
     );
 
-    // Müşteriler
+    // 💰 Satışlar (sales)
     items.add(
-      _buildMenuItem(
-        icon: Icons.people_outline,
-        title: 'Müşteriler',
-        route: '/customers',
-      ),
-    );
-
-    // Satışlar
-    items.add(
-      _buildMenuItem(
+      _buildExpandableMenuItem(
         icon: Icons.shopping_cart_outlined,
         title: 'Satışlar',
-        route: '/sales',
+        menuKey: 'sales',
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.hourglass_empty,
+            title: 'Onay Bekleyen Satışlar',
+            route: AppRouter.pendingSales,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.local_shipping,
+            title: 'Kargolanan Satışlar',
+            route: AppRouter.shippedSales,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.inventory_2,
+            title: 'Teslim Edilen Satışlar',
+            route: AppRouter.deliveredSales,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.done_all,
+            title: 'Tamamlanan Satışlar',
+            route: AppRouter.completedSales,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.cancel_outlined,
+            title: 'Reddedilen Satışlar',
+            route: AppRouter.rejectedSales,
+          ),
+          // Sadece admin görebilir
+          if (widget.userRole.toLowerCase() == 'admin')
+            _buildSubMenuItem(
+              icon: Icons.approval,
+              title: 'Onay Adımları',
+              route: AppRouter.approvalMechanism,
+            ),
+        ],
       ),
     );
 
-    // Kargo
+    // 📦 Satış Kargolama (shipments)
     items.add(
-      _buildMenuItem(
+      _buildExpandableMenuItem(
         icon: Icons.local_shipping_outlined,
-        title: 'Kargo',
-        route: '/cargo',
+        title: 'Satış Kargolama',
+        menuKey: 'shipments',
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.pending_actions,
+            title: 'Kargolama Bekleyen Satışlar',
+            route: AppRouter.approvedSales,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.inventory,
+            title: 'Kısmi Kargolanan Satışlar',
+            route: AppRouter.partiallyShippedSales,
+          ),
+        ],
       ),
     );
 
-    // Teknik Servis Kartı
+    // 🔧 Teknik Servis Kaydı (technicianservice)
     items.add(
-      _buildMenuItem(
+      _buildExpandableMenuItem(
         icon: Icons.build_outlined,
         title: 'Teknik Servis Kaydı',
-        route: '/service',
+        menuKey: 'technicalservice',
+        children: [
+          _buildSubMenuItem(
+            icon: Icons.app_registration,
+            title: 'Servis Ön Kayıtları',
+            route: AppRouter.servicePreRegistrations,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.pending_actions,
+            title: 'Devam Eden İşlemler',
+            route: AppRouter.serviceOngoing,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.fact_check,
+            title: 'Son Kontroller',
+            route: AppRouter.serviceFinalChecks,
+          ),
+          _buildSubMenuItem(
+            icon: Icons.check_circle,
+            title: 'Tamamlanan İşlemler',
+            route: AppRouter.serviceCompleted,
+          ),
+        ],
       ),
     );
 
-    // Raporlama
-    items.add(
-      _buildMenuItem(
-        icon: Icons.assessment_outlined,
-        title: 'Raporlama',
-        route: '/reports',
-      ),
-    );
+    // 🗺️ Saha Yönetimi (fieldmanagement) - Sadece admin
+    if (widget.userRole.toLowerCase() == 'admin') {
+      items.add(
+        _buildExpandableMenuItem(
+          icon: Icons.map_outlined,
+          title: 'Saha Yönetimi',
+          menuKey: 'fieldmanagement',
+          children: [
+            _buildSubMenuItem(
+              icon: Icons.pending_actions,
+              title: 'Bekleyen Görevler',
+              route: AppRouter.pendingTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.task_alt,
+              title: 'Kabul Edilen',
+              route: AppRouter.acceptedTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.autorenew,
+              title: 'Devam Eden Görevler',
+              route: AppRouter.ongoingTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.check_circle,
+              title: 'Tamamlanan Görevler',
+              route: AppRouter.completedTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.cancel,
+              title: 'Reddedilen Görevler',
+              route: AppRouter.cancelledTasks,
+            ),
+          ],
+        ),
+      );
+    }
 
-    // Loglama
-    items.add(
-      _buildMenuItem(
-        icon: Icons.article_outlined,
-        title: 'Loglama',
-        route: '/logs',
-      ),
-    );
+    // 📋 Saha Görevleri (fieldtasks) - Sadece fielder rolü
+    if (widget.userRole.toLowerCase() == 'fielder') {
+      items.add(
+        _buildExpandableMenuItem(
+          icon: Icons.assignment_outlined,
+          title: 'Saha Görevleri',
+          menuKey: 'fieldtasks',
+          children: [
+            _buildSubMenuItem(
+              icon: Icons.assignment,
+              title: 'Atanan Görevlerim',
+              route: AppRouter.myAssignedTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.thumb_up,
+              title: 'Kabul Edilen Görevlerim',
+              route: AppRouter.myAcceptedTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.loop,
+              title: 'Devam Eden Görevlerim',
+              route: AppRouter.myOngoingTasks,
+            ),
+            _buildSubMenuItem(
+              icon: Icons.done_all,
+              title: 'Tamamlanan Görevlerim',
+              route: AppRouter.myCompletedTasks,
+            ),
+          ],
+        ),
+      );
+    }
 
-    // Kullanıcılar - Sadece Admin için
-    if (widget.userRole == 'Admin') {
+    // 🏢 Müşteriler - Admin ve stock manager
+    if (widget.userRole.toLowerCase() == 'admin' ||
+        widget.userRole.toLowerCase() == 'stock_manager') {
+      items.add(
+        _buildMenuItem(
+          icon: Icons.people_outline,
+          title: 'Müşteriler',
+          route: AppRouter.customerList,
+        ),
+      );
+    }
+
+    // 📊 Raporlama - Sadece admin
+    if (widget.userRole.toLowerCase() == 'admin') {
+      items.add(
+        _buildMenuItem(
+          icon: Icons.assessment_outlined,
+          title: 'Raporlama',
+          route: AppRouter.customerReports,
+        ),
+      );
+    }
+
+    // 📝 Loglama - Sadece admin
+    if (widget.userRole.toLowerCase() == 'admin') {
+      items.add(
+        _buildMenuItem(
+          icon: Icons.article_outlined,
+          title: 'Loglama',
+          route: AppRouter.logging,
+        ),
+      );
+    }
+
+    // 👤 Kullanıcılar - Sadece admin
+    if (widget.userRole.toLowerCase() == 'admin') {
       items.add(
         _buildMenuItem(
           icon: Icons.person_outline,
           title: 'Kullanıcılar',
-          route: '/users',
+          route: AppRouter.usersManagement,
         ),
       );
     }
+
+    // ⚙️ Ayarlar
+    items.add(
+      _buildMenuItem(
+        icon: Icons.settings_outlined,
+        title: 'Ayarlar',
+        route: '/settings',
+      ),
+    );
 
     return items;
   }
@@ -190,7 +350,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
               color: isActive ? const Color(0xFFF34723) : Colors.black87,
             ),
             onTap: () {
-              // TODO: Navigasyon
+              Navigator.pushNamed(context, route);
             },
             dense: true,
           ),
@@ -218,7 +378,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
         ),
         trailing: isActive ? null : const Icon(Icons.chevron_right, size: 20),
         onTap: () {
-          // TODO: Navigasyon
+          Navigator.pushNamed(context, route);
         },
       ),
     );
@@ -227,33 +387,26 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
   Widget _buildExpandableMenuItem({
     required IconData icon,
     required String title,
-    required String route,
+    required String menuKey,
     required List<Widget> children,
   }) {
-    final isActive = widget.currentRoute.startsWith(route);
-    final isExpanded = widget.expandedMenuItem == route;
+    final isExpanded = widget.expandedMenuItem == menuKey;
 
     if (widget.isCollapsed) {
       return Tooltip(
         message: title,
-        child: Container(
-          decoration: BoxDecoration(
-            border: isActive
-                ? const Border(
-                    left: BorderSide(color: Color(0xFFF34723), width: 4),
-                  )
-                : null,
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: Colors.black87,
           ),
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: isActive ? const Color(0xFFF34723) : Colors.black87,
-            ),
-            onTap: () {
-              // TODO: Navigasyon
-            },
-            dense: true,
-          ),
+          onTap: () {
+            // Collapsed modda ilk child'a git
+            if (children.isNotEmpty) {
+              // İlk child'ı bul ve ona navigate et
+            }
+          },
+          dense: true,
         ),
       );
     }
@@ -261,13 +414,13 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     return ExpansionTile(
       leading: Icon(
         icon,
-        color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+        color: Colors.black87,
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: isActive ? const Color(0xFFF57C00) : Colors.black87,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontWeight: FontWeight.normal,
         ),
       ),
       trailing: Icon(
@@ -276,7 +429,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
       ),
       initiallyExpanded: isExpanded,
       onExpansionChanged: (expanded) {
-        widget.onExpandMenuItem(expanded ? route : null);
+        widget.onExpandMenuItem(expanded ? menuKey : null);
       },
       children: children,
     );
@@ -306,7 +459,7 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
           ),
         ),
         onTap: () {
-          // TODO: Navigasyon
+          Navigator.pushNamed(context, route);
         },
       ),
     );

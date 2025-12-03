@@ -4,8 +4,8 @@ import '../../../../config/routes/app_router.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../widgets/home_sidebar_widget.dart';
 import '../widgets/home_bottom_nav_bar.dart';
+import '../widgets/home_drawer_widget.dart';
 
 // Sayfa import'ları
 import '../../../devices/presentation/pages/device_list_page.dart';
@@ -58,11 +58,12 @@ class HomePage extends StatelessWidget {
       buildWhen: (previous, current) {
         // Sadece önemli değişikliklerde rebuild et
         if (previous is HomeLoaded && current is HomeLoaded) {
-          // expandedMenuItem değiştiğinde REBUILD ETME
+          // expandedMenus değiştiğinde REBUILD ETME - bu sidebar'ın kendi işi
           // Sadece userName, userRole, selectedNavIndex değiştiğinde rebuild et
           return previous.userName != current.userName ||
                  previous.userRole != current.userRole ||
-                 previous.selectedNavIndex != current.selectedNavIndex;
+                 previous.selectedNavIndex != current.selectedNavIndex ||
+                 previous.selectedPageRoute != current.selectedPageRoute;
         }
         return true; // Diğer durumlarda rebuild et
       },
@@ -135,43 +136,7 @@ class HomePage extends StatelessWidget {
       },
       drawerScrimColor: Colors.black26,
       drawerEnableOpenDragGesture: false,
-      drawer: GestureDetector(
-        onTap: () {
-          // Drawer içine tıklandığında hiçbir şey yapma
-        },
-        child: Container(
-          margin: EdgeInsets.only(
-            top: kToolbarHeight + MediaQuery.of(context).padding.top,
-          ),
-          child: Drawer(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero,
-            ),
-            child: HomeSidebarWidget(
-              isCollapsed: false,
-              currentRoute: state.selectedPageRoute,
-              onLogout: () {
-                context.read<HomeBloc>().add(const LogoutRequested());
-              },
-              userRole: state.userRole,
-              userName: state.userName,
-              expandedMenuItem: state.expandedMenuItem,
-              onExpandMenuItem: (route) {
-                context.read<HomeBloc>().add(ExpandMenuItem(route));
-              },
-              onPageSelected: (route, {bool closeDrawer = false, String? keepMenuExpanded}) {
-                // Alt menüden seçim yapıldıysa parent menüyü açık tut
-                context.read<HomeBloc>().add(
-                  ChangeSelectedPage(route, expandedMenuItem: keepMenuExpanded)
-                );
-                if (closeDrawer) {
-                  Navigator.of(context).pop(); // Drawer'ı kapat
-                }
-              },
-            ),
-          ),
-        ),
-      ),
+      drawer: const HomeDrawerWidget(),
       body: BlocBuilder<HomeBloc, HomeState>(
         buildWhen: (previous, current) {
           // Sadece selectedPageRoute değiştiğinde rebuild et

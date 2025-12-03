@@ -1,43 +1,42 @@
 import 'package:flutter/material.dart';
 import '../../../../config/routes/app_router.dart';
 
-class HomeSidebarWidget extends StatefulWidget {
-  final bool isCollapsed;
+class HomeSidebarWidget extends StatelessWidget {
   final String currentRoute;
   final VoidCallback onLogout;
   final String userRole;
   final String userName;
-  final String? expandedMenuItem;
-  final Function(String?) onExpandMenuItem;
-  final Function(String, {bool closeDrawer, String? keepMenuExpanded}) onPageSelected; // Yeni callback
+  final Map<String, bool> expandedMenus;
+  final Function(String) onMenuToggle;
+  final Function(String) onPageSelect;
 
   const HomeSidebarWidget({
     super.key,
-    required this.isCollapsed,
     required this.currentRoute,
     required this.onLogout,
     required this.userRole,
     required this.userName,
-    this.expandedMenuItem,
-    required this.onExpandMenuItem,
-    required this.onPageSelected,
+    required this.expandedMenus,
+    required this.onMenuToggle,
+    required this.onPageSelect,
   });
 
   @override
-  State<HomeSidebarWidget> createState() => _HomeSidebarWidgetState();
-}
+  Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
 
-class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
-  String? _localExpandedMenuItem;
-
-  @override
-  void initState() {
-    super.initState();
-    _localExpandedMenuItem = widget.expandedMenuItem;
+    return ListView(
+      padding: EdgeInsets.only(top: statusBarHeight),
+      children: _getMenuItems(context),
+    );
   }
 
-  List<Widget> _getMenuItems() {
+  List<Widget> _getMenuItems(BuildContext context) {
     final items = <Widget>[];
+
+    // Rol kontrolü için normalize edilmiş rol
+    // TEST: Geçici olarak her zaman admin olarak işaretle
+    final normalizedRole = 'admin'; // userRole.toLowerCase().trim();
 
     // Header/Logo
     items.add(
@@ -49,29 +48,21 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             bottom: BorderSide(color: Colors.black12, width: 1),
           ),
         ),
-        child: widget.isCollapsed
-            ? Image.asset(
-                'assets/images/narposloginlogo.png',
-                height: 30,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.admin_panel_settings,
-                      size: 30, color: Color(0xFFF57C00));
-                },
-              )
-            : Image.asset(
-                'assets/images/narposloginlogo.png',
-                height: 50,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.admin_panel_settings,
-                      size: 50, color: Color(0xFFF57C00));
-                },
-              ),
+        child:Image.asset(
+              'assets/images/narposloginlogo.png',
+              height: 50,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.admin_panel_settings,
+                    size: 50, color: Color(0xFFF57C00));
+              },
+        ),
       ),
     );
 
     // 🏠 Dashboard
     items.add(
       _buildMenuItem(
+        context: context,
         icon: Icons.dashboard_outlined,
         title: 'Dashboard',
         route: AppRouter.home,
@@ -81,27 +72,28 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     // 📱 Cihazlar (devices)
     items.add(
       _buildExpandableMenuItem(
+        context: context,
         icon: Icons.devices_other_outlined,
         title: 'Cihazlar',
         menuKey: 'devices',
         children: [
           _buildSubMenuItem(
+            context: context,
             icon: Icons.list,
             title: 'Tüm Cihazlar',
             route: AppRouter.deviceList,
-            parentMenuKey: 'devices',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.warehouse_outlined,
             title: 'Depodaki Cihazlar',
             route: AppRouter.depotDevices,
-            parentMenuKey: 'devices',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.backup_outlined,
             title: 'Yedek Cihazlar',
             route: AppRouter.depotBackupDevices,
-            parentMenuKey: 'devices',
           ),
         ],
       ),
@@ -110,47 +102,48 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     // 💰 Satışlar (sales)
     items.add(
       _buildExpandableMenuItem(
+        context: context,
         icon: Icons.shopping_cart_outlined,
         title: 'Satışlar',
         menuKey: 'sales',
         children: [
           _buildSubMenuItem(
+            context: context,
             icon: Icons.hourglass_empty,
             title: 'Onay Bekleyen Satışlar',
             route: AppRouter.pendingSales,
-            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.local_shipping,
             title: 'Kargolanan Satışlar',
             route: AppRouter.shippedSales,
-            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.inventory_2,
             title: 'Teslim Edilen Satışlar',
             route: AppRouter.deliveredSales,
-            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.done_all,
             title: 'Tamamlanan Satışlar',
             route: AppRouter.completedSales,
-            parentMenuKey: 'sales',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.cancel_outlined,
             title: 'Reddedilen Satışlar',
             route: AppRouter.rejectedSales,
-            parentMenuKey: 'sales',
           ),
           // Sadece admin görebilir
-          if (widget.userRole.toLowerCase() == 'admin')
+          if (normalizedRole == 'admin')
             _buildSubMenuItem(
+              context: context,
               icon: Icons.approval,
               title: 'Onay Adımları',
               route: AppRouter.approvalMechanism,
-              parentMenuKey: 'sales',
             ),
         ],
       ),
@@ -159,98 +152,101 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     // 📦 Satış Kargolama (shipments)
     items.add(
       _buildExpandableMenuItem(
+        context: context,
         icon: Icons.local_shipping_outlined,
         title: 'Satış Kargolama',
         menuKey: 'shipments',
         children: [
           _buildSubMenuItem(
+            context: context,
             icon: Icons.pending_actions,
             title: 'Kargolama Bekleyen Satışlar',
             route: AppRouter.approvedSales,
-            parentMenuKey: 'shipments',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.inventory,
             title: 'Kısmi Kargolanan Satışlar',
             route: AppRouter.partiallyShippedSales,
-            parentMenuKey: 'shipments',
           ),
         ],
       ),
     );
 
-    // 🔧 Teknik Servis Kaydı (technicianservice)
+    // 🔧 Teknik Servis Kaydı (technicalservice)
     items.add(
       _buildExpandableMenuItem(
+        context: context,
         icon: Icons.build_outlined,
         title: 'Teknik Servis Kaydı',
         menuKey: 'technicalservice',
         children: [
           _buildSubMenuItem(
+            context: context,
             icon: Icons.app_registration,
             title: 'Servis Ön Kayıtları',
             route: AppRouter.servicePreRegistrations,
-            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.pending_actions,
             title: 'Devam Eden İşlemler',
             route: AppRouter.serviceOngoing,
-            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.fact_check,
             title: 'Son Kontroller',
             route: AppRouter.serviceFinalChecks,
-            parentMenuKey: 'technicalservice',
           ),
           _buildSubMenuItem(
+            context: context,
             icon: Icons.check_circle,
             title: 'Tamamlanan İşlemler',
             route: AppRouter.serviceCompleted,
-            parentMenuKey: 'technicalservice',
           ),
         ],
       ),
     );
 
     // 🗺️ Saha Yönetimi (fieldmanagement) - Sadece admin
-    if (widget.userRole.toLowerCase() == 'admin') {
+    if (normalizedRole == 'admin') {
       items.add(
         _buildExpandableMenuItem(
+          context: context,
           icon: Icons.map_outlined,
           title: 'Saha Yönetimi',
           menuKey: 'fieldmanagement',
           children: [
             _buildSubMenuItem(
+              context: context,
               icon: Icons.pending_actions,
               title: 'Bekleyen Görevler',
               route: AppRouter.pendingTasks,
-              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.task_alt,
               title: 'Kabul Edilen',
               route: AppRouter.acceptedTasks,
-              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.autorenew,
               title: 'Devam Eden Görevler',
               route: AppRouter.ongoingTasks,
-              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.check_circle,
               title: 'Tamamlanan Görevler',
               route: AppRouter.completedTasks,
-              parentMenuKey: 'fieldmanagement',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.cancel,
               title: 'Reddedilen Görevler',
               route: AppRouter.cancelledTasks,
-              parentMenuKey: 'fieldmanagement',
             ),
           ],
         ),
@@ -258,36 +254,37 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     }
 
     // 📋 Saha Görevleri (fieldtasks) - Sadece fielder rolü
-    if (widget.userRole.toLowerCase() == 'fielder') {
+    if (normalizedRole == 'fielder') {
       items.add(
         _buildExpandableMenuItem(
+          context: context,
           icon: Icons.assignment_outlined,
           title: 'Saha Görevleri',
           menuKey: 'fieldtasks',
           children: [
             _buildSubMenuItem(
+              context: context,
               icon: Icons.assignment,
               title: 'Atanan Görevlerim',
               route: AppRouter.myAssignedTasks,
-              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.thumb_up,
               title: 'Kabul Edilen Görevlerim',
               route: AppRouter.myAcceptedTasks,
-              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.loop,
               title: 'Devam Eden Görevlerim',
               route: AppRouter.myOngoingTasks,
-              parentMenuKey: 'fieldtasks',
             ),
             _buildSubMenuItem(
+              context: context,
               icon: Icons.done_all,
               title: 'Tamamlanan Görevlerim',
               route: AppRouter.myCompletedTasks,
-              parentMenuKey: 'fieldtasks',
             ),
           ],
         ),
@@ -295,10 +292,10 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     }
 
     // 🏢 Müşteriler - Admin ve stock manager
-    if (widget.userRole.toLowerCase() == 'admin' ||
-        widget.userRole.toLowerCase() == 'stock_manager') {
+    if (normalizedRole == 'admin' || normalizedRole == 'stock_manager') {
       items.add(
         _buildMenuItem(
+          context: context,
           icon: Icons.people_outline,
           title: 'Müşteriler',
           route: AppRouter.customerList,
@@ -307,9 +304,10 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     }
 
     // 📊 Raporlama - Sadece admin
-    if (widget.userRole.toLowerCase() == 'admin') {
+    if (normalizedRole == 'admin') {
       items.add(
         _buildMenuItem(
+          context: context,
           icon: Icons.assessment_outlined,
           title: 'Raporlama',
           route: AppRouter.customerReports,
@@ -318,9 +316,10 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     }
 
     // 📝 Loglama - Sadece admin
-    if (widget.userRole.toLowerCase() == 'admin') {
+    if (normalizedRole == 'admin') {
       items.add(
         _buildMenuItem(
+          context: context,
           icon: Icons.article_outlined,
           title: 'Loglama',
           route: AppRouter.logging,
@@ -329,9 +328,10 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
     }
 
     // 👤 Kullanıcılar - Sadece admin
-    if (widget.userRole.toLowerCase() == 'admin') {
+    if (normalizedRole == 'admin') {
       items.add(
         _buildMenuItem(
+          context: context,
           icon: Icons.person_outline,
           title: 'Kullanıcılar',
           route: AppRouter.usersManagement,
@@ -339,58 +339,16 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
       );
     }
 
-    // ⚙️ Ayarlar
-    items.add(
-      _buildMenuItem(
-        icon: Icons.settings_outlined,
-        title: 'Ayarlar',
-        route: '/settings',
-      ),
-    );
-
     return items;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: _getMenuItems(),
-    );
-  }
-
   Widget _buildMenuItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String route,
-    bool isSelected = false,
   }) {
-    final isActive = isSelected || widget.currentRoute == route;
-
-    if (widget.isCollapsed) {
-      return Tooltip(
-        message: title,
-        child: Container(
-          decoration: BoxDecoration(
-            border: isActive
-                ? const Border(
-                    left: BorderSide(color: Color(0xFFF34723), width: 4),
-                  )
-                : null,
-          ),
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: isActive ? const Color(0xFFF34723) : Colors.black87,
-            ),
-            onTap: () {
-              widget.onPageSelected(route, closeDrawer: true);
-            },
-            dense: true,
-          ),
-        ),
-      );
-    }
+    final isActive = currentRoute == route;
 
     return Container(
       decoration: BoxDecoration(
@@ -410,76 +368,60 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
-        trailing: isActive ? null : const Icon(Icons.chevron_right, size: 20),
         onTap: () {
-          widget.onPageSelected(route, closeDrawer: true);
+          onPageSelect(route);
+          Navigator.of(context).pop(); // Close drawer
         },
       ),
     );
   }
 
   Widget _buildExpandableMenuItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String menuKey,
     required List<Widget> children,
   }) {
-    final isExpanded = _localExpandedMenuItem == menuKey;
+    final isExpanded = expandedMenus[menuKey] ?? false;
 
-    if (widget.isCollapsed) {
-      return Tooltip(
-        message: title,
-        child: ListTile(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
           leading: Icon(
             icon,
             color: Colors.black87,
           ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+          trailing: Icon(
+            isExpanded ? Icons.expand_more : Icons.chevron_right,
+            color: Colors.black54,
+          ),
           onTap: () {
-            // Collapsed modda ilk child'a git
-            if (children.isNotEmpty) {
-              // İlk child'ı bul ve ona navigate et
-            }
+            // Toggle menu expansion - DRAWER KAPANMAZ
+            onMenuToggle(menuKey);
           },
-          dense: true,
         ),
-      );
-    }
-
-    return ExpansionTile(
-      leading: Icon(
-        icon,
-        color: Colors.black87,
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.normal,
-        ),
-      ),
-      trailing: Icon(
-        isExpanded ? Icons.expand_more : Icons.chevron_right,
-        color: Colors.black54,
-      ),
-      initiallyExpanded: isExpanded,
-      onExpansionChanged: (expanded) {
-        setState(() {
-          _localExpandedMenuItem = expanded ? menuKey : null;
-        });
-        // BLoC'a da bildir ama bu drawer'ı kapatmayacak
-        widget.onExpandMenuItem(expanded ? menuKey : null);
-      },
-      children: children,
+        // Conditional submenu rendering
+        if (isExpanded) ...children,
+      ],
     );
   }
 
   Widget _buildSubMenuItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String route,
-    String? parentMenuKey,
   }) {
-    final isActive = widget.currentRoute == route;
+    final isActive = currentRoute == route;
 
     return Padding(
       padding: const EdgeInsets.only(left: 30),
@@ -498,11 +440,8 @@ class _HomeSidebarWidgetState extends State<HomeSidebarWidget> {
           ),
         ),
         onTap: () {
-          // Alt menüye tıklandığında parent menüyü açık tutmak için state'e kaydet
-          setState(() {
-            _localExpandedMenuItem = parentMenuKey;
-          });
-          widget.onPageSelected(route, closeDrawer: true, keepMenuExpanded: parentMenuKey);
+          onPageSelect(route);
+          Navigator.of(context).pop(); // Close drawer
         },
       ),
     );

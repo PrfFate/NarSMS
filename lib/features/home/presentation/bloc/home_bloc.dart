@@ -58,6 +58,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       // Toggle the menu - if it's currently open, close it; if closed, open it
       final isCurrentlyExpanded = newExpandedMenus[event.menuKey] ?? false;
+
+      if (!isCurrentlyExpanded) {
+        // If opening a new menu, close all other menus first
+        newExpandedMenus.updateAll((key, value) => false);
+      }
+
       newExpandedMenus[event.menuKey] = !isCurrentlyExpanded;
 
       emit(currentState.copyWith(expandedMenus: newExpandedMenus));
@@ -70,7 +76,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) {
     if (state is HomeLoaded) {
       final currentState = state as HomeLoaded;
-      emit(currentState.copyWith(selectedPageRoute: event.route));
+      // Close all expanded menus when selecting a page
+      final closedMenus = Map<String, bool>.from(currentState.expandedMenus);
+      closedMenus.updateAll((key, value) => false);
+
+      emit(currentState.copyWith(
+        selectedPageRoute: event.route,
+        expandedMenus: closedMenus,
+      ));
     }
   }
 

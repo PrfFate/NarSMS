@@ -13,9 +13,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.logoutUseCase,
   }) : super(const HomeInitial()) {
     on<LoadUserInfo>(_onLoadUserInfo);
-    on<ToggleSidebar>(_onToggleSidebar);
     on<ChangeNavigation>(_onChangeNavigation);
-    on<ExpandMenuItem>(_onExpandMenuItem);
+    on<ToggleMenuExpansion>(_onToggleMenuExpansion);
+    on<SelectPage>(_onSelectPage);
     on<LogoutRequested>(_onLogoutRequested);
   }
 
@@ -30,25 +30,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     result.fold(
       (failure) => emit(HomeError(failure.message)),
       (userInfo) => emit(HomeLoaded(
-        isSidebarCollapsed: false,
         selectedNavIndex: 0,
-        expandedMenuItem: null,
         userName: userInfo['userName'] ?? '',
         userRole: userInfo['userRole'] ?? '',
+        expandedMenus: {},
       )),
     );
-  }
-
-  void _onToggleSidebar(
-    ToggleSidebar event,
-    Emitter<HomeState> emit,
-  ) {
-    if (state is HomeLoaded) {
-      final currentState = state as HomeLoaded;
-      emit(currentState.copyWith(
-        isSidebarCollapsed: !currentState.isSidebarCollapsed,
-      ));
-    }
   }
 
   void _onChangeNavigation(
@@ -61,13 +48,42 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
-  void _onExpandMenuItem(
-    ExpandMenuItem event,
+  void _onToggleMenuExpansion(
+    ToggleMenuExpansion event,
     Emitter<HomeState> emit,
   ) {
     if (state is HomeLoaded) {
       final currentState = state as HomeLoaded;
-      emit(currentState.copyWith(expandedMenuItem: event.menuRoute));
+      final newExpandedMenus = Map<String, bool>.from(currentState.expandedMenus);
+
+      // Toggle the menu - if it's currently open, close it; if closed, open it
+      final isCurrentlyExpanded = newExpandedMenus[event.menuKey] ?? false;
+
+      if (!isCurrentlyExpanded) {
+        // If opening a new menu, close all other menus first
+        newExpandedMenus.updateAll((key, value) => false);
+      }
+
+      newExpandedMenus[event.menuKey] = !isCurrentlyExpanded;
+
+      emit(currentState.copyWith(expandedMenus: newExpandedMenus));
+    }
+  }
+
+  void _onSelectPage(
+    SelectPage event,
+    Emitter<HomeState> emit,
+  ) {
+    if (state is HomeLoaded) {
+      final currentState = state as HomeLoaded;
+      // Close all expanded menus when selecting a page
+      final closedMenus = Map<String, bool>.from(currentState.expandedMenus);
+      closedMenus.updateAll((key, value) => false);
+
+      emit(currentState.copyWith(
+        selectedPageRoute: event.route,
+        expandedMenus: closedMenus,
+      ));
     }
   }
 

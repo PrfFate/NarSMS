@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart'; // TODO: Backend hazır olunca açılacak
 import 'config/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
-import 'core/constants/storage_constants.dart';
+// import 'core/constants/storage_constants.dart'; // TODO: Backend hazır olunca açılacak
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends StatefulWidget
+{
   const SplashScreen({super.key});
 
   @override
@@ -47,16 +48,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
+    // TODO: Geçici olarak direkt home'a yönlendiriyoruz
     // Token kontrolü yap
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(StorageConstants.accessToken);
+    // final prefs = await SharedPreferences.getInstance();
+    // final token = prefs.getString(StorageConstants.accessToken);
 
     // Token varsa home'a, yoksa login'e git
-    if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, AppRouter.home);
-    } else {
-      Navigator.pushReplacementNamed(context, AppRouter.login);
-    }
+    // if (token != null && token.isNotEmpty) {
+    //   Navigator.pushReplacementNamed(context, AppRouter.home);
+    // } else {
+    //   Navigator.pushReplacementNamed(context, AppRouter.login);
+    // }
+
+    // Geçici: Backend olmadığı için direkt home'a git
+    Navigator.pushReplacementNamed(context, AppRouter.home);
   }
 
   @override

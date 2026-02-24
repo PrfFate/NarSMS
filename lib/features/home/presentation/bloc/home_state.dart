@@ -16,42 +16,44 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final bool isSidebarCollapsed;
   final int selectedNavIndex;
-  final String? expandedMenuItem;
+  final String selectedPageRoute;
   final String userName;
   final String userRole;
 
+  // Sidebar menu states
+  final Map<String, bool> expandedMenus;
+
   const HomeLoaded({
-    required this.isSidebarCollapsed,
     required this.selectedNavIndex,
-    this.expandedMenuItem,
+    this.selectedPageRoute = '/home',
     required this.userName,
     required this.userRole,
+    this.expandedMenus = const {},
   });
 
   @override
   List<Object?> get props => [
-        isSidebarCollapsed,
         selectedNavIndex,
-        expandedMenuItem,
+        selectedPageRoute,
         userName,
         userRole,
+        expandedMenus,
       ];
 
   HomeLoaded copyWith({
-    bool? isSidebarCollapsed,
     int? selectedNavIndex,
-    String? expandedMenuItem,
+    String? selectedPageRoute,
     String? userName,
     String? userRole,
+    Map<String, bool>? expandedMenus,
   }) {
     return HomeLoaded(
-      isSidebarCollapsed: isSidebarCollapsed ?? this.isSidebarCollapsed,
       selectedNavIndex: selectedNavIndex ?? this.selectedNavIndex,
-      expandedMenuItem: expandedMenuItem ?? this.expandedMenuItem,
+      selectedPageRoute: selectedPageRoute ?? this.selectedPageRoute,
       userName: userName ?? this.userName,
       userRole: userRole ?? this.userRole,
+      expandedMenus: expandedMenus ?? this.expandedMenus,
     );
   }
 }

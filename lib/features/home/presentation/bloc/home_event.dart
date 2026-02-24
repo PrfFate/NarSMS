@@ -11,10 +11,6 @@ class LoadUserInfo extends HomeEvent {
   const LoadUserInfo();
 }
 
-class ToggleSidebar extends HomeEvent {
-  const ToggleSidebar();
-}
-
 class ChangeNavigation extends HomeEvent {
   final int index;
 
@@ -24,13 +20,22 @@ class ChangeNavigation extends HomeEvent {
   List<Object?> get props => [index];
 }
 
-class ExpandMenuItem extends HomeEvent {
-  final String? menuRoute;
+class ToggleMenuExpansion extends HomeEvent {
+  final String menuKey;
 
-  const ExpandMenuItem(this.menuRoute);
+  const ToggleMenuExpansion(this.menuKey);
 
   @override
-  List<Object?> get props => [menuRoute];
+  List<Object?> get props => [menuKey];
+}
+
+class SelectPage extends HomeEvent {
+  final String route;
+
+  const SelectPage(this.route);
+
+  @override
+  List<Object?> get props => [route];
 }
 
 class LogoutRequested extends HomeEvent {

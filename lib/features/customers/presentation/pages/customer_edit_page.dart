@@ -1,29 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/turkey_cities.dart';
+import '../../domain/entities/customer_entity.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
 
-/// Page for adding a new customer.
-/// Uses a form with validation and submits via [CustomerBloc].
-class CustomerAddPage extends StatefulWidget {
-  const CustomerAddPage({super.key});
+/// Page for editing an existing customer.
+/// Receives the [CustomerEntity] via route arguments and pre-fills the form.
+class CustomerEditPage extends StatefulWidget {
+  final CustomerEntity customer;
+
+  const CustomerEditPage({super.key, required this.customer});
 
   @override
-  State<CustomerAddPage> createState() => _CustomerAddPageState();
+  State<CustomerEditPage> createState() => _CustomerEditPageState();
 }
 
-class _CustomerAddPageState extends State<CustomerAddPage> {
+class _CustomerEditPageState extends State<CustomerEditPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _uniqueIdController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _uniqueIdController;
 
   String? _selectedCity;
   String? _selectedDistrict;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.customer.name);
+    _emailController = TextEditingController(text: widget.customer.email ?? '');
+    _phoneController = TextEditingController(text: widget.customer.phone ?? '');
+    _addressController =
+        TextEditingController(text: widget.customer.address ?? '');
+    _uniqueIdController =
+        TextEditingController(text: widget.customer.uniqueId ?? '');
+  }
 
   @override
   void dispose() {
@@ -38,7 +53,6 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
   void _onSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       // Adres alanına il ve ilçe bilgisini de ekleyerek birleştiriyoruz.
-      // Eger backend tarafinda il/ilce ayri tutulacaksa burasi degistirilebilir.
       String finalAddress = _addressController.text.trim();
       if (_selectedCity != null && _selectedDistrict != null) {
         finalAddress = '$_selectedDistrict, $_selectedCity\n$finalAddress'.trim();
@@ -47,18 +61,13 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
       }
 
       context.read<CustomerBloc>().add(
-            CreateCustomer(
+            UpdateCustomer(
+              id: widget.customer.id!,
               name: _nameController.text.trim(),
-              email: _emailController.text.trim().isNotEmpty
-                  ? _emailController.text.trim()
-                  : null,
-              phone: _phoneController.text.trim().isNotEmpty
-                  ? _phoneController.text.trim()
-                  : null,
-              address: finalAddress.isNotEmpty ? finalAddress : null,
-              uniqueId: _uniqueIdController.text.trim().isNotEmpty
-                  ? _uniqueIdController.text.trim()
-                  : null,
+              email: _emailController.text.trim(),
+              phone: _phoneController.text.trim(),
+              address: finalAddress,
+              uniqueId: _uniqueIdController.text.trim(),
             ),
           );
     }
@@ -166,7 +175,7 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.green),
           );
-          Navigator.of(context).pop(true);
+          Navigator.of(context).pop(true); // return true to refresh list
         } else if (state is CustomerError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -182,7 +191,7 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
           centerTitle: false,
           iconTheme: const IconThemeData(color: Colors.black54),
           title: const Text(
-            'Yeni Müşteri Ekle',
+            'Müşteri Bilgileri Güncelle',
             style: TextStyle(
               color: Color(0xFF1E293B), // Koyu lacivert/siyah
               fontSize: 18,
@@ -294,7 +303,7 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
                                 height: 20, width: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Text('Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            : const Text('Güncelle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ),

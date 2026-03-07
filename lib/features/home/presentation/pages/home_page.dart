@@ -33,6 +33,8 @@ import '../../../field_tasks/presentation/pages/my_accepted_tasks_page.dart';
 import '../../../field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
 import '../../../field_tasks/presentation/pages/my_completed_tasks_page.dart';
 import '../../../customers/presentation/pages/customer_list_page.dart';
+import '../../../customers/presentation/bloc/customer_bloc.dart';
+import '../../../../core/di/injection.dart';
 import '../../../reporting/presentation/pages/customer_reports_page.dart';
 import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
@@ -228,7 +230,10 @@ class HomePage extends StatelessWidget {
 
       // Müşteriler
       case AppRouter.customerList:
-        return const CustomerListPage();
+        return BlocProvider(
+          create: (_) => getIt<CustomerBloc>(),
+          child: const CustomerListPage(),
+        );
 
       // Raporlama
       case AppRouter.customerReports:

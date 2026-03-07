@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'config/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'core/constants/storage_constants.dart'; // TODO: Backend hazır olunca açılacak
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await initializeDependencies();
   runApp(const MyApp());
 }

@@ -18,6 +18,18 @@ import '../../features/home/domain/usecases/get_user_info_usecase.dart';
 import '../../features/home/domain/usecases/logout_usecase.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 
+// Customer feature imports
+import '../../features/customers/data/datasources/customer_remote_datasource.dart';
+import '../../features/customers/data/repositories/customer_repository_impl.dart';
+import '../../features/customers/domain/repositories/customer_repository.dart';
+import '../../features/customers/domain/usecases/get_customers_usecase.dart';
+import '../../features/customers/domain/usecases/search_customers_usecase.dart';
+import '../../features/customers/domain/usecases/get_customer_detail_usecase.dart';
+import '../../features/customers/domain/usecases/create_customer_usecase.dart';
+import '../../features/customers/domain/usecases/update_customer_usecase.dart';
+import '../../features/customers/domain/usecases/delete_customer_usecase.dart';
+import '../../features/customers/presentation/bloc/customer_bloc.dart';
+
 final getIt = GetIt.instance;
 
 Future<void> initializeDependencies() async {
@@ -83,4 +95,55 @@ Future<void> initializeDependencies() async {
       logoutUseCase: getIt<LogoutUseCase>(),
     ),
   );
+
+  // ===== CUSTOMER FEATURE =====
+
+  // Data sources
+  getIt.registerLazySingleton<CustomerRemoteDataSource>(
+    () => CustomerRemoteDataSourceImpl(
+      dioClient: getIt<DioClient>(),
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<CustomerRepository>(
+    () => CustomerRepositoryImpl(
+      remoteDataSource: getIt<CustomerRemoteDataSource>(),
+      networkInfo: getIt<NetworkInfo>(),
+    ),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton(
+    () => GetCustomersUseCase(getIt<CustomerRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => SearchCustomersUseCase(getIt<CustomerRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetCustomerDetailUseCase(getIt<CustomerRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => CreateCustomerUseCase(getIt<CustomerRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => UpdateCustomerUseCase(getIt<CustomerRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => DeleteCustomerUseCase(getIt<CustomerRepository>()),
+  );
+
+  // BLoC (Factory - her sayfada yeni instance)
+  getIt.registerFactory(
+    () => CustomerBloc(
+      getCustomersUseCase: getIt<GetCustomersUseCase>(),
+      searchCustomersUseCase: getIt<SearchCustomersUseCase>(),
+      getCustomerDetailUseCase: getIt<GetCustomerDetailUseCase>(),
+      createCustomerUseCase: getIt<CreateCustomerUseCase>(),
+      updateCustomerUseCase: getIt<UpdateCustomerUseCase>(),
+      deleteCustomerUseCase: getIt<DeleteCustomerUseCase>(),
+    ),
+  );
 }
+

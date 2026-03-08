@@ -43,28 +43,49 @@ class _SearchInputWidgetState extends State<SearchInputWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: const Color(0xFFF57C00), 
+        ),
       ),
-      child: TextField(
-        controller: _controller,
-        onChanged: widget.onSearch,
-        decoration: InputDecoration(
-          hintText: widget.hintText,
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: _controller.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey),
-                  onPressed: _handleClear,
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+      child: TapRegion(
+        onTapOutside: (event) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: TextField(
+          controller: _controller,
+          onChanged: widget.onSearch,
+          cursorColor: const Color(0xFFF57C00),
+          style: const TextStyle(fontSize: 14),
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+            hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+            prefixIcon: Icon(Icons.search, color: Colors.grey[500], size: 20),
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[500], size: 20),
+                    onPressed: _handleClear,
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.grey[100], // Arka plan: Hafif gri
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            
+            // Tıklamadan önce 
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1.0),
+            ),
+            
+            // Tıklandığında
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFF57C00), width: 1.5),
+            ),
           ),
         ),
       ),

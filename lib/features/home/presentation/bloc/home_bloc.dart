@@ -29,10 +29,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     result.fold(
       (failure) => emit(HomeError(failure.message)),
-      (userInfo) => emit(HomeLoaded(
+      (user) => emit(HomeLoaded(
         selectedNavIndex: 0,
-        userName: userInfo['userName'] ?? '',
-        userRole: userInfo['userRole'] ?? '',
+        userName: user.username ?? '',
+        userRole: user.roleName ?? '',
         expandedMenus: {},
       )),
     );

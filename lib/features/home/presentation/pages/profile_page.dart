@@ -199,7 +199,7 @@ class ProfilePage extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF57C00).withOpacity(0.2),
+            color: const Color(0xFFF57C00).withAlpha(51),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -324,7 +324,7 @@ class ProfilePage extends StatelessWidget {
     try {
       homeBloc = context.read<HomeBloc>();
     } catch (e) {
-      print('HomeBloc bulunamadı: $e');
+      debugPrint('HomeBloc bulunamadı: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Çıkış işlemi başarısız oldu')),
       );

@@ -1,24 +1,19 @@
 import 'package:dartz/dartz.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/storage_constants.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 
+/// Oturum açmış kullanıcının önbellekteki bilgilerini getirir.
+///
+/// Domain katmanının [SharedPreferences] veya herhangi bir data katmanı
+/// paketine doğrudan bağımlı olmamasını sağlar. Tüm önbellek okuma işlemi
+/// [AuthRepository] soyutlaması üzerinden yapılır (Dependency Inversion).
 class GetUserInfoUseCase {
-  final SharedPreferences sharedPreferences;
+  final AuthRepository repository;
 
-  GetUserInfoUseCase(this.sharedPreferences);
+  GetUserInfoUseCase(this.repository);
 
-  Future<Either<Failure, Map<String, String>>> call() async {
-    try {
-      final userName = sharedPreferences.getString(StorageConstants.userName) ?? '';
-      final userRole = sharedPreferences.getString(StorageConstants.userRole) ?? '';
-
-      return Right({
-        'userName': userName,
-        'userRole': userRole,
-      });
-    } catch (e) {
-      return Left(ServerFailure('Failed to load user info: ${e.toString()}'));
-    }
+  Future<Either<Failure, UserEntity>> call() {
+    return repository.getCachedUser();
   }
 }

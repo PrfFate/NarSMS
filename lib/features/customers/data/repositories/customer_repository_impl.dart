@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
+import '../../../../core/base/base_repository.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/network/network_info.dart';
 import '../../domain/entities/customer_entity.dart';
 import '../../domain/entities/paginated_result.dart';
 import '../../domain/repositories/customer_repository.dart';
@@ -10,47 +9,36 @@ import '../models/customer_model.dart';
 import '../models/create_customer_request_model.dart';
 import '../models/update_customer_request_model.dart';
 
-/// Implementation of [CustomerRepository].
-/// Acts as a bridge between domain and data layers.
-/// Handles Exception → Failure conversion and network checks.
-class CustomerRepositoryImpl implements CustomerRepository {
+/// [CustomerRepository] implementasyonu.
+///
+/// [BaseRepository]'den türetilir; ağ kontrolü ve exception→failure
+/// dönüşümü [runNetworkCall] ile merkezi olarak yönetilir.
+/// Bu sınıf yalnızca Customer'a özgü veri dönüşüm mantığını içerir.
+class CustomerRepositoryImpl extends BaseRepository
+    implements CustomerRepository {
   final CustomerRemoteDataSource remoteDataSource;
-  final NetworkInfo networkInfo;
 
   CustomerRepositoryImpl({
     required this.remoteDataSource,
-    required this.networkInfo,
+    required super.networkInfo,
   });
 
   @override
-  Future<Either<Failure, PaginatedResult<CustomerEntity>>>
-      getCustomersPaged({
+  Future<Either<Failure, PaginatedResult<CustomerEntity>>> getCustomersPaged({
     int page = 1,
     int pageSize = 15,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+  }) {
+    return runNetworkCall(() async {
       final response = await remoteDataSource.getCustomersPaged(
         page: page,
         pageSize: pageSize,
       );
-
-      return Right(_parsePaginatedResponse(response));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+      return _parsePaginatedResponse(response);
+    });
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<CustomerEntity>>>
-      searchCustomers({
+  Future<Either<Failure, PaginatedResult<CustomerEntity>>> searchCustomers({
     String? name,
     String? email,
     String? phone,
@@ -58,12 +46,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
     String? uniqueId,
     int page = 1,
     int pageSize = 15,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+  }) {
+    return runNetworkCall(() async {
       final response = await remoteDataSource.searchCustomers(
         name: name,
         email: email,
@@ -73,70 +57,31 @@ class CustomerRepositoryImpl implements CustomerRepository {
         page: page,
         pageSize: pageSize,
       );
-
-      return Right(_parsePaginatedResponse(response));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+      return _parsePaginatedResponse(response);
+    });
   }
 
   @override
-  Future<Either<Failure, CustomerEntity>> getCustomerById(int id) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+  Future<Either<Failure, CustomerEntity>> getCustomerById(int id) {
+    return runNetworkCall(() async {
       final model = await remoteDataSource.getCustomerById(id);
-      return Right(model.toEntity());
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+      return model.toEntity();
+    });
   }
 
   @override
   Future<Either<Failure, CustomerEntity>> getCustomerByUniqueId(
-      String uniqueId) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+    String uniqueId,
+  ) {
+    return runNetworkCall(() async {
       final model = await remoteDataSource.getCustomerByUniqueId(uniqueId);
-      return Right(model.toEntity());
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+      return model.toEntity();
+    });
   }
 
   @override
-  Future<Either<Failure, List<dynamic>>> getCustomerDevices(int id) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
-      final devices = await remoteDataSource.getCustomerDevices(id);
-      return Right(devices);
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+  Future<Either<Failure, List<dynamic>>> getCustomerDevices(int id) {
+    return runNetworkCall(() => remoteDataSource.getCustomerDevices(id));
   }
 
   @override
@@ -146,12 +91,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
     String? phone,
     String? address,
     String? uniqueId,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+  }) {
+    return runNetworkCall(() async {
       final request = CreateCustomerRequestModel(
         name: name,
         email: email,
@@ -159,18 +100,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
         address: address,
         uniqueId: uniqueId,
       );
-
       final model = await remoteDataSource.createCustomer(request);
-      return Right(model.toEntity());
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, errors: e.errors));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+      return model.toEntity();
+    });
   }
 
   @override
@@ -181,12 +113,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
     String? phone,
     String? address,
     String? uniqueId,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
+  }) {
+    return runNetworkCall(() async {
       final request = UpdateCustomerRequestModel(
         name: name,
         email: email,
@@ -194,45 +122,26 @@ class CustomerRepositoryImpl implements CustomerRepository {
         address: address,
         uniqueId: uniqueId,
       );
-
       await remoteDataSource.updateCustomer(id, request);
-      return const Right(null);
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, errors: e.errors));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+    });
   }
 
   @override
-  Future<Either<Failure, void>> deleteCustomer(int id) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('İnternet bağlantısı yok'));
-    }
-
-    try {
-      await remoteDataSource.deleteCustomer(id);
-      return const Right(null);
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen hata: ${e.toString()}'));
-    }
+  Future<Either<Failure, void>> deleteCustomer(int id) {
+    return runNetworkCall(() => remoteDataSource.deleteCustomer(id));
   }
 
-  /// Parses raw JSON response into a [PaginatedResult<CustomerEntity>].
+  // ─── Private Helpers ──────────────────────────────────────────────────────
+
+  /// Ham JSON yanıtı [PaginatedResult<CustomerEntity>] nesnesine dönüştürür.
   PaginatedResult<CustomerEntity> _parsePaginatedResponse(
-      Map<String, dynamic> response) {
+    Map<String, dynamic> response,
+  ) {
     final items = (response['items'] as List<dynamic>?)
-            ?.map((item) =>
-                CustomerModel.fromJson(item as Map<String, dynamic>)
-                    .toEntity())
+            ?.map(
+              (item) => CustomerModel.fromJson(item as Map<String, dynamic>)
+                  .toEntity(),
+            )
             .toList() ??
         [];
 

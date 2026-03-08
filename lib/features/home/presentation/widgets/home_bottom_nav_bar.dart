@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../pages/barcode_scanner_page.dart';
 import '../pages/profile_page.dart';
 import '../bloc/home_bloc.dart';
 
+/// Alt navigasyon çubuğu widget'ı.
+///
+/// Renk ve stil değerleri hardcoded yerine [AppColors] üzerinden alınır;
+/// tek bir tema değişikliği ile tüm uygulamayı günceller.
 class HomeBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onIndexChanged;
@@ -23,7 +28,7 @@ class HomeBottomNavBar extends StatelessWidget {
     return Container(
       height: 70,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.background,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -37,40 +42,16 @@ class HomeBottomNavBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Sol 2 Icon
-              _buildNavItem(
-                context,
-                Icons.home_outlined,
-                'Ana Sayfa',
-                0,
-              ),
-              _buildNavItem(
-                context,
-                Icons.search_outlined,
-                'Arama',
-                1,
-              ),
-
-              // Ortada boşluk (barkod okuyucu için)
+              _buildNavItem(context, Icons.home_outlined, 'Ana Sayfa', 0),
+              _buildNavItem(context, Icons.search_outlined, 'Arama', 1),
               const Spacer(),
-
-              // Sağ 2 Icon
               _buildNavItem(
-                context,
-                Icons.notifications_outlined,
-                'Bildirimler',
-                3,
-              ),
-              _buildNavItem(
-                context,
-                Icons.person_outline,
-                'Profil',
-                4,
-              ),
+                  context, Icons.notifications_outlined, 'Bildirimler', 3),
+              _buildNavItem(context, Icons.person_outline, 'Profil', 4),
             ],
           ),
 
-          // Ortadaki Büyük Barkod Okuyucu Butonu
+          // Ortadaki barkod okuyucu butonu
           Positioned(
             left: MediaQuery.of(context).size.width / 2 - 35,
             top: -20,
@@ -78,13 +59,13 @@ class HomeBottomNavBar extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFF57C00), Color(0xFFF34723)],
+                  colors: [AppColors.accent, AppColors.accentDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF57C00).withValues(alpha: 0.4),
+                    color: AppColors.accentDark.withValues(alpha: 0.4),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -95,8 +76,6 @@ class HomeBottomNavBar extends StatelessWidget {
                 child: InkWell(
                   onTap: () async {
                     onIndexChanged(2);
-
-                    // Barkod okuyucu sayfasını aç
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -104,16 +83,14 @@ class HomeBottomNavBar extends StatelessWidget {
                       ),
                     );
 
-                    // Taranan kodu göster
                     if (result != null && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Seri No: $result'),
-                          backgroundColor: const Color(0xFFF57C00),
+                          backgroundColor: AppColors.accentDark,
                           duration: const Duration(seconds: 2),
                         ),
                       );
-                      // TODO: Burada cihaz arama, ekleme işlemleri yapılacak
                     }
                   },
                   borderRadius: BorderRadius.circular(35),
@@ -124,7 +101,7 @@ class HomeBottomNavBar extends StatelessWidget {
                     child: const Icon(
                       Icons.qr_code_scanner_rounded,
                       size: 35,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),
@@ -151,7 +128,6 @@ class HomeBottomNavBar extends StatelessWidget {
           onTap: () {
             onIndexChanged(index);
 
-            // Profil ikonuna tıklanınca profil sayfasına git
             if (index == 4) {
               final homeBloc = context.read<HomeBloc>();
               Navigator.push(
@@ -173,16 +149,18 @@ class HomeBottomNavBar extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: isSelected ? const Color(0xFFF57C00) : Colors.grey,
+                color: isSelected ? AppColors.accentDark : AppColors.textHint,
                 size: 26,
               ),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFFF57C00) : Colors.grey,
+                  color:
+                      isSelected ? AppColors.accentDark : AppColors.textHint,
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ],

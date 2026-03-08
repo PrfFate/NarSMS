@@ -3,20 +3,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/storage_constants.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/customer_model.dart';
 import '../models/create_customer_request_model.dart';
 import '../models/update_customer_request_model.dart';
 
-/// Abstract class defining customer-related remote data source operations.
+/// Müşteri işlemlerine ait uzak veri kaynağı sözleşmesi.
 abstract class CustomerRemoteDataSource {
-  /// Fetches a paginated list of customers.
+  /// Sayfalı müşteri listesi döner.
   Future<Map<String, dynamic>> getCustomersPaged({
     int page = 1,
     int pageSize = 15,
   });
 
-  /// Searches customers with optional filters.
+  /// Filtreli müşteri araması yapar.
   Future<Map<String, dynamic>> searchCustomers({
     String? name,
     String? email,
@@ -27,28 +28,33 @@ abstract class CustomerRemoteDataSource {
     int pageSize = 15,
   });
 
-  /// Fetches a single customer by ID.
+  /// ID ile tek müşteri getirir.
   Future<CustomerModel> getCustomerById(int id);
 
-  /// Fetches a single customer by unique identifier.
+  /// Benzersiz kimlik ile tek müşteri getirir.
   Future<CustomerModel> getCustomerByUniqueId(String uniqueId);
 
-  /// Fetches devices belonging to a customer.
+  /// Müşteriye ait cihazları getirir.
   Future<List<dynamic>> getCustomerDevices(int id);
 
-  /// Creates a new customer.
+  /// Yeni müşteri oluşturur.
   Future<CustomerModel> createCustomer(CreateCustomerRequestModel request);
 
-  /// Updates an existing customer. Returns void (API returns 204 No Content).
+  /// Mevcut müşteriyi günceller. API 204 No Content döner.
   Future<void> updateCustomer(int id, UpdateCustomerRequestModel request);
 
-  /// Deletes a customer.
+  /// Müşteriyi siler.
   Future<void> deleteCustomer(int id);
 }
 
-/// Implementation of [CustomerRemoteDataSource] using Dio HTTP client.
-/// All requests include Bearer token authentication from SharedPreferences.
-class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
+/// [CustomerRemoteDataSource] Dio HTTP istemcisi ile implementasyonu.
+///
+/// [ApiErrorHandler] mixin'i sayesinde her metoddaki tekrarlı
+/// [DioException] catch bloğu tek [handleDioException] çağrısına inmiştir.
+/// Auth header'ı [_authOptions] helper'ı ile merkezi olarak yönetilir.
+class CustomerRemoteDataSourceImpl
+    with ApiErrorHandler
+    implements CustomerRemoteDataSource {
   final DioClient dioClient;
   final SharedPreferences sharedPreferences;
 
@@ -57,7 +63,7 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
     required this.sharedPreferences,
   });
 
-  /// Builds [Options] with the Authorization header.
+  /// Bearer token içeren [Options] nesnesi oluşturur.
   Options _authOptions() {
     final token = sharedPreferences.getString(StorageConstants.accessToken);
     return Options(
@@ -75,10 +81,7 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
     try {
       final response = await dioClient.get(
         ApiConstants.customerPaged,
-        queryParameters: {
-          'page': page,
-          'pageSize': pageSize,
-        },
+        queryParameters: {'page': page, 'pageSize': pageSize},
         options: _authOptions(),
       );
 
@@ -87,11 +90,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to fetch customers',
+        message: 'Müşteri listesi alınamadı',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -132,11 +135,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to search customers',
+        message: 'Müşteri araması başarısız',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -153,11 +156,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to fetch customer detail',
+        message: 'Müşteri detayı alınamadı',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -174,11 +177,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to fetch customer by unique ID',
+        message: 'Müşteri benzersiz ID ile alınamadı',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -195,17 +198,18 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to fetch customer devices',
+        message: 'Müşteri cihazları alınamadı',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
   @override
   Future<CustomerModel> createCustomer(
-      CreateCustomerRequestModel request) async {
+    CreateCustomerRequestModel request,
+  ) async {
     try {
       final response = await dioClient.post(
         ApiConstants.customerCreate,
@@ -218,11 +222,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to create customer',
+        message: 'Müşteri oluşturulamadı',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -246,11 +250,11 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       }
 
       throw ServerException(
-        message: 'Failed to update customer',
+        message: 'Müşteri güncellenemedi',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
   }
 
@@ -264,40 +268,12 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException(
-          message: 'Failed to delete customer',
+          message: 'Müşteri silinemedi',
           statusCode: response.statusCode,
         );
       }
     } on DioException catch (e) {
-      _handleDioException(e);
+      handleDioException(e);
     }
-  }
-
-  /// Centralized Dio exception handler.
-  /// Converts [DioException] to application-specific exceptions.
-  Never _handleDioException(DioException e) {
-    if (e.response?.statusCode == 401) {
-      throw UnauthorizedException(message: 'Oturum süresi doldu');
-    } else if (e.response?.statusCode == 404) {
-      throw ServerException(
-        message: 'Kayıt bulunamadı',
-        statusCode: 404,
-      );
-    } else if (e.response?.statusCode == 422) {
-      throw ValidationException(
-        message: 'Doğrulama hatası',
-        errors: e.response?.data['errors'] as Map<String, List<String>>?,
-      );
-    } else if (e.response?.statusCode == 409) {
-      throw ServerException(
-        message: 'Bu kayıt zaten mevcut',
-        statusCode: 409,
-      );
-    }
-
-    throw ServerException(
-      message: e.message ?? 'Beklenmeyen bir ağ hatası oluştu',
-      statusCode: e.response?.statusCode,
-    );
   }
 }

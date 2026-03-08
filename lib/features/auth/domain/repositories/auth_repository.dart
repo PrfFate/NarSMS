@@ -30,4 +30,14 @@ abstract class AuthRepository {
 
   /// Sends a password reset email.
   Future<Either<Failure, void>> forgotPassword(String email);
+
+  /// Yerel önbellekten (SharedPreferences) kimlik doğrulaması yapılmış
+  /// kullanıcı bilgilerini okur.
+  ///
+  /// Domain katmanının SharedPreferences'a doğrudan bağımlı olmaması için
+  /// tüm önbellek erişimi bu soyut metot üzerinden yapılır.
+  Future<Either<Failure, UserEntity>> getCachedUser();
+
+  /// Kullanıcının oturum açıp açmadığını kontrol eder.
+  Future<bool> isLoggedIn();
 }

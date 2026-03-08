@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
@@ -50,6 +51,10 @@ import '../../features/devices/presentation/pages/assigned_backup_devices_page.d
 // Customers
 import '../../features/customers/presentation/pages/customer_list_page.dart';
 import '../../features/customers/presentation/pages/customer_add_page.dart';
+import '../../features/customers/presentation/pages/customer_detail_page.dart';
+import '../../features/customers/presentation/pages/customer_edit_page.dart';
+import '../../features/customers/presentation/bloc/customer_bloc.dart';
+import '../../features/customers/domain/entities/customer_entity.dart';
 
 // Reporting
 import '../../features/reporting/presentation/pages/customer_reports_page.dart';
@@ -125,6 +130,8 @@ class AppRouter {
   // Customer routes
   static const String customerList = '/customers/list';
   static const String customerAdd = '/customers/add';
+  static const String customerDetail = '/customers/detail';
+  static const String customerEdit = '/customers/edit';
 
   // Reporting routes
   static const String customerReports = '/reports/customers';
@@ -152,11 +159,7 @@ class AppRouter {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          builder: (_) => const SplashPage(),
         );
 
       case login:
@@ -281,10 +284,38 @@ class AppRouter {
 
       // Customers
       case customerList:
-        return MaterialPageRoute(builder: (_) => const CustomerListPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CustomerBloc>(),
+            child: const CustomerListPage(),
+          ),
+        );
 
       case customerAdd:
-        return MaterialPageRoute(builder: (_) => const CustomerAddPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CustomerBloc>(),
+            child: const CustomerAddPage(),
+          ),
+        );
+
+      case customerDetail:
+        final customerId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CustomerBloc>(),
+            child: CustomerDetailPage(customerId: customerId),
+          ),
+        );
+
+      case customerEdit:
+        final customer = settings.arguments as CustomerEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CustomerBloc>(),
+            child: CustomerEditPage(customer: customer),
+          ),
+        );
 
       // Reporting
       case customerReports:

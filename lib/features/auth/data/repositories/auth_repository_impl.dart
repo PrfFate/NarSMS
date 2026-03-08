@@ -1,81 +1,53 @@
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/base/base_repository.dart';
 import '../../../../core/constants/storage_constants.dart';
-import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/network/network_info.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
 import '../models/register_request_model.dart';
 
-/// Implementation of AuthRepository.
-/// This class acts as a bridge between the domain layer and data sources.
-/// It handles error conversion from Exceptions to Failures.
-class AuthRepositoryImpl implements AuthRepository {
+/// [AuthRepository] implementasyonu.
+///
+/// [BaseRepository]'den türetilir; ağ kontrolü ve exception→failure
+/// dönüşümü [runNetworkCall] ile merkezi olarak yönetilir.
+/// Bu sınıf yalnızca Auth'a özgü iş mantığını (token kaydetme vb.) içerir.
+class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  final NetworkInfo networkInfo;
   final SharedPreferences sharedPreferences;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
-    required this.networkInfo,
     required this.sharedPreferences,
+    required super.networkInfo,
   });
 
   @override
   Future<Either<Failure, UserEntity>> login({
     required String email,
     required String password,
-  }) async {
-    // Check internet connection first
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      // Create request model
+  }) {
+    return runNetworkCall(() async {
       final request = LoginRequestModel(email: email, password: password);
-
-      // Make API call
       final response = await remoteDataSource.login(request);
 
-      // Save tokens to local storage
-      await _saveTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+      await _persistSession(response.accessToken, response.refreshToken);
+      await _persistUserInfo(
+        email: response.email,
+        username: response.username,
+        role: response.role,
+        phone: response.phone,
       );
 
-      // Save user info directly from response
-      await sharedPreferences.setString(StorageConstants.userEmail, response.email);
-      await sharedPreferences.setString(StorageConstants.userName, response.username);
-      await sharedPreferences.setString(StorageConstants.userRole, response.role);
-      if (response.phone != null) {
-        await sharedPreferences.setString(StorageConstants.userPhone, response.phone!);
-      }
-      await sharedPreferences.setBool(StorageConstants.isLoggedIn, true);
-
-      // Create and return user entity
-      final user = UserEntity(
+      return UserEntity(
         email: response.email,
         username: response.username,
         phone: response.phone,
         roleName: response.role,
       );
-
-      return Right(user);
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, errors: e.errors));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
-    }
+    });
   }
 
   @override
@@ -85,12 +57,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String password,
     required int roleId,
-  }) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
+  }) {
+    return runNetworkCall(() async {
       final request = RegisterRequestModel(
         username: username,
         email: email,
@@ -101,41 +69,26 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final response = await remoteDataSource.register(request);
 
-      await _saveTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+      await _persistSession(response.accessToken, response.refreshToken);
+      await _persistUserInfo(
+        email: response.email,
+        username: response.username,
+        role: response.role,
+        phone: response.phone,
       );
 
-      // Save user info directly from response
-      await sharedPreferences.setString(StorageConstants.userEmail, response.email);
-      await sharedPreferences.setString(StorageConstants.userName, response.username);
-      await sharedPreferences.setString(StorageConstants.userRole, response.role);
-      if (response.phone != null) {
-        await sharedPreferences.setString(StorageConstants.userPhone, response.phone!);
-      }
-
-      // Create and return user entity
-      final user = UserEntity(
+      return UserEntity(
         email: response.email,
         username: response.username,
         phone: response.phone,
         roleName: response.role,
       );
-
-      return Right(user);
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, errors: e.errors));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
-    }
+    });
   }
 
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      // Clear all stored data
       await sharedPreferences.remove(StorageConstants.accessToken);
       await sharedPreferences.remove(StorageConstants.refreshToken);
       await sharedPreferences.remove(StorageConstants.userId);
@@ -146,66 +99,87 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Failed to logout: ${e.toString()}'));
+      return Left(CacheFailure('Çıkış yapılamadı: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, String>> refreshToken(String refreshToken) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      final newAccessToken = await remoteDataSource.refreshToken(refreshToken);
+  Future<Either<Failure, String>> refreshToken(String refreshToken) {
+    return runNetworkCall(() async {
+      final newAccessToken =
+          await remoteDataSource.refreshToken(refreshToken);
 
       await sharedPreferences.setString(
         StorageConstants.accessToken,
         newAccessToken,
       );
 
-      return Right(newAccessToken);
-    } on UnauthorizedException catch (e) {
-      // Refresh token expired, logout user
-      await logout();
-      return Left(UnauthorizedFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return newAccessToken;
+    });
+  }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword(String email) {
+    return runNetworkCall(
+      () => remoteDataSource.forgotPassword(email),
+    );
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> getCachedUser() async {
+    try {
+      final email =
+          sharedPreferences.getString(StorageConstants.userEmail) ?? '';
+      final username =
+          sharedPreferences.getString(StorageConstants.userName) ?? '';
+      final role =
+          sharedPreferences.getString(StorageConstants.userRole) ?? '';
+      final phone = sharedPreferences.getString(StorageConstants.userPhone);
+
+      return Right(
+        UserEntity(
+          email: email,
+          username: username,
+          roleName: role,
+          phone: phone,
+        ),
+      );
     } catch (e) {
-      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
+      return Left(CacheFailure('Kullanıcı bilgisi okunamadı: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> forgotPassword(String email) async {
-    if (!await networkInfo.isConnected) {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-
-    try {
-      await remoteDataSource.forgotPassword(email);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
-    }
+  Future<bool> isLoggedIn() async {
+    return sharedPreferences.getBool(StorageConstants.isLoggedIn) ?? false;
   }
 
-  /// Private helper method to save tokens to local storage
-  Future<void> _saveTokens({
-    required String accessToken,
-    required String refreshToken,
-  }) async {
+  // ─── Private Helpers ──────────────────────────────────────────────────────
+
+  /// Access ve refresh token'ı yerel depolamaya kaydeder.
+  Future<void> _persistSession(
+    String accessToken,
+    String refreshToken,
+  ) async {
     await sharedPreferences.setString(
-      StorageConstants.accessToken,
-      accessToken,
-    );
+        StorageConstants.accessToken, accessToken);
     await sharedPreferences.setString(
-      StorageConstants.refreshToken,
-      refreshToken,
-    );
+        StorageConstants.refreshToken, refreshToken);
     await sharedPreferences.setBool(StorageConstants.isLoggedIn, true);
   }
 
+  /// Kullanıcı bilgilerini yerel depolamaya kaydeder.
+  Future<void> _persistUserInfo({
+    required String email,
+    required String username,
+    required String role,
+    String? phone,
+  }) async {
+    await sharedPreferences.setString(StorageConstants.userEmail, email);
+    await sharedPreferences.setString(StorageConstants.userName, username);
+    await sharedPreferences.setString(StorageConstants.userRole, role);
+    if (phone != null) {
+      await sharedPreferences.setString(StorageConstants.userPhone, phone);
+    }
+  }
 }

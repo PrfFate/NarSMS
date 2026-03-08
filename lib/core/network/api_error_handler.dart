@@ -1,0 +1,76 @@
+import 'package:dio/dio.dart';
+import '../errors/exceptions.dart';
+
+/// Tüm RemoteDataSource sınıflarının kullandığı merkezi Dio hata yönetimi.
+///
+/// Bu mixin'i `with ApiErrorHandler` şeklinde datasource implementasyonlarına
+/// ekleyerek her sınıfta tekrarlanan [DioException] switch-case bloklarını
+/// ortadan kaldırır (DRY prensibi).
+///
+/// Kullanım:
+/// ```dart
+/// class MyDataSourceImpl with ApiErrorHandler implements MyDataSource {
+///   Future<Foo> getFoo() async {
+///     try {
+///       final res = await dio.get('/foo');
+///       ...
+///     } on DioException catch (e) {
+///       handleDioException(e);   // <-- tek satır
+///     }
+///   }
+/// }
+/// ```
+mixin ApiErrorHandler {
+  /// [DioException]'ı uygun uygulama istisnasına dönüştürür ve fırlatır.
+  ///
+  /// Bu metot her zaman bir istisna fırlatır; dönüş tipi [Never]'dır.
+  /// Böylece `return handleDioException(e)` şeklinde de kullanılabilir.
+  Never handleDioException(DioException e) {
+    final statusCode = e.response?.statusCode;
+
+    switch (statusCode) {
+      case 401:
+        throw UnauthorizedException(
+          message: 'Oturum süresi doldu veya yetki yok',
+        );
+
+      case 404:
+        throw ServerException(
+          message: 'Kayıt bulunamadı',
+          statusCode: 404,
+        );
+
+      case 409:
+        throw ServerException(
+          message: 'Bu kayıt zaten mevcut',
+          statusCode: 409,
+        );
+
+      case 422:
+        // Backend doğrulama hatası — hata detayları varsa ilet
+        final rawErrors = e.response?.data?['errors'];
+        final Map<String, List<String>>? errors =
+            rawErrors is Map<String, dynamic>
+                ? rawErrors.map(
+                    (key, value) => MapEntry(
+                      key,
+                      (value as List<dynamic>)
+                          .map((v) => v.toString())
+                          .toList(),
+                    ),
+                  )
+                : null;
+
+        throw ValidationException(
+          message: 'Giriş doğrulama hatası',
+          errors: errors,
+        );
+
+      default:
+        throw ServerException(
+          message: e.message ?? 'Beklenmeyen bir ağ hatası oluştu',
+          statusCode: statusCode,
+        );
+    }
+  }
+}

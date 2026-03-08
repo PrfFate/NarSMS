@@ -99,7 +99,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF57C00).withOpacity(0.1),
+                        color: const Color(0xFFF57C00).withAlpha(26),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(

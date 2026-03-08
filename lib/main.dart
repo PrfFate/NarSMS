@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
-// import 'package:shared_preferences/shared_preferences.dart'; // TODO: Backend hazır olunca açılacak
 import 'config/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
-// import 'core/constants/storage_constants.dart'; // TODO: Backend hazır olunca açılacak
+import 'features/auth/presentation/pages/splash_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+/// Uygulama giriş noktası.
+///
+/// Sorumlulukları:
+/// 1. Çevre değişkenlerini (.env) yüklemek
+/// 2. Dependency injection'ı başlatmak
+/// 3. Flutter uygulamasını çalıştırmak
+///
+/// Routing ve oturum kontrolü [AppRouter] ve [SplashPage] tarafından yönetilir.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   await initializeDependencies();
-  runApp(const MyApp());
+  runApp(const NarSmsApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class NarSmsApp extends StatelessWidget {
+  const NarSmsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,54 +31,8 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const SplashScreen(),
+      home: const SplashPage(),
       onGenerateRoute: AppRouter.generateRoute,
-    );
-  }
-}
-
-class SplashScreen extends StatefulWidget
-{
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (!mounted) return;
-
-    // TODO: Geçici olarak direkt home'a yönlendiriyoruz
-    // Token kontrolü yap
-    // final prefs = await SharedPreferences.getInstance();
-    // final token = prefs.getString(StorageConstants.accessToken);
-
-    // Token varsa home'a, yoksa login'e git
-    // if (token != null && token.isNotEmpty) {
-    //   Navigator.pushReplacementNamed(context, AppRouter.home);
-    // } else {
-    //   Navigator.pushReplacementNamed(context, AppRouter.login);
-    // }
-
-    // Geçici: Backend olmadığı için direkt home'a git
-    Navigator.pushReplacementNamed(context, AppRouter.home);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
     );
   }
 }

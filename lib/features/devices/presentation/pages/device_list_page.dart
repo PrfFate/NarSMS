@@ -31,7 +31,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
                 onPressed: () {
                   // Cihaz ekle
                 },
-                icon: const Icon(Icons.add, size: 20),
+                icon: const Icon(Icons.add, size: 20, color: Colors.white),
                 label: const Text('Yeni Cihaz'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF57C00),

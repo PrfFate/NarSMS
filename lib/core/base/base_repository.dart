@@ -35,15 +35,6 @@ abstract class BaseRepository {
   Future<Either<Failure, T>> runNetworkCall<T>(
     Future<T> Function() call,
   ) async {
-    if (!await networkInfo.isConnected) {
-      return Left(
-        NetworkFailure(
-          'İnternet bağlantısı yok',
-          code: AppFailureCode.noInternet,
-        ),
-      );
-    }
-
     try {
       final result = await call();
       return Right(result);

@@ -37,7 +37,7 @@ Future<void> initAuthModule() async {
   );
 
   // BLoC — Factory: her navigasyonda yeni instance
-  getIt.registerFactory(
+  getIt.registerLazySingleton(
     () => AuthBloc(
       loginUseCase: getIt<LoginUseCase>(),
       registerUseCase: getIt<RegisterUseCase>(),

@@ -35,8 +35,7 @@ class HomeSidebarWidget extends StatelessWidget {
     final items = <Widget>[];
 
     // Rol kontrolü için normalize edilmiş rol
-    // TEST: Geçici olarak her zaman admin olarak işaretle
-    final normalizedRole = 'admin'; // userRole.toLowerCase().trim();
+    final normalizedRole = userRole.toLowerCase().trim();
 
     // Header/Logo
     items.add(
@@ -76,6 +75,11 @@ class HomeSidebarWidget extends StatelessWidget {
         icon: Icons.devices_other_outlined,
         title: 'Cihazlar',
         menuKey: 'devices',
+        routes: [
+          AppRouter.deviceList,
+          AppRouter.depotDevices,
+          AppRouter.depotBackupDevices,
+        ],
         children: [
           _buildSubMenuItem(
             context: context,
@@ -106,6 +110,14 @@ class HomeSidebarWidget extends StatelessWidget {
         icon: Icons.shopping_cart_outlined,
         title: 'Satışlar',
         menuKey: 'sales',
+        routes: [
+          AppRouter.pendingSales,
+          AppRouter.shippedSales,
+          AppRouter.deliveredSales,
+          AppRouter.completedSales,
+          AppRouter.rejectedSales,
+          AppRouter.approvalWorkflows,
+        ],
         children: [
           _buildSubMenuItem(
             context: context,
@@ -143,7 +155,7 @@ class HomeSidebarWidget extends StatelessWidget {
               context: context,
               icon: Icons.approval,
               title: 'Onay Adımları',
-              route: AppRouter.approvalMechanism,
+              route: AppRouter.approvalWorkflows,
             ),
         ],
       ),
@@ -156,6 +168,10 @@ class HomeSidebarWidget extends StatelessWidget {
         icon: Icons.local_shipping_outlined,
         title: 'Satış Kargolama',
         menuKey: 'shipments',
+        routes: [
+          AppRouter.approvedSales,
+          AppRouter.partiallyShippedSales,
+        ],
         children: [
           _buildSubMenuItem(
             context: context,
@@ -180,6 +196,12 @@ class HomeSidebarWidget extends StatelessWidget {
         icon: Icons.build_outlined,
         title: 'Teknik Servis Kaydı',
         menuKey: 'technicalservice',
+        routes: [
+          AppRouter.servicePreRegistrations,
+          AppRouter.serviceOngoing,
+          AppRouter.serviceFinalChecks,
+          AppRouter.serviceCompleted,
+        ],
         children: [
           _buildSubMenuItem(
             context: context,
@@ -217,6 +239,13 @@ class HomeSidebarWidget extends StatelessWidget {
           icon: Icons.map_outlined,
           title: 'Saha Yönetimi',
           menuKey: 'fieldmanagement',
+          routes: [
+            AppRouter.pendingTasks,
+            AppRouter.acceptedTasks,
+            AppRouter.ongoingTasks,
+            AppRouter.completedTasks,
+            AppRouter.cancelledTasks,
+          ],
           children: [
             _buildSubMenuItem(
               context: context,
@@ -261,6 +290,12 @@ class HomeSidebarWidget extends StatelessWidget {
           icon: Icons.assignment_outlined,
           title: 'Saha Görevleri',
           menuKey: 'fieldtasks',
+          routes: [
+            AppRouter.myAssignedTasks,
+            AppRouter.myAcceptedTasks,
+            AppRouter.myOngoingTasks,
+            AppRouter.myCompletedTasks,
+          ],
           children: [
             _buildSubMenuItem(
               context: context,
@@ -381,33 +416,41 @@ class HomeSidebarWidget extends StatelessWidget {
     required IconData icon,
     required String title,
     required String menuKey,
+    required List<String> routes, // Added routes list
     required List<Widget> children,
   }) {
     final isExpanded = expandedMenus[menuKey] ?? false;
+    // Check if any child route is active
+    final isAnyChildActive = routes.contains(currentRoute);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ListTile(
-          leading: Icon(
-            icon,
-            color: Colors.black87,
+        Container(
+          decoration: BoxDecoration(
+            color: isAnyChildActive ? const Color(0xFFF57C00).withValues(alpha: 0.1) : null,
           ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.normal,
+          child: ListTile(
+            leading: Icon(
+              icon,
+              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
             ),
+            title: Text(
+              title,
+              style: TextStyle(
+                color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
+                fontWeight: isAnyChildActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            trailing: Icon(
+              isExpanded ? Icons.expand_more : Icons.chevron_right,
+              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black54,
+            ),
+            onTap: () {
+              // Toggle menu expansion - DRAWER KAPANMAZ
+              onMenuToggle(menuKey);
+            },
           ),
-          trailing: Icon(
-            isExpanded ? Icons.expand_more : Icons.chevron_right,
-            color: Colors.black54,
-          ),
-          onTap: () {
-            // Toggle menu expansion - DRAWER KAPANMAZ
-            onMenuToggle(menuKey);
-          },
         ),
         // Conditional submenu rendering
         if (isExpanded) ...children,

@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/auth/presentation/pages/pending_user_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
+import '../../features/home/presentation/bloc/home_event.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
 // Role-based dashboards
@@ -36,8 +39,16 @@ import '../../features/sales/presentation/pages/rejected_sales_page.dart';
 import '../../features/sales/presentation/pages/partially_shipped_sales_page.dart';
 import '../../features/sales/presentation/pages/shipped_sales_page.dart';
 import '../../features/sales/presentation/pages/delivered_sales_page.dart';
-import '../../features/sales/presentation/pages/completed_sales_page.dart';
-import '../../features/sales/presentation/pages/sale_add_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/completed_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/sale_add_page.dart';
+import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/workflow_create_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/sale_detail_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/shipped_sale_detail_page.dart';
+import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
+import 'package:tasarim_app/features/sales/presentation/bloc/carrier_bloc.dart';
+import 'package:tasarim_app/features/sales/domain/entities/sale_entity.dart';
 
 // Devices
 import '../../features/devices/presentation/pages/device_list_page.dart';
@@ -63,7 +74,7 @@ import '../../features/reporting/presentation/pages/sales_reports_page.dart';
 import '../../features/reporting/presentation/pages/user_reports_page.dart';
 
 // Helpers
-import '../../features/carrier/presentation/pages/carrier_management_page.dart';
+import '../../features/sales/presentation/pages/carrier_management_page.dart';
 import '../../features/supplier/presentation/pages/supplier_management_page.dart';
 import '../../features/technical_service/presentation/pages/technical_service_page.dart';
 
@@ -85,6 +96,7 @@ class AppRouter {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
+  static const String pendingUser = '/pending-user';
 
   // Role-based dashboard routes
   static const String adminDashboard = '/admin-dashboard';
@@ -112,11 +124,15 @@ class AppRouter {
   static const String pendingSales = '/sales/pending';
   static const String approvedSales = '/sales/approved';
   static const String rejectedSales = '/sales/rejected';
-  static const String partiallyShippedSales = '/sales/partially-shipped';
+  static const String partiallyShippedSales = '/partially-shipped-sales';
+  static const String approvalWorkflows = '/approval-workflows';
+  static const String workflowCreate = '/workflow-create';
   static const String shippedSales = '/sales/shipped';
   static const String deliveredSales = '/sales/delivered';
   static const String completedSales = '/sales/completed';
   static const String saleAdd = '/sales/add';
+  static const String saleDetail = '/sales/detail';
+  static const String shippedSaleDetail = '/sales/shipped-detail';
 
   // Device routes
   static const String deviceList = '/devices/list';
@@ -145,7 +161,8 @@ class AppRouter {
   static const String technicalService = '/technical-service';
 
   // Technical Service routes
-  static const String servicePreRegistrations = '/technical-service/pre-registrations';
+  static const String servicePreRegistrations =
+      '/technical-service/pre-registrations';
   static const String serviceOngoing = '/technical-service/ongoing';
   static const String serviceFinalChecks = '/technical-service/final-checks';
   static const String serviceCompleted = '/technical-service/completed';
@@ -164,19 +181,19 @@ class AppRouter {
 
       case login:
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<AuthBloc>(),
-            child: const LoginPage(),
-          ),
+          builder: (_) => const LoginPage(),
         );
 
       case home:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (_) => getIt<HomeBloc>(),
+            create: (_) => getIt<HomeBloc>()..add(const LoadUserInfo()),
             child: const HomePage(),
           ),
         );
+
+      case pendingUser:
+        return MaterialPageRoute(builder: (_) => const PendingUserPage());
 
       // Role-based dashboards
       case adminDashboard:
@@ -234,29 +251,65 @@ class AppRouter {
 
       // Sales
       case pendingSales:
-        return MaterialPageRoute(builder: (_) => const PendingSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const PendingSalesPage(),
+          ),
+        );
 
       case approvedSales:
-        return MaterialPageRoute(builder: (_) => const ApprovedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const ApprovedSalesPage(),
+          ),
+        );
 
       case rejectedSales:
         return MaterialPageRoute(builder: (_) => const RejectedSalesPage());
 
       case partiallyShippedSales:
         return MaterialPageRoute(
-            builder: (_) => const PartiallyShippedSalesPage());
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const PartiallyShippedSalesPage(),
+          ),
+        );
 
       case shippedSales:
-        return MaterialPageRoute(builder: (_) => const ShippedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const ShippedSalesPage(),
+          ),
+        );
 
       case deliveredSales:
         return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
 
+      case saleAdd:
+        return MaterialPageRoute(builder: (_) => const SaleAddPage());
+
       case completedSales:
         return MaterialPageRoute(builder: (_) => const CompletedSalesPage());
 
-      case saleAdd:
-        return MaterialPageRoute(builder: (_) => const SaleAddPage());
+      case saleDetail:
+        final sale = settings.arguments as SaleEntity;
+        return MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: SaleDetailPage(sale: sale),
+          ),
+        );
+      case shippedSaleDetail:
+        final sale = settings.arguments as SaleEntity;
+        return MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: ShippedSaleDetailPage(sale: sale),
+          ),
+        );
 
       // Devices
       case deviceList:
@@ -333,7 +386,11 @@ class AppRouter {
       // Helpers
       case carrierManagement:
         return MaterialPageRoute(
-            builder: (_) => const CarrierManagementPage());
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CarrierBloc>(),
+            child: const CarrierManagementPage(),
+          ),
+        );
 
       case supplierManagement:
         return MaterialPageRoute(
@@ -359,15 +416,29 @@ class AppRouter {
 
       // Admin routes
       case approvalMechanism:
-        return MaterialPageRoute(
-            builder: (_) => const ApprovalMechanismPage());
+        return MaterialPageRoute(builder: (_) => const ApprovalMechanismPage());
 
       case usersManagement:
-        return MaterialPageRoute(
-            builder: (_) => const UsersManagementPage());
+        return MaterialPageRoute(builder: (_) => const UsersManagementPage());
 
       case logging:
         return MaterialPageRoute(builder: (_) => const LoggingPage());
+
+      case approvalWorkflows:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<ApprovalBloc>(),
+            child: const ApprovalWorkflowsPage(),
+          ),
+        );
+
+      case workflowCreate:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<ApprovalBloc>(),
+            child: const WorkflowCreatePage(),
+          ),
+        );
 
       default:
         return MaterialPageRoute(

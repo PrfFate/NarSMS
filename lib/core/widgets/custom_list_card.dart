@@ -5,17 +5,12 @@ class CustomListCard extends StatelessWidget {
   final String subtitle;
   final String? leadingText;
   final VoidCallback onTap;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
   const CustomListCard({
     super.key,
     required this.title,
     required this.subtitle,
     this.leadingText,
     required this.onTap,
-    required this.onEdit,
-    required this.onDelete,
   });
 
   @override
@@ -76,26 +71,8 @@ class CustomListCard extends StatelessWidget {
               ),
             ),
             
-            // Action Buttons
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit_outlined, size: 20, color: Colors.blue[600]),
-                  onPressed: onEdit,
-                  splashRadius: 24,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline, size: 20, color: Colors.red[600]),
-                  onPressed: onDelete,
-                  splashRadius: 24,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                ),
-              ],
-            ),
+            // Trailing Chevron
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 24),
           ],
         ),
       ),

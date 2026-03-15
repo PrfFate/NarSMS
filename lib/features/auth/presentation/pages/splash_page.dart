@@ -18,19 +18,21 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<AuthBloc>()..add(CheckAuthStatus()),
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            Navigator.of(context).pushReplacementNamed(AppRouter.home);
-          } else if (state is AuthUnauthenticated) {
-            Navigator.of(context).pushReplacementNamed(AppRouter.login);
-          }
-        },
-        child: const _SplashView(),
-      ),
+    // Dispatch CheckAuthStatus event when the page is built.
+    // AuthBloc is expected to be provided higher up in the widget tree.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthBloc>().add(CheckAuthStatus());
+    });
+
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          Navigator.of(context).pushReplacementNamed(AppRouter.home);
+        } else if (state is AuthUnauthenticated) {
+          Navigator.of(context).pushReplacementNamed(AppRouter.login);
+        }
+      },
+      child: const _SplashView(),
     );
   }
 }

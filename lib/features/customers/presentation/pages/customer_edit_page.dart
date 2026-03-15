@@ -5,6 +5,7 @@ import '../../domain/entities/customer_entity.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Page for editing an existing customer.
 /// Receives the [CustomerEntity] via route arguments and pre-fills the form.
@@ -201,7 +202,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(2.0),
             child: Container(
-              color: const Color(0xFFEF4444), // Kırmızı alt çizgi
+              color: AppColors.accentDark, // Turuncu ana renk
               height: 2.0,
             ),
           ),

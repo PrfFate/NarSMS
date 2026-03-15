@@ -46,6 +46,8 @@ class _SupplierManagementPageState extends State<SupplierManagementPage> {
         onPressed: () {
           // Add new supplier
         },
+        backgroundColor: const Color(0xFFF57C00),
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

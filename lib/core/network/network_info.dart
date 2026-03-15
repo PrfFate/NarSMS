@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 abstract class NetworkInfo {
@@ -11,7 +12,25 @@ class NetworkInfoImpl implements NetworkInfo {
 
   @override
   Future<bool> get isConnected async {
+    // 1. connectivity_plus ile hızlı ön kontrol
     final result = await connectivity.checkConnectivity();
-    return !result.contains(ConnectivityResult.none);
+    if (result.contains(ConnectivityResult.none)) {
+      // Bazı cihazlarda yanlış 'none' dönebilir; gerçek TCP ile doğrula
+      return _verifyWithSocket();
+    }
+    return true;
+  }
+
+  /// Google DNS'e (8.8.8.8:53) 3 saniyelik TCP bağlantısı deniyor.
+  /// Bağlanabilirse internet var demektir.
+  Future<bool> _verifyWithSocket() async {
+    try {
+      final socket = await Socket.connect('8.8.8.8', 53,
+          timeout: const Duration(seconds: 3));
+      socket.destroy();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/widgets/generic_confirmation_dialog.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -104,27 +105,27 @@ class ProfilePage extends StatelessWidget {
           centerTitle: false,
         ),
         body: Column(
-        children: [
-          _buildProfileHeader(),
-          // Ayarlar Listesi
-          Expanded(
-            child: ListView.separated(
-              itemCount: _settingsItems.length,
-              separatorBuilder: (context, index) => _buildDivider(),
-              itemBuilder: (context, index) {
-                final item = _settingsItems[index];
-                return _buildSettingItem(
-                  context,
-                  icon: item.icon,
-                  title: item.title,
-                  onTap: () => _handleSettingTap(context, item.id),
-                  isDestructive: item.isDestructive,
-                );
-              },
+          children: [
+            _buildProfileHeader(),
+            // Ayarlar Listesi
+            Expanded(
+              child: ListView.separated(
+                itemCount: _settingsItems.length,
+                separatorBuilder: (context, index) => _buildDivider(),
+                itemBuilder: (context, index) {
+                  final item = _settingsItems[index];
+                  return _buildSettingItem(
+                    context,
+                    icon: item.icon,
+                    title: item.title,
+                    onTap: () => _handleSettingTap(context, item.id),
+                    isDestructive: item.isDestructive,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -291,7 +292,8 @@ class ProfilePage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   color: color,
-                  fontWeight: isDestructive ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight:
+                      isDestructive ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ),
@@ -334,41 +336,16 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Çıkış Yap',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text('Hesabınızdan çıkış yapmak istediğinize emin misiniz?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: Text(
-                'İptal',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                if (homeBloc != null) {
-                  homeBloc.add(const LogoutRequested());
-                }
-              },
-              child: const Text(
-                'Çıkış Yap',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+        return GenericConfirmationDialog(
+          title: 'Çıkış Yap',
+          message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+          confirmLabel: 'Çıkış Yap',
+          cancelLabel: 'İptal',
+          accentColor: const Color(0xFFF57C00),
+          onConfirm: () {
+            homeBloc?.add(const LogoutRequested());
+            Navigator.pop(dialogContext);
+          },
         );
       },
     );

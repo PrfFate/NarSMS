@@ -226,21 +226,6 @@ class _CustomerListPageState extends State<CustomerListPage> {
                 );
               }
             },
-            onEdit: () async {
-              if (customer.id != null) {
-                final result = await Navigator.pushNamed(
-                  context,
-                  AppRouter.customerEdit,
-                  arguments: customer,
-                );
-                if (result == true) _loadCustomers();
-              }
-            },
-            onDelete: () {
-              if (customer.id != null) {
-                _onDeleteCustomer(customer.id!, customer.name);
-              }
-            },
           );
         },
       ),

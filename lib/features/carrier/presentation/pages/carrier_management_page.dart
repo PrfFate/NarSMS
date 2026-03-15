@@ -46,6 +46,8 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
         onPressed: () {
           // Add new carrier
         },
+        backgroundColor: const Color(0xFFF57C00),
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

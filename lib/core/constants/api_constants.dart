@@ -1,7 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
-
   static String get baseUrl => dotenv.get('API_BASE_URL');
   static const String apiVersion = '/api';
 
@@ -18,10 +17,51 @@ class ApiConstants {
   static String customerById(int id) => '$apiVersion/Customer/$id';
   static String customerByUniqueId(String uniqueId) =>
       '$apiVersion/Customer/unique/$uniqueId';
-  static String customerDevices(int id) =>
-      '$apiVersion/Customer/$id/devices';
+  static String customerDevices(int id) => '$apiVersion/Customer/$id/devices';
   static const String customerCreate = '$apiVersion/Customer';
   static String customerUpdate(int id) => '$apiVersion/Customer/$id';
   static String customerDelete(int id) => '$apiVersion/Customer/$id';
   static const String customerBulk = '$apiVersion/Customer/bulk';
+
+  // Sale endpoints
+  static const String saleSearch = '$apiVersion/sale/search';
+  static String saleApprove(int id) => '$apiVersion/Sale/$id/approve';
+  static String saleReject(int id) => '$apiVersion/Sale/$id/reject';
+
+  // Shipment endpoints
+  static String shipmentBySaleId(int saleId) =>
+      '$apiVersion/shipment/sale/$saleId';
+  static const String shipmentCreate = '$apiVersion/Shipment';
+
+  // Carrier endpoints
+  static const String carrierAll = '$apiVersion/Carrier';
+  static String carrierById(int id) => '$apiVersion/Carrier/$id';
+  static const String carrierCreate = '$apiVersion/Carrier';
+  static String carrierUpdate(int id) => '$apiVersion/Carrier/$id';
+  static String carrierDelete(int id) => '$apiVersion/Carrier/$id';
+
+  // User endpoints
+  static const String userSearch = '$apiVersion/User/search';
+  static String shipmentMarkDelivered(int id) =>
+      '$apiVersion/Shipment/$id/mark-delivered';
+
+  static String usersByRole(String role) => '$apiVersion/User/byrolename/$role';
+  static String get userByRoleFielder => usersByRole('Fielder');
+
+  // Role endpoints
+  static const String role = '$apiVersion/Role';
+
+  // Approval Workflow endpoints
+  static const String approvalWorkflow = '$apiVersion/ApprovalWorkflow';
+  static String approvalWorkflowById(int id) =>
+      '$apiVersion/ApprovalWorkflow/$id';
+  static String approvalWorkflowActivate(int id) =>
+      '$apiVersion/ApprovalWorkflow/$id/activate';
+  static String approvalWorkflowDeactivate(int id) =>
+      '$apiVersion/ApprovalWorkflow/$id/deactivate';
+
+  // Device endpoints
+  static const String deviceSearch = '$apiVersion/Device/search';
+  static String deviceActiveWarranty(int deviceId) =>
+      '$apiVersion/Warranty/device/$deviceId/active';
 }

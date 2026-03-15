@@ -8,6 +8,7 @@ import '../network/network_info.dart';
 import '../../features/auth/di/auth_injection.dart';
 import '../../features/customers/di/customer_injection.dart';
 import '../../features/home/di/home_injection.dart';
+import '../../features/sales/di/sale_injection.dart';
 
 /// GetIt servis bulucu örneği — uygulama genelinde tek instance.
 final getIt = GetIt.instance;
@@ -27,7 +28,7 @@ Future<void> initializeDependencies() async {
   getIt.registerLazySingleton(() => Connectivity());
 
   final sharedPreferences = await SharedPreferences.getInstance();
-  getIt.registerLazySingleton(() => sharedPreferences);
+  getIt.registerSingleton<SharedPreferences>(sharedPreferences);
 
   // ===== CORE DEPENDENCIES =====
   getIt.registerLazySingleton(() => DioClient());
@@ -40,4 +41,5 @@ Future<void> initializeDependencies() async {
   await initAuthModule();
   await initCustomerModule();
   await initHomeModule();
+  await initSaleModule();
 }

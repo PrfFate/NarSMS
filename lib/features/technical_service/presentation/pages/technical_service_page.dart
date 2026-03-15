@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class TechnicalServicePage extends StatefulWidget {
   const TechnicalServicePage({super.key});
@@ -46,6 +47,8 @@ class _TechnicalServicePageState extends State<TechnicalServicePage> {
         onPressed: () {
           // Add new technical service request
         },
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

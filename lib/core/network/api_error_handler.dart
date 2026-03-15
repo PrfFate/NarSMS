@@ -29,6 +29,31 @@ mixin ApiErrorHandler {
     final statusCode = e.response?.statusCode;
 
     switch (statusCode) {
+      case 400:
+        // Bad Request - Detaylı hata mesajını ayıkla
+        String errorMessage = 'Geçersiz istek';
+        final responseData = e.response?.data;
+        
+        if (responseData is Map<String, dynamic>) {
+          errorMessage = responseData['message'] ?? responseData['error'] ?? responseData['title'] ?? 'Geçersiz istek parametreleri';
+          
+          // Eğer ASP.NET Core Validation errors varsa
+          if (responseData['errors'] != null && responseData['errors'] is Map) {
+            final errors = responseData['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.first;
+            if (firstError is List && firstError.isNotEmpty) {
+              errorMessage = firstError.first.toString();
+            }
+          }
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+        
+        throw ServerException(
+          message: errorMessage,
+          statusCode: 400,
+        );
+
       case 401:
         throw UnauthorizedException(
           message: 'Oturum süresi doldu veya yetki yok',

@@ -4,6 +4,9 @@ import '../../domain/entities/customer_entity.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
+import '../../../../config/routes/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/delete_confirmation_dialog.dart';
 
 /// Page displaying detailed information about a single customer.
 /// Receives the customer ID via route arguments and fetches the detail.
@@ -20,9 +23,23 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<CustomerBloc>()
-        .add(LoadCustomerDetail(widget.customerId));
+    _loadDetail();
+  }
+
+  void _loadDetail() {
+    context.read<CustomerBloc>().add(LoadCustomerDetail(widget.customerId));
+  }
+
+  Future<void> _onDeleteCustomer(int id, String name) async {
+    final confirmed = await DeleteConfirmationDialog.show(
+      context: context,
+      title: 'Müşteri Sil',
+      itemName: name,
+    );
+    if (confirmed == true && mounted) {
+      context.read<CustomerBloc>().add(DeleteCustomer(id));
+      Navigator.pop(context, true); // Go back after deletion
+    }
   }
 
   @override
@@ -43,9 +60,43 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          BlocBuilder<CustomerBloc, CustomerState>(
+            builder: (context, state) {
+              if (state is CustomerDetailLoaded) {
+                final customer = state.customer;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: AppColors.navy),
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          AppRouter.customerEdit,
+                          arguments: customer,
+                        );
+                        if (result == true) _loadDetail();
+                      },
+                      tooltip: 'Düzenle',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _onDeleteCustomer(
+                          customer.id ?? widget.customerId, customer.name),
+                      tooltip: 'Sil',
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(2.0),
-          child: Container(color: const Color(0xFFEF4444), height: 2.0),
+          child: Container(color: AppColors.accentDark, height: 2.0),
         ),
       ),
       body: BlocBuilder<CustomerBloc, CustomerState>(
@@ -73,6 +124,10 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                     onPressed: () => context
                         .read<CustomerBloc>()
                         .add(LoadCustomerDetail(widget.customerId)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF57C00),
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Tekrar Dene'),
                   ),
                 ],
@@ -125,12 +180,12 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.navy,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Kadıköy/İstanbul', // Şimdilik mocklanmış, ileride dinamik olur
+                        _getCityDistrictPreview(customer.address),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -174,7 +229,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.navy,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -204,7 +259,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.navy,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -220,6 +275,28 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
         ],
       ),
     );
+  }
+
+  String _getCityDistrictPreview(String? fullAddress) {
+    if (fullAddress == null || fullAddress.trim().isEmpty) return '-';
+
+    // Edit sayfasında adresi "İlçe, İl\nAdres Detayı" formatında kaydediyoruz.
+    // İlk satırı alıp il/ilçe bilgisini göstermeye çalışalım.
+    final lines = fullAddress.trim().split('\n');
+    if (lines.isNotEmpty) {
+      final firstLine = lines.first.trim();
+      // Eğer ilk satırda virgül varsa (İlçe, İl formatındaysa) doğrudan göster
+      if (firstLine.contains(',')) {
+        return firstLine;
+      }
+      
+      // Virgül yoksa ama adres çok uzun değilse ilk 30 karakterini göster
+      if (firstLine.length < 30) {
+        return firstLine;
+      }
+    }
+    
+    return 'Adres Kayıtlı';
   }
 
   Widget _buildCard({required Widget child}) {
@@ -279,7 +356,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F172A),
+                  color: AppColors.navy,
                   height: 1.4,
                 ),
               ),
@@ -288,13 +365,5 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.'
-        '${date.month.toString().padLeft(2, '0')}.'
-        '${date.year} '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
   }
 }

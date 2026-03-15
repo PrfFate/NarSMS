@@ -1,43 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../config/routes/app_router.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
-import '../widgets/home_bottom_nav_bar.dart';
-import '../widgets/home_drawer_widget.dart';
+import 'package:tasarim_app/config/routes/app_router.dart';
+import 'package:tasarim_app/features/home/presentation/bloc/home_bloc.dart';
+import 'package:tasarim_app/features/home/presentation/bloc/home_event.dart';
+import 'package:tasarim_app/features/home/presentation/bloc/home_state.dart';
+import 'package:tasarim_app/features/home/presentation/widgets/home_bottom_nav_bar.dart';
+import 'package:tasarim_app/features/home/presentation/widgets/home_drawer_widget.dart';
 
 // Sayfa import'ları
-import '../../../devices/presentation/pages/device_list_page.dart';
-import '../../../devices/presentation/pages/depot_devices_page.dart';
-import '../../../devices/presentation/pages/depot_backup_devices_page.dart';
-import '../../../sales/presentation/pages/pending_sales_page.dart';
-import '../../../sales/presentation/pages/shipped_sales_page.dart';
-import '../../../sales/presentation/pages/delivered_sales_page.dart';
-import '../../../sales/presentation/pages/completed_sales_page.dart';
-import '../../../sales/presentation/pages/rejected_sales_page.dart';
-import '../../../sales/presentation/pages/approval_mechanism_page.dart';
-import '../../../sales/presentation/pages/approved_sales_page.dart';
-import '../../../sales/presentation/pages/partially_shipped_sales_page.dart';
-import '../../../technical_service/presentation/pages/service_pre_registrations_page.dart';
-import '../../../technical_service/presentation/pages/service_ongoing_page.dart';
-import '../../../technical_service/presentation/pages/service_final_checks_page.dart';
-import '../../../technical_service/presentation/pages/service_completed_page.dart';
-import '../../../field_management/presentation/pages/pending_tasks_page.dart';
-import '../../../field_management/presentation/pages/accepted_tasks_page.dart';
-import '../../../field_management/presentation/pages/ongoing_tasks_page.dart';
-import '../../../field_management/presentation/pages/completed_tasks_page.dart';
-import '../../../field_management/presentation/pages/cancelled_tasks_page.dart';
-import '../../../field_tasks/presentation/pages/my_assigned_tasks_page.dart';
-import '../../../field_tasks/presentation/pages/my_accepted_tasks_page.dart';
-import '../../../field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
-import '../../../field_tasks/presentation/pages/my_completed_tasks_page.dart';
-import '../../../customers/presentation/pages/customer_list_page.dart';
-import '../../../customers/presentation/bloc/customer_bloc.dart';
-import '../../../../core/di/injection.dart';
-import '../../../reporting/presentation/pages/customer_reports_page.dart';
-import '../../../admin/presentation/pages/logging_page.dart';
-import '../../../admin/presentation/pages/users_management_page.dart';
+import 'package:tasarim_app/features/devices/presentation/pages/device_list_page.dart';
+import 'package:tasarim_app/features/devices/presentation/pages/depot_devices_page.dart';
+import 'package:tasarim_app/features/devices/presentation/pages/depot_backup_devices_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/pending_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/shipped_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/delivered_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/completed_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/rejected_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
+import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
+import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
+import 'package:tasarim_app/features/admin/presentation/pages/approval_mechanism_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/approved_sales_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/partially_shipped_sales_page.dart';
+import 'package:tasarim_app/features/technical_service/presentation/pages/service_pre_registrations_page.dart';
+import 'package:tasarim_app/features/technical_service/presentation/pages/service_ongoing_page.dart';
+import 'package:tasarim_app/features/technical_service/presentation/pages/service_final_checks_page.dart';
+import 'package:tasarim_app/features/technical_service/presentation/pages/service_completed_page.dart';
+import 'package:tasarim_app/features/field_management/presentation/pages/pending_tasks_page.dart';
+import 'package:tasarim_app/features/field_management/presentation/pages/accepted_tasks_page.dart';
+import 'package:tasarim_app/features/field_management/presentation/pages/ongoing_tasks_page.dart';
+import 'package:tasarim_app/features/field_management/presentation/pages/completed_tasks_page.dart';
+import 'package:tasarim_app/features/field_management/presentation/pages/cancelled_tasks_page.dart';
+import 'package:tasarim_app/features/field_tasks/presentation/pages/my_assigned_tasks_page.dart';
+import 'package:tasarim_app/features/field_tasks/presentation/pages/my_accepted_tasks_page.dart';
+import 'package:tasarim_app/features/field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
+import 'package:tasarim_app/features/field_tasks/presentation/pages/my_completed_tasks_page.dart';
+import 'package:tasarim_app/features/customers/presentation/pages/customer_list_page.dart';
+import 'package:tasarim_app/features/customers/presentation/bloc/customer_bloc.dart';
+import 'package:tasarim_app/core/di/injection.dart';
+import 'package:tasarim_app/features/reporting/presentation/pages/customer_reports_page.dart';
+import 'package:tasarim_app/features/admin/presentation/pages/logging_page.dart';
+import 'package:tasarim_app/features/admin/presentation/pages/users_management_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -48,6 +51,11 @@ class HomePage extends StatelessWidget {
       listener: (context, state) {
         if (state is LogoutSuccess) {
           Navigator.pushReplacementNamed(context, AppRouter.login);
+        } else if (state is HomeLoaded) {
+          final role = state.userRole.toLowerCase().trim();
+          if (role == 'pendinguser' || role == 'pending') {
+            Navigator.pushReplacementNamed(context, AppRouter.pendingUser);
+          }
         } else if (state is HomeError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -63,9 +71,9 @@ class HomePage extends StatelessWidget {
           // expandedMenus değiştiğinde REBUILD ETME - bu sidebar'ın kendi işi
           // Sadece userName, userRole, selectedNavIndex değiştiğinde rebuild et
           return previous.userName != current.userName ||
-                 previous.userRole != current.userRole ||
-                 previous.selectedNavIndex != current.selectedNavIndex ||
-                 previous.selectedPageRoute != current.selectedPageRoute;
+              previous.userRole != current.userRole ||
+              previous.selectedNavIndex != current.selectedNavIndex ||
+              previous.selectedPageRoute != current.selectedPageRoute;
         }
         return true; // Diğer durumlarda rebuild et
       },
@@ -178,23 +186,38 @@ class HomePage extends StatelessWidget {
 
       // Satışlar
       case AppRouter.pendingSales:
-        return const PendingSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const PendingSalesPage(),
+        );
       case AppRouter.shippedSales:
-        return const ShippedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const ShippedSalesPage(),
+        );
       case AppRouter.deliveredSales:
         return const DeliveredSalesPage();
       case AppRouter.completedSales:
         return const CompletedSalesPage();
       case AppRouter.rejectedSales:
         return const RejectedSalesPage();
-      case AppRouter.approvalMechanism:
-        return const ApprovalMechanismPage();
+      case AppRouter.approvalWorkflows:
+        return BlocProvider(
+          create: (_) => getIt<ApprovalBloc>(),
+          child: const ApprovalWorkflowsPage(),
+        );
 
       // Satış Kargolama
       case AppRouter.approvedSales:
-        return const ApprovedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const ApprovedSalesPage(),
+        );
       case AppRouter.partiallyShippedSales:
-        return const PartiallyShippedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const PartiallyShippedSalesPage(),
+        );
 
       // Teknik Servis
       case AppRouter.servicePreRegistrations:

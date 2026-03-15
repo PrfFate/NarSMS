@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_user_info_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
+import '../../../../config/routes/app_router.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -76,13 +77,64 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) {
     if (state is HomeLoaded) {
       final currentState = state as HomeLoaded;
-      // Close all expanded menus when selecting a page
-      final closedMenus = Map<String, bool>.from(currentState.expandedMenus);
-      closedMenus.updateAll((key, value) => false);
+      final newExpandedMenus = Map<String, bool>.from(currentState.expandedMenus);
+
+      // Route to MenuKey mapping
+      final routeToMenuKey = {
+        'devices': [
+          AppRouter.deviceList,
+          AppRouter.depotDevices,
+          AppRouter.depotBackupDevices,
+        ],
+        'sales': [
+          AppRouter.pendingSales,
+          AppRouter.shippedSales,
+          AppRouter.deliveredSales,
+          AppRouter.completedSales,
+          AppRouter.rejectedSales,
+          AppRouter.approvalWorkflows,
+        ],
+        'shipments': [
+          AppRouter.approvedSales,
+          AppRouter.partiallyShippedSales,
+        ],
+        'technicalservice': [
+          AppRouter.servicePreRegistrations,
+          AppRouter.serviceOngoing,
+          AppRouter.serviceFinalChecks,
+          AppRouter.serviceCompleted,
+        ],
+        'fieldmanagement': [
+          AppRouter.pendingTasks,
+          AppRouter.acceptedTasks,
+          AppRouter.ongoingTasks,
+          AppRouter.completedTasks,
+          AppRouter.cancelledTasks,
+        ],
+        'fieldtasks': [
+          AppRouter.myAssignedTasks,
+          AppRouter.myAcceptedTasks,
+          AppRouter.myOngoingTasks,
+          AppRouter.myCompletedTasks,
+        ],
+      };
+
+      // Find the menu key for the current route
+      String? activeMenuKey;
+      routeToMenuKey.forEach((menuKey, routes) {
+        if (routes.contains(event.route)) {
+          activeMenuKey = menuKey;
+        }
+      });
+
+      // Expand the menu containing the active route
+      if (activeMenuKey != null) {
+        newExpandedMenus[activeMenuKey!] = true;
+      }
 
       emit(currentState.copyWith(
         selectedPageRoute: event.route,
-        expandedMenus: closedMenus,
+        expandedMenus: newExpandedMenus,
       ));
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/turkey_cities.dart';
+import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
@@ -173,136 +174,84 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA), // Çok açık gri arkaplan
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          centerTitle: false,
-          iconTheme: const IconThemeData(color: Colors.black54),
-          title: const Text(
-            'Yeni Müşteri Ekle',
-            style: TextStyle(
-              color: Color(0xFF1E293B), // Koyu lacivert/siyah
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(2.0),
-            child: Container(
-              color: const Color(0xFFEF4444), // Kırmızı alt çizgi
-              height: 2.0,
-            ),
-          ),
-        ),
-        body: BlocBuilder<CustomerBloc, CustomerState>(
-          builder: (context, state) {
-            return Form(
+      child: BlocBuilder<CustomerBloc, CustomerState>(
+        builder: (context, state) {
+          return CustomFormScaffold(
+            title: 'Yeni Müşteri Ekle',
+            bottomButtonText: 'Ekle',
+            isLoading: state is CustomerLoading,
+            onBottomButtonPressed: _onSubmit,
+            body: Form(
               key: _formKey,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTextField(
-                            label: 'Müşteri Id',
-                            hint: 'Müşteri ID girin',
-                            controller: _uniqueIdController,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            label: 'Ad',
-                            hint: 'İsim girin',
-                            controller: _nameController,
-                            validator: (value) => (value == null || value.trim().isEmpty) ? 'Müşteri adı zorunludur' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            label: 'Email',
-                            hint: 'Email girin',
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            label: 'Telefon',
-                            hint: '(5__) _ _ _ _',
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDropdown(
-                            label: 'İl',
-                            hint: 'İl seçin',
-                            items: TurkeyCities.cities,
-                            value: _selectedCity,
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedCity = val;
-                                _selectedDistrict = null; // İlçe seçimini sıfırla
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDropdown(
-                            label: 'İlçe',
-                            hint: 'İlçe seçin',
-                            items: _selectedCity != null ? TurkeyCities.getDistricts(_selectedCity!) : [],
-                            value: _selectedDistrict,
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedDistrict = val;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            label: 'Adres',
-                            hint: 'Adres girin',
-                            controller: _addressController,
-                            maxLines: 4,
-                          ),
-                        ],
-                      ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      label: 'Müşteri Id',
+                      hint: 'Müşteri ID girin',
+                      controller: _uniqueIdController,
                     ),
-                  ),
-                  // Sabit Alt Buton Alanı
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20.0),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8F9FA),
-                      border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      label: 'Ad',
+                      hint: 'İsim girin',
+                      controller: _nameController,
+                      validator: (value) => (value == null || value.trim().isEmpty) ? 'Müşteri adı zorunludur' : null,
                     ),
-                    child: SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: state is CustomerLoading ? null : _onSubmit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF57C00), // Ana turuncu renk
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: state is CustomerLoading
-                            ? const SizedBox(
-                                height: 20, width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Text('Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      label: 'Email',
+                      hint: 'Email girin',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      label: 'Telefon',
+                      hint: '(5__) _ _ _ _',
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDropdown(
+                      label: 'İl',
+                      hint: 'İl seçin',
+                      items: TurkeyCities.cities,
+                      value: _selectedCity,
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedCity = val;
+                          _selectedDistrict = null; // İlçe seçimini sıfırla
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDropdown(
+                      label: 'İlçe',
+                      hint: 'İlçe seçin',
+                      items: _selectedCity != null ? TurkeyCities.getDistricts(_selectedCity!) : [],
+                      value: _selectedDistrict,
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedDistrict = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      label: 'Adres',
+                      hint: 'Adres girin',
+                      controller: _addressController,
+                      maxLines: 4,
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

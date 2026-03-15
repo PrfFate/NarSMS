@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary colors
-  static const Color primary = Color(0xFF2196F3);
-  static const Color primaryDark = Color(0xFF1976D2);
-  static const Color primaryLight = Color(0xFFBBDEFB);
+  static const Color primary = Color(0xFFF57C00);
+  static const Color primaryDark = Color(0xFFE65100);
+  static const Color primaryLight = Color(0xFFFFE0B2);
 
   // Accent colors
   static const Color accent = Color(0xFFFF9800);
@@ -39,4 +39,9 @@ class AppColors {
   static const Color deviceDefective = Color(0xFFF44336);
   static const Color deviceReturned = Color(0xFF9C27B0);
   static const Color deviceReserved = Color(0xFFFFEB3B);
+
+  // New Corporate Colors
+  static const Color navy = Color(0xFF0F172A);
+  static const Color slate = Color(0xFF64748B);
+  static const Color borderLight = Color(0xFFE2E8F0);
 }

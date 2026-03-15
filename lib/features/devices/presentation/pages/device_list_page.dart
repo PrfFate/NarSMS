@@ -171,6 +171,38 @@ class _DeviceListPageState extends State<DeviceListPage> {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Başlık
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tüm Cihazlar',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Cihaz ekle
+                },
+                icon: const Icon(Icons.add, size: 20, color: Colors.white),
+                label: const Text('Yeni Cihaz'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF57C00),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 Row(

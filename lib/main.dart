@@ -5,6 +5,10 @@ import 'core/di/injection.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
+
 /// Uygulama giriş noktası.
 ///
 /// Sorumlulukları:
@@ -17,7 +21,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await initializeDependencies();
-  runApp(const NarSmsApp());
+  runApp(
+    BlocProvider<AuthBloc>(
+      create: (context) => getIt<AuthBloc>()..add(CheckAuthStatus()),
+      child: const NarSmsApp(),
+    ),
+  );
 }
 
 class NarSmsApp extends StatelessWidget {

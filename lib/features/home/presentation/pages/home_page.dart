@@ -8,6 +8,37 @@ import 'package:tasarim_app/features/home/presentation/widgets/home_bottom_nav_b
 import 'package:tasarim_app/features/home/presentation/widgets/home_drawer_widget.dart';
 
 // Sayfa import'ları
+import '../../../devices/presentation/pages/device_list_page.dart';
+import '../../../devices/presentation/bloc/device_bloc.dart';
+import '../../../devices/presentation/pages/depot_devices_page.dart';
+import '../../../devices/presentation/pages/depot_backup_devices_page.dart';
+import '../../../sales/presentation/pages/pending_sales_page.dart';
+import '../../../sales/presentation/pages/shipped_sales_page.dart';
+import '../../../sales/presentation/pages/delivered_sales_page.dart';
+import '../../../sales/presentation/pages/completed_sales_page.dart';
+import '../../../sales/presentation/pages/rejected_sales_page.dart';
+import '../../../sales/presentation/pages/approval_mechanism_page.dart';
+import '../../../sales/presentation/pages/approved_sales_page.dart';
+import '../../../sales/presentation/pages/partially_shipped_sales_page.dart';
+import '../../../technical_service/presentation/pages/service_pre_registrations_page.dart';
+import '../../../technical_service/presentation/pages/service_ongoing_page.dart';
+import '../../../technical_service/presentation/pages/service_final_checks_page.dart';
+import '../../../technical_service/presentation/pages/service_completed_page.dart';
+import '../../../field_management/presentation/pages/pending_tasks_page.dart';
+import '../../../field_management/presentation/pages/accepted_tasks_page.dart';
+import '../../../field_management/presentation/pages/ongoing_tasks_page.dart';
+import '../../../field_management/presentation/pages/completed_tasks_page.dart';
+import '../../../field_management/presentation/pages/cancelled_tasks_page.dart';
+import '../../../field_tasks/presentation/pages/my_assigned_tasks_page.dart';
+import '../../../field_tasks/presentation/pages/my_accepted_tasks_page.dart';
+import '../../../field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
+import '../../../field_tasks/presentation/pages/my_completed_tasks_page.dart';
+import '../../../customers/presentation/pages/customer_list_page.dart';
+import '../../../customers/presentation/bloc/customer_bloc.dart';
+import '../../../../core/di/injection.dart';
+import '../../../reporting/presentation/pages/customer_reports_page.dart';
+import '../../../admin/presentation/pages/logging_page.dart';
+import '../../../admin/presentation/pages/users_management_page.dart';
 import 'package:tasarim_app/features/devices/presentation/pages/device_list_page.dart';
 import 'package:tasarim_app/features/devices/presentation/pages/depot_devices_page.dart';
 import 'package:tasarim_app/features/devices/presentation/pages/depot_backup_devices_page.dart';
@@ -178,7 +209,10 @@ class HomePage extends StatelessWidget {
     switch (route) {
       // Cihazlar
       case AppRouter.deviceList:
-        return const DeviceListPage();
+        return BlocProvider(
+          create: (_) => getIt<DeviceBloc>(),
+          child: const DeviceListPage(),
+        );
       case AppRouter.depotDevices:
         return const DepotDevicesPage();
       case AppRouter.depotBackupDevices:

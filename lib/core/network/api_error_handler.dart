@@ -71,6 +71,44 @@ mixin ApiErrorHandler {
           statusCode: 409,
         );
 
+      case 400:
+        // C# Backend'den gelen Validation veya Bad Request mesajını çözümle
+        String errorMessage = 'Geçersiz İstek (400)';
+        print('--- 400 DETAIL ---');
+        print(e.response?.data);
+        print('------------------');
+        
+        if (e.response?.data is Map<String, dynamic>) {
+          final data = e.response!.data as Map<String, dynamic>;
+          // Model/Validation alan bazlı hatalar (errors)
+          if (data.containsKey('errors') && data['errors'] is Map) {
+            final errors = data['errors'] as Map<String, dynamic>;
+            if (errors.isNotEmpty) {
+              final firstErrorValue = errors.values.first;
+              if (firstErrorValue is List && firstErrorValue.isNotEmpty) {
+                errorMessage = firstErrorValue.first.toString();
+              } else {
+                errorMessage = firstErrorValue.toString();
+              }
+            }
+          } 
+          // Custom C# Detail veya Title mesajı
+          else if (data.containsKey('detail')) {
+            errorMessage = data['detail'].toString();
+          } else if (data.containsKey('title')) {
+            errorMessage = data['title'].toString();
+          } else if (data.containsKey('message')) {
+            errorMessage = data['message'].toString();
+          }
+        }  else if (e.response?.data is String) {
+          errorMessage = e.response?.data.toString() ?? errorMessage;
+        }
+
+        throw ServerException(
+          message: errorMessage,
+          statusCode: 400,
+        );
+
       case 422:
         // Backend doğrulama hatası — hata detayları varsa ilet
         final rawErrors = e.response?.data?['errors'];
@@ -92,8 +130,14 @@ mixin ApiErrorHandler {
         );
 
       default:
+        // Dio'nun genel message'ı yerine API'nin döndüğü anlamlı hatayı (eğer varsa) bas.
+        String defaultMsg = 'Beklenmeyen bir ağ hatası oluştu';
+        if(e.response?.data is Map<String, dynamic> && e.response?.data['message'] != null) {
+          defaultMsg = e.response?.data['message'];
+        }
+
         throw ServerException(
-          message: e.message ?? 'Beklenmeyen bir ağ hatası oluştu',
+          message: defaultMsg,
           statusCode: statusCode,
         );
     }

@@ -9,19 +9,19 @@ import '../../data/models/create_device_request_model.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../home/presentation/pages/barcode_scanner_page.dart';
 
-class DeviceAddPage extends StatefulWidget {
-  const DeviceAddPage({super.key});
+class DeviceBulkAddPage extends StatefulWidget {
+  const DeviceBulkAddPage({super.key});
 
   @override
-  State<DeviceAddPage> createState() => _DeviceAddPageState();
+  State<DeviceBulkAddPage> createState() => _DeviceBulkAddPageState();
 }
 
-class _DeviceAddPageState extends State<DeviceAddPage> {
+class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
   final _formKey = GlobalKey<FormState>();
 
   // Form Controllers
-  final _serialNumberController = TextEditingController();
   final _purchasePriceController = TextEditingController();
+  final List<TextEditingController> _serialNumberControllers = [TextEditingController()];
 
   String? _selectedDeviceType;
   String? _selectedSupplier;
@@ -55,13 +55,14 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
   @override
   void initState() {
     super.initState();
-    // Sayfa açılır açılmaz device tiplerini ve tedarikçileri yüklüyoruz.
     context.read<DeviceBloc>().add(LoadDeviceOptions());
   }
 
   @override
   void dispose() {
-    _serialNumberController.dispose();
+    for (var controller in _serialNumberControllers) {
+      controller.dispose();
+    }
     _purchasePriceController.dispose();
     super.dispose();
   }
@@ -92,6 +93,21 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
     }
   }
 
+  void _addSerialNumberField() {
+    setState(() {
+      _serialNumberControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeSerialNumberField(int index) {
+    if (_serialNumberControllers.length > 1) {
+      setState(() {
+        _serialNumberControllers[index].dispose();
+        _serialNumberControllers.removeAt(index);
+      });
+    }
+  }
+
   void _onSave() {
     if (_formKey.currentState!.validate()) {
       if (_selectedDeviceType == null) {
@@ -107,8 +123,17 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
         return;
       }
 
+      final serialNumbers = _serialNumberControllers
+          .map((c) => c.text.trim())
+          .where((text) => text.isNotEmpty)
+          .toList();
+
+      if (serialNumbers.isEmpty) {
+        _showError('En az 1 adet geçerli seri numarası giriniz.');
+        return;
+      }
+
       final features = <Map<String, dynamic>>[];
-      
       final dt = _selectedDeviceType!.toLowerCase();
       
       if (dt.contains('bilgisayar')) {
@@ -125,23 +150,30 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
       }
       
       if (features.isEmpty) {
-        // Hata verdiriyordu: features.add({"featureName": "No Properties", "featureValue": null});
+        features.add({"featureName": "No Properties", "featureValue": null});
       }
 
       final purchaseDate = _isPastDate ? _selectedDate! : DateTime.now();
       final double purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
 
-      final request = CreateDeviceRequestModel(
-        deviceSerialNumber: _serialNumberController.text.trim(),
-        deviceTypeName: _selectedDeviceType!,
-        supplierName: _selectedSupplier!,
-        status: 'InStock',
-        purchaseDate: purchaseDate,
-        purchasePrice: purchasePrice,
-        features: features,
-      );
+      final devicesList = serialNumbers.map((sn) {
+        return CreateDeviceRequestModel(
+          deviceSerialNumber: sn,
+          deviceTypeName: _selectedDeviceType!,
+          supplierName: _selectedSupplier!,
+          status: 'InStock',
+          purchaseDate: purchaseDate,
+          purchasePrice: purchasePrice,
+          features: features,
+        ).toJson();
+      }).toList();
 
-      context.read<DeviceBloc>().add(CreateDevice(request.toJson()));
+      final request = {
+        'devices': devicesList,
+        'stopOnFirstError': true,
+      };
+
+      context.read<DeviceBloc>().add(BulkCreateDevices(request));
     }
   }
 
@@ -155,16 +187,16 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Müşteri UI uyumu
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Yeni Cihaz Ekle', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text('Toplu Cihaz Ekle', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: const Color(0xFFF57C00), // Alt kırmızı/turuncu şerit
+            color: const Color(0xFFF57C00),
             height: 2.0,
           ),
         ),
@@ -175,7 +207,7 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.green),
             );
-            Navigator.pop(context, true); // True dönerse liste yenilenir
+            Navigator.pop(context, true);
           } else if (state is DeviceError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -202,42 +234,6 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSectionTitle('Temel Bilgiler'),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        controller: _serialNumberController,
-                        label: 'Seri Numarası',
-                        hint: 'SRN-XXXX-XXXX',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFF57C00)),
-                          tooltip: 'Barkod Okut',
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const BarcodeScannerPage(),
-                              ),
-                            );
-                            if (result != null && result is String) {
-                              setState(() {
-                                _serialNumberController.text = result;
-                              });
-                            }
-                          },
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Seri numarası zorunludur' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        controller: _purchasePriceController,
-                        label: 'Alış Fiyatı (\$)',
-                        hint: 'Örn: 15000',
-                        keyboardType: TextInputType.number,
-                        prefixIcon: const Icon(Icons.attach_money),
-                        validator: (value) => value == null || value.isEmpty ? 'Kayıt için alış fiyatı giriniz' : null,
-                      ),
-                      const SizedBox(height: 24),
-
-                      _buildSectionTitle('Cihaz Özellikleri'),
                       const SizedBox(height: 12),
                       
                       // CİHAZ MODELLERİ (DeviceType)
@@ -278,11 +274,24 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
                       ),
                       const SizedBox(height: 16),
 
+                      CustomTextField(
+                        controller: _purchasePriceController,
+                        label: 'Alış Fiyatı (\$)',
+                        hint: 'Örn: 15000',
+                        keyboardType: TextInputType.number,
+                        prefixIcon: const Icon(Icons.attach_money),
+                        validator: (value) => value == null || value.isEmpty ? 'Kayıt için alış fiyatı giriniz' : null,
+                      ),
+                      const SizedBox(height: 24),
+
+                      _buildSectionTitle('Cihaz Özellikleri (Ortak)'),
+                      const SizedBox(height: 12),
+
                       // DİNAMİK ÖZELLİK LİSTESİ (Cihaza göre)
                       if (_selectedDeviceType != null) ..._buildDynamicFeatures(),
                       
                       const SizedBox(height: 24),
-                      _buildSectionTitle('Kayıt Tarihi'),
+                      _buildSectionTitle('Kayıt Tarihi (Ortak)'),
                       const SizedBox(height: 8),
 
                       CheckboxListTile(
@@ -328,6 +337,91 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 24),
+
+                      _buildSectionTitle('Seri Numaraları'),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Eklemek istediğiniz cihazların seri numaralarını tek tek aşağıya giriniz.',
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                      const SizedBox(height: 16),
+
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _serialNumberControllers.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _serialNumberControllers[index],
+                                    decoration: InputDecoration(
+                                      hintText: 'Cihaz ${index + 1} Seri No',
+                                      prefixIcon: const Icon(Icons.numbers, color: Colors.grey),
+                                      suffixIcon: IconButton(
+                                        icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFF57C00)),
+                                        tooltip: 'Barkod Okut',
+                                        onPressed: () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const BarcodeScannerPage(),
+                                            ),
+                                          );
+                                          if (result != null && result is String) {
+                                            setState(() {
+                                              _serialNumberControllers[index].text = result;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Color(0xFFF57C00), width: 2),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                    ),
+                                    textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) {
+                                      // Yeni satır açmak için kolaylık
+                                      if (index == _serialNumberControllers.length - 1) {
+                                        _addSerialNumberField();
+                                      }
+                                    },
+                                    validator: (value) => value == null || value.isEmpty ? 'Gereklidir' : null,
+                                  ),
+                                ),
+                                if (_serialNumberControllers.length > 1) ...[
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
+                                    onPressed: () => _removeSerialNumberField(index),
+                                  ),
+                                ]
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _addSerialNumberField,
+                          icon: const Icon(Icons.add_circle, color: Color(0xFFF57C00)),
+                          label: const Text('Yeni Seri Numarası Ekle', style: TextStyle(color: Color(0xFFF57C00), fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      
                       const SizedBox(height: 100), // Bottom button spacer
                     ],
                   ),
@@ -361,7 +455,7 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
                     ),
                     child: isLoading 
                       ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text('Cihazı Kaydet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      : Text('${_serialNumberControllers.length} Cihazı Toplu Kaydet', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),

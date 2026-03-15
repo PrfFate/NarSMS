@@ -40,8 +40,21 @@ import '../../features/sales/presentation/pages/completed_sales_page.dart';
 import '../../features/sales/presentation/pages/sale_add_page.dart';
 
 // Devices
+import '../../features/devices/domain/entities/device_entity.dart';
+import '../../features/devices/presentation/bloc/device_bloc.dart';
 import '../../features/devices/presentation/pages/device_list_page.dart';
+import '../../features/devices/presentation/pages/device_detail_page.dart';
 import '../../features/devices/presentation/pages/device_add_page.dart';
+import '../../features/devices/presentation/pages/device_bulk_add_page.dart';
+import '../../features/devices/presentation/pages/device_models_page.dart';
+import '../../features/devices/presentation/pages/device_model_add_page.dart';
+import '../../features/devices/presentation/pages/suppliers_page.dart';
+import '../../features/devices/presentation/pages/supplier_detail_page.dart';
+import '../../features/devices/presentation/pages/supplier_add_page.dart';
+import '../../features/devices/domain/entities/supplier_entity.dart';
+import '../../features/devices/domain/entities/device_type_entity.dart';
+import '../../features/devices/presentation/bloc/device_type_bloc.dart';
+import '../../features/devices/presentation/bloc/supplier_bloc.dart';
 import '../../features/devices/presentation/pages/device_edit_page.dart';
 import '../../features/devices/presentation/pages/device_return_page.dart';
 import '../../features/devices/presentation/pages/depot_devices_page.dart';
@@ -120,7 +133,14 @@ class AppRouter {
 
   // Device routes
   static const String deviceList = '/devices/list';
+  static const String deviceDetail = '/devices/detail';
   static const String deviceAdd = '/devices/add';
+  static const String deviceBulkAdd = '/devices/bulk-add';
+  static const String deviceModels = '/devices/models';
+  static const String deviceModelAdd = '/devices/models/add';
+  static const String suppliers = '/devices/suppliers';
+  static const String supplierDetail = '/devices/suppliers/detail';
+  static const String supplierAdd = '/devices/suppliers/add';
   static const String deviceEdit = '/devices/edit';
   static const String deviceReturn = '/devices/return';
   static const String depotDevices = '/devices/depot';
@@ -260,13 +280,89 @@ class AppRouter {
 
       // Devices
       case deviceList:
-        return MaterialPageRoute(builder: (_) => const DeviceListPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: const DeviceListPage(),
+          ),
+        );
 
       case deviceAdd:
-        return MaterialPageRoute(builder: (_) => const DeviceAddPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: const DeviceAddPage(),
+          ),
+        );
+
+      case deviceBulkAdd:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: const DeviceBulkAddPage(),
+          ),
+        );
+
+      case deviceModels:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceTypeBloc>(),
+            child: const DeviceModelsPage(),
+          ),
+        );
+
+      case deviceModelAdd:
+        final deviceModel = settings.arguments as DeviceTypeEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceTypeBloc>(),
+            child: DeviceModelAddPage(deviceModel: deviceModel),
+          ),
+        );
+
+      case suppliers:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SupplierBloc>(),
+            child: const SuppliersPage(),
+          ),
+        );
+
+      case supplierAdd:
+        final supplierParams = settings.arguments as SupplierEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SupplierBloc>(),
+            child: SupplierAddPage(supplier: supplierParams),
+          ),
+        );
+
+      case supplierDetail:
+        final supplier = settings.arguments as SupplierEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SupplierBloc>(),
+            child: SupplierDetailPage(supplier: supplier),
+          ),
+        );
+
+      case deviceDetail:
+        final device = settings.arguments as DeviceEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: DeviceDetailPage(device: device),
+          ),
+        );
 
       case deviceEdit:
-        return MaterialPageRoute(builder: (_) => const DeviceEditPage());
+        final device = settings.arguments as DeviceEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: DeviceEditPage(device: device),
+          ),
+        );
 
       case deviceReturn:
         return MaterialPageRoute(builder: (_) => const DeviceReturnPage());

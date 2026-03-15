@@ -9,6 +9,7 @@ import '../widgets/home_drawer_widget.dart';
 
 // Sayfa import'ları
 import '../../../devices/presentation/pages/device_list_page.dart';
+import '../../../devices/presentation/bloc/device_bloc.dart';
 import '../../../devices/presentation/pages/depot_devices_page.dart';
 import '../../../devices/presentation/pages/depot_backup_devices_page.dart';
 import '../../../sales/presentation/pages/pending_sales_page.dart';
@@ -170,7 +171,10 @@ class HomePage extends StatelessWidget {
     switch (route) {
       // Cihazlar
       case AppRouter.deviceList:
-        return const DeviceListPage();
+        return BlocProvider(
+          create: (_) => getIt<DeviceBloc>(),
+          child: const DeviceListPage(),
+        );
       case AppRouter.depotDevices:
         return const DepotDevicesPage();
       case AppRouter.depotBackupDevices:

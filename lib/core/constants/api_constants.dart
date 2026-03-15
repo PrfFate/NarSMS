@@ -24,4 +24,19 @@ class ApiConstants {
   static String customerUpdate(int id) => '$apiVersion/Customer/$id';
   static String customerDelete(int id) => '$apiVersion/Customer/$id';
   static const String customerBulk = '$apiVersion/Customer/bulk';
+
+  // Device endpoints
+  static const String devicePaged = '$apiVersion/Device/paged';
+  static const String deviceSearch = '$apiVersion/Device/search';
+  static const String deviceFilterSearch = '$apiVersion/Device/search-by-multiple-features';
+  static String deviceById(int id) => '$apiVersion/Device/$id';
+  static const String deviceCreate = '$apiVersion/Device';
+  static String deviceUpdate(int id) => '$apiVersion/Device/$id';
+  static String deviceDelete(int id) => '$apiVersion/Device/$id';
+  static const String deviceBulkCreate = '$apiVersion/Device/bulk-create';
+
+  // Device Type and Supplier API Endpoints
+  static const String deviceTypes = '$apiVersion/devicetype';
+  static const String suppliers = '$apiVersion/Supplier';
+  static String deviceMovements(int id) => '$apiVersion/Device/$id/movements';
 }

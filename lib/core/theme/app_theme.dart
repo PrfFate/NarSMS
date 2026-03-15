@@ -30,6 +30,11 @@ class AppTheme {
         bodySmall: AppTextStyles.bodySmall,
         labelLarge: AppTextStyles.button,
       ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color(0xFFF57C00), // İmleç (Cursor) rengi
+        selectionColor: Color(0x66F57C00), // Seçili metin arka plan rengi (yarı saydam)
+        selectionHandleColor: Color(0xFFF57C00), // Seçim tutamaklarının rengi
+      ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -116,6 +121,11 @@ class AppTheme {
             fontWeight: FontWeight.normal,
             color: AppColors.textHint),
         labelLarge: AppTextStyles.button,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color(0xFFF57C00), // İmleç (Cursor) rengi
+        selectionColor: Color(0x66F57C00), // Seçili metin arka plan rengi (yarı saydam)
+        selectionHandleColor: Color(0xFFF57C00), // Seçim tutamaklarının rengi
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(

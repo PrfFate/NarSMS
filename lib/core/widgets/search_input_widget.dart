@@ -5,6 +5,7 @@ class SearchInputWidget extends StatefulWidget {
   final Function(String) onSearch;
   final Function()? onClear;
   final String? initialValue;
+  final TextEditingController? controller; // Dışarıdan da controller verilebilir
 
   const SearchInputWidget({
     super.key,
@@ -12,6 +13,7 @@ class SearchInputWidget extends StatefulWidget {
     required this.onSearch,
     this.onClear,
     this.initialValue,
+    this.controller,
   });
 
   @override
@@ -20,16 +22,22 @@ class SearchInputWidget extends StatefulWidget {
 
 class _SearchInputWidgetState extends State<SearchInputWidget> {
   late TextEditingController _controller;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue ?? '');
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _controller = TextEditingController(text: widget.initialValue ?? '');
+      _ownsController = true;
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (_ownsController) _controller.dispose();
     super.dispose();
   }
 

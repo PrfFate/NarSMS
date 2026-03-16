@@ -314,10 +314,11 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
 
       case saleAdd:
+        final initialDevice = settings.arguments as DeviceEntity?;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (_) => getIt<SaleBloc>(),
-            child: const SaleAddPage(),
+            child: SaleAddPage(initialDevice: initialDevice),
           ),
         );
 
@@ -440,7 +441,12 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeviceReturnPage());
 
       case depotDevices:
-        return MaterialPageRoute(builder: (_) => const DepotDevicesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: const DepotDevicesPage(),
+          ),
+        );
 
       case depotBackupDevices:
         return MaterialPageRoute(

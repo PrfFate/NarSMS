@@ -214,7 +214,10 @@ class HomePage extends StatelessWidget {
           child: const DeviceListPage(),
         );
       case AppRouter.depotDevices:
-        return const DepotDevicesPage();
+        return BlocProvider(
+          create: (_) => getIt<DeviceBloc>(),
+          child: const DepotDevicesPage(),
+        );
       case AppRouter.depotBackupDevices:
         return const DepotBackupDevicesPage();
 

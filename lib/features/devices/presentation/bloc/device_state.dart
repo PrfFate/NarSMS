@@ -18,11 +18,17 @@ class DeviceLoaded extends DeviceState {
   final PaginatedResult<DeviceEntity> result;
   final String? searchQuery;
   final DeviceFilterModel? activeFilter;
+  final String? status;
 
-  const DeviceLoaded({required this.result, this.searchQuery, this.activeFilter});
+  const DeviceLoaded({
+    required this.result,
+    this.searchQuery,
+    this.activeFilter,
+    this.status,
+  });
 
   @override
-  List<Object?> get props => [result, searchQuery, activeFilter];
+  List<Object?> get props => [result, searchQuery, activeFilter, status];
 }
 
 class DeviceError extends DeviceState {

@@ -10,6 +10,7 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../customers/data/models/customer_model.dart';
 import '../../../devices/data/models/device_model.dart';
+import '../../../devices/domain/entities/device_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/sale_bloc.dart';
 import '../bloc/sale_event.dart';
@@ -18,7 +19,7 @@ import '../../data/models/sale_create_request.dart';
 import '../../../../core/widgets/device_image_widget.dart';
 
 class SelectedDevice {
-  final DeviceModel device;
+  final DeviceEntity device;
   final TextEditingController priceController;
 
   SelectedDevice({required this.device, required double initialPrice})
@@ -30,7 +31,9 @@ class SelectedDevice {
 }
 
 class SaleAddPage extends StatefulWidget {
-  const SaleAddPage({super.key});
+  final DeviceEntity? initialDevice;
+
+  const SaleAddPage({super.key, this.initialDevice});
 
   @override
   State<SaleAddPage> createState() => _SaleAddPageState();
@@ -40,6 +43,19 @@ class _SaleAddPageState extends State<SaleAddPage> {
   CustomerModel? _selectedCustomer;
   final List<SelectedDevice> _selectedDevices = [];
   TextEditingController _deviceSearchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDevice != null) {
+      _selectedDevices.add(
+        SelectedDevice(
+          device: widget.initialDevice!,
+          initialPrice: widget.initialDevice!.purchasePrice ?? 0.0,
+        ),
+      );
+    }
+  }
   
   void _updateInternalController(TextEditingController controller) {
     _deviceSearchController = controller;

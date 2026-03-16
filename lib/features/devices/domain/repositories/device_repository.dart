@@ -10,6 +10,7 @@ import '../entities/supplier_entity.dart';
 abstract class DeviceRepository {
   Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   });

@@ -20,12 +20,14 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   }) async {
     try {
       final data = await remoteDataSource.searchDevices(
         serialNumber: serialNumber,
+        status: status,
         page: page,
         pageSize: pageSize,
       );

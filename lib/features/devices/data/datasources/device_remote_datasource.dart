@@ -13,6 +13,7 @@ import '../../../../core/models/device_filter_model.dart';
 abstract class DeviceRemoteDataSource {
   Future<Map<String, dynamic>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   });
@@ -111,6 +112,7 @@ class DeviceRemoteDataSourceImpl
   @override
   Future<Map<String, dynamic>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   }) async {
@@ -121,7 +123,11 @@ class DeviceRemoteDataSourceImpl
       };
 
       if (serialNumber != null && serialNumber.isNotEmpty) {
-        queryParams['deviceSerialNumber'] = serialNumber; // Veya backend'in beklediği argüman
+        queryParams['deviceSerialNumber'] = serialNumber;
+      }
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
       }
 
       final response = await dioClient.get(
@@ -131,15 +137,24 @@ class DeviceRemoteDataSourceImpl
       );
 
       if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+        final data = response.data as Map<String, dynamic>;
+        // API seviyesinde başarı kontrolü
+        if (data['isSuccess'] == false) {
+          throw ServerException(
+            message: data['error'] ?? 'Cihaz araması başarısız',
+            statusCode: response.statusCode,
+          );
+        }
+        return data;
       }
 
       throw ServerException(
-        message: 'Cihaz araması başarısız',
+        message: 'Sunucu hatası: ${response.statusCode}',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       handleDioException(e);
+      rethrow;
     }
   }
 

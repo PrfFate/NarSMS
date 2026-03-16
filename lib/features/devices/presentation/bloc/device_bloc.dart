@@ -96,13 +96,17 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
 
     // Başlangıçta boş query ile arama kullanılarak listeleme yapılır.
     final result = await searchDevicesUseCase(
+      status: event.status,
       page: event.page,
       pageSize: event.pageSize,
     );
 
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
-      (paginatedResult) => emit(DeviceLoaded(result: paginatedResult)),
+      (paginatedResult) => emit(DeviceLoaded(
+        result: paginatedResult,
+        status: event.status,
+      )),
     );
   }
 
@@ -114,6 +118,7 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
 
     final result = await searchDevicesUseCase(
       serialNumber: event.serialNumber,
+      status: event.status,
       filter: event.filter,
       page: event.page,
       pageSize: event.pageSize,

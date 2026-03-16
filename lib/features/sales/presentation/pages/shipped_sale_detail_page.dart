@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../config/routes/app_router.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../../domain/entities/sale_entity.dart';
 import '../../domain/entities/shipment_entity.dart';
@@ -10,8 +11,8 @@ import '../../domain/repositories/sale_repository.dart';
 import '../bloc/sale_bloc.dart';
 import '../bloc/sale_event.dart';
 import '../bloc/sale_state.dart';
-import '../widgets/shipment_create_dialog.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
+import '../../../../core/widgets/device_image_widget.dart';
 
 class ShippedSaleDetailPage extends StatefulWidget {
   final SaleEntity sale;
@@ -70,13 +71,10 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   }
 
   void _openShipmentDialog(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => BlocProvider<SaleBloc>.value(
-        value: context.read<SaleBloc>(),
-        child: ShipmentCreateDialog(sale: widget.sale),
-      ),
+    final result = await Navigator.pushNamed(
+      context, 
+      AppRouter.saleShip, 
+      arguments: widget.sale
     );
 
     if (result == true) {
@@ -249,18 +247,9 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                    ? Image.network(item.imageUrl!,
-                        errorBuilder: (c, e, s) => const Icon(Icons.computer,
-                            color: AppColors.primary))
-                    : const Icon(Icons.computer, color: AppColors.primary),
+              DeviceImageWidget(
+                deviceTypeName: item.modelName,
+                size: 48,
               ),
               const SizedBox(width: 16),
               Expanded(

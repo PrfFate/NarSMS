@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../data/models/shipment_create_request.dart';
+import '../../data/models/sale_create_request.dart';
 
 abstract class SaleEvent extends Equatable {
   const SaleEvent();
@@ -76,4 +77,11 @@ class RejectSale extends SaleEvent {
   const RejectSale(this.id, {this.note});
   @override
   List<Object?> get props => [id, note];
+}
+
+class CreateSale extends SaleEvent {
+  final SaleCreateRequest request;
+  const CreateSale(this.request);
+  @override
+  List<Object?> get props => [request];
 }

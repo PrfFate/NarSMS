@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../config/routes/app_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
@@ -68,7 +69,11 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
                     },
                   ),
                   ElevatedButton.icon(
-                    onPressed: () => _showAddEditDialog(context),
+                    onPressed: () => Navigator.pushNamed(context, AppRouter.carrierAdd).then((value) {
+                      if (value == true) {
+                        context.read<CarrierBloc>().add(LoadCarriers());
+                      }
+                    }),
                     icon: const Icon(Icons.add, size: 20, color: Colors.white),
                     label: const Text('Yeni Firma'),
                     style: ElevatedButton.styleFrom(
@@ -108,7 +113,11 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
                           final carrier = state.carriers[index];
                           return _CarrierCard(
                             carrier: carrier,
-                            onEdit: () => _showAddEditDialog(context, carrier: carrier),
+                            onEdit: () => Navigator.pushNamed(context, AppRouter.carrierAdd, arguments: carrier).then((value) {
+                              if (value == true) {
+                                context.read<CarrierBloc>().add(LoadCarriers());
+                              }
+                            }),
                             onDelete: () => _showDeleteConfirm(context, carrier),
                           );
                         },
@@ -125,49 +134,7 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
     );
   }
 
-  void _showAddEditDialog(BuildContext context, {CarrierEntity? carrier}) {
-    final controller = TextEditingController(text: carrier?.name);
-    final isEdit = carrier != null;
 
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(isEdit ? 'Firmayı Düzenle' : 'Yeni Firma Ekle'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Firma Adı',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                if (isEdit) {
-                  context.read<CarrierBloc>().add(UpdateCarrier(carrier.id, name));
-                } else {
-                  context.read<CarrierBloc>().add(CreateCarrier(name));
-                }
-                Navigator.pop(dialogCtx);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF57C00),
-              foregroundColor: Colors.white,
-            ),
-            child: Text(isEdit ? 'Güncelle' : 'Ekle'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showDeleteConfirm(BuildContext context, CarrierEntity carrier) {
     GenericConfirmationDialog.show(

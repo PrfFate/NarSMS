@@ -38,6 +38,7 @@ class ApiConstants {
   static const String suppliers = '$apiVersion/Supplier';
   static String deviceMovements(int id) => '$apiVersion/Device/$id/movements';
   // Sale endpoints
+  static const String saleCreate = '$apiVersion/Sale';
   static const String saleSearch = '$apiVersion/sale/search';
   static String saleApprove(int id) => '$apiVersion/Sale/$id/approve';
   static String saleReject(int id) => '$apiVersion/Sale/$id/reject';
@@ -45,7 +46,7 @@ class ApiConstants {
   // Shipment endpoints
   static String shipmentBySaleId(int saleId) =>
       '$apiVersion/shipment/sale/$saleId';
-  static const String shipmentCreate = '$apiVersion/Shipment';
+  static const String shipmentCreate = '$apiVersion/Shipment/sale';
 
   // Carrier endpoints
   static const String carrierAll = '$apiVersion/Carrier';
@@ -74,8 +75,6 @@ class ApiConstants {
   static String approvalWorkflowDeactivate(int id) =>
       '$apiVersion/ApprovalWorkflow/$id/deactivate';
 
-  // Device endpoints
-  static const String deviceSearch = '$apiVersion/Device/search';
   static String deviceActiveWarranty(int deviceId) =>
       '$apiVersion/Warranty/device/$deviceId/active';
 }

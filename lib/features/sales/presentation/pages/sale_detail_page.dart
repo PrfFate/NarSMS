@@ -4,6 +4,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
+import '../../../../config/routes/app_router.dart';
 import '../../domain/entities/sale_entity.dart';
 import '../../domain/entities/sale_item_entity.dart';
 import '../../domain/entities/approval_step_entity.dart';
@@ -12,7 +13,7 @@ import 'package:tasarim_app/features/auth/presentation/bloc/auth_state.dart';
 import '../bloc/sale_bloc.dart';
 import '../bloc/sale_event.dart';
 import '../bloc/sale_state.dart';
-import '../widgets/shipment_create_dialog.dart';
+import '../../../../core/widgets/device_image_widget.dart';
 
 class SaleDetailPage extends StatefulWidget {
   final SaleEntity sale;
@@ -33,19 +34,17 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
   }
 
   void _openShipmentDialog(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<SaleBloc>(),
-        child: ShipmentCreateDialog(sale: widget.sale),
-      ),
+    final result = await Navigator.pushNamed(
+      context, 
+      AppRouter.saleShip, 
+      arguments: widget.sale
     );
 
     if (result == true) {
       // Kargo oluşturulduysa sayfayı kapat ve listeyi yenile
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context, true);
+      if (context.mounted) {
+        Navigator.pop(context, true);
+      }
     }
   }
 
@@ -153,18 +152,9 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                    ? Image.network(item.imageUrl!,
-                        errorBuilder: (c, e, s) => const Icon(Icons.computer,
-                            color: AppColors.primary))
-                    : const Icon(Icons.computer, color: AppColors.primary),
+              DeviceImageWidget(
+                deviceTypeName: item.modelName,
+                size: 48,
               ),
               const SizedBox(width: 16),
               Expanded(

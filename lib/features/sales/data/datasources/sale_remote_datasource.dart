@@ -9,6 +9,7 @@ import '../models/shipment_model.dart';
 import '../models/warranty_model.dart';
 import '../models/carrier_model.dart';
 import '../models/shipment_create_request.dart';
+import '../models/sale_create_request.dart';
 import '../../../auth/data/models/user_model.dart';
 
 abstract class SaleRemoteDataSource {
@@ -17,6 +18,8 @@ abstract class SaleRemoteDataSource {
     required int page,
     required int pageSize,
   });
+  
+  Future<void> createSale(SaleCreateRequest request);
 
   Future<List<ShipmentModel>> getShipmentBySaleId(int saleId);
   Future<void> createShipment(ShipmentCreateRequest request);
@@ -45,7 +48,10 @@ class SaleRemoteDataSourceImpl
   Options get _authOptions {
     final token =
         sharedPreferences.getString(StorageConstants.accessToken) ?? '';
-    return Options(headers: {'Authorization': 'Bearer $token'});
+    return Options(headers: {
+      'Authorization': 'Bearer $token',
+      'accept': '*/*',
+    });
   }
 
   @override
@@ -65,6 +71,29 @@ class SaleRemoteDataSourceImpl
         options: _authOptions,
       );
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      handleDioException(e);
+    }
+  }
+
+  @override
+  Future<void> createSale(SaleCreateRequest request) async {
+    try {
+      final response = await dioClient.dio.post(
+        ApiConstants.saleCreate,
+        data: request.toJson(),
+        options: _authOptions,
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      final isSuccess = data['isSuccess'] as bool? ?? true;
+
+      if (!isSuccess || (response.statusCode != 200 && response.statusCode != 201)) {
+        throw ServerException(
+          message: data['error']?.toString() ?? 'Satış oluşturulamadı',
+          statusCode: response.statusCode,
+        );
+      }
     } on DioException catch (e) {
       handleDioException(e);
     }

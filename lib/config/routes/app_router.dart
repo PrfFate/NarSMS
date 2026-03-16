@@ -48,6 +48,9 @@ import 'package:tasarim_app/features/sales/presentation/pages/sale_detail_page.d
 import 'package:tasarim_app/features/sales/presentation/pages/shipped_sale_detail_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/carrier_bloc.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/carrier_add_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/shipment_add_page.dart';
+import 'package:tasarim_app/features/sales/domain/entities/carrier_entity.dart';
 import 'package:tasarim_app/features/sales/domain/entities/sale_entity.dart';
 
 // Devices
@@ -146,6 +149,7 @@ class AppRouter {
   static const String saleAdd = '/sales/add';
   static const String saleDetail = '/sales/detail';
   static const String shippedSaleDetail = '/sales/shipped-detail';
+  static const String saleShip = '/sales/ship';
 
   // Device routes
   static const String deviceList = '/devices/list';
@@ -177,6 +181,7 @@ class AppRouter {
 
   // Helper routes
   static const String carrierManagement = '/carrier-management';
+  static const String carrierAdd = '/carrier/add';
   static const String supplierManagement = '/supplier-management';
   static const String technicalService = '/technical-service';
 
@@ -309,7 +314,12 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
 
       case saleAdd:
-        return MaterialPageRoute(builder: (_) => const SaleAddPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const SaleAddPage(),
+          ),
+        );
 
       case completedSales:
         return MaterialPageRoute(builder: (_) => const CompletedSalesPage());
@@ -322,6 +332,15 @@ class AppRouter {
             child: SaleDetailPage(sale: sale),
           ),
         );
+      case saleShip:
+        final sale = settings.arguments as SaleEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: ShipmentAddPage(sale: sale),
+          ),
+        );
+
       case shippedSaleDetail:
         final sale = settings.arguments as SaleEntity;
         return MaterialPageRoute(
@@ -485,6 +504,14 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (_) => getIt<CarrierBloc>(),
             child: const CarrierManagementPage(),
+          ),
+        );
+      case carrierAdd:
+        final carrier = settings.arguments as CarrierEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CarrierBloc>(),
+            child: CarrierAddPage(carrier: carrier),
           ),
         );
 

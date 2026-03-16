@@ -16,13 +16,20 @@ class ShipmentCreateRequest {
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'saleId': saleId,
-      'carrierId': carrierId,
-      'trackingNumber': trackingNumber,
-      'fieldTeamUserId': fieldTeamUserId,
       'shipmentDate': shipmentDate,
       'saleItemIds': saleItemIds,
     };
+
+    if (carrierId != null) data['carrierId'] = carrierId;
+    
+    if (fieldTeamUserId != null) {
+      data['fieldTeamUserId'] = fieldTeamUserId;
+    } else if (trackingNumber != null && trackingNumber!.isNotEmpty) {
+      data['trackingNumber'] = trackingNumber;
+    }
+
+    return data;
   }
 }

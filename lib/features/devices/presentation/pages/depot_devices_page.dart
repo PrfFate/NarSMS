@@ -230,7 +230,7 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
                   }
 
                   if (state is DeviceLoaded) {
-                    final devices = state.result.items;
+                    final devices = state.devices;
                     if (devices.isEmpty) return _buildEmptyState();
 
                     return Column(
@@ -238,9 +238,9 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
                         Expanded(child: _buildDeviceList(devices)),
                         const SizedBox(height: 8),
                         PaginationWidget(
-                          currentPage: state.result.page,
-                          totalPages: state.result.totalPages,
-                          totalItems: state.result.totalCount,
+                          currentPage: _currentPage,
+                          totalPages: (state.totalCount / _pageSize).ceil(),
+                          totalItems: state.totalCount,
                           itemsPerPage: _pageSize,
                           onPageChanged: _onPageChanged,
                         ),

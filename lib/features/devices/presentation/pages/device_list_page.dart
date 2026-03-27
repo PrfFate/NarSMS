@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/models/device_filter_model.dart';
 import '../../../../core/widgets/device_filter_bottom_sheet.dart';
 import '../../../../core/widgets/device_status_badge.dart';
-import '../../../../core/widgets/pagination_widget.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/device_image_widget.dart';
@@ -29,51 +28,85 @@ class _DeviceListPageState extends State<DeviceListPage> {
   DeviceFilterModel _activeFilter = DeviceFilterModel.empty;
   List<String> _availableDeviceTypes = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
-  // Cihaz tiplerini doğrudan DI üzerinden çekeriz.
-  // DeviceBloc'a hiç dokunmaz → DeviceLoaded state'i bozulmaz.
+  /// Aynı anda birden fazla LoadMore isteği gitmesini engeller
+  bool _isLoadingMore = false;
+
   final _deviceTypesUseCase = GetIt.instance<GetDeviceTypesUseCase>();
 
   @override
   void initState() {
     super.initState();
-    _loadDevices(); // Sadece cihaz listesi yüklenir, başka bir event tetiklenmez.
+    _scrollController.addListener(_onScroll);
+    _loadDevices();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _loadDevices() {
+    // Yeni bir yükleme başlarken sayfa ve kilit sıfırlanır
+    setState(() {
+      _currentPage = 1;
+      _isLoadingMore = false;
+    });
     if (_activeFilter.isNotEmpty) {
-      // Aktif filtre varsa filtreyi koruyarak yenile
       context.read<DeviceBloc>().add(
-            FilterDevices(filter: _activeFilter, page: _currentPage, pageSize: _pageSize),
+            FilterDevices(filter: _activeFilter, page: 1, pageSize: _pageSize),
           );
     } else if (_searchQuery.isNotEmpty) {
-      // Aktif arama varsa aramayı koruyarak yenile
       context.read<DeviceBloc>().add(
             SearchDevices(
               serialNumber: _searchQuery,
-              page: _currentPage,
+              page: 1,
               pageSize: _pageSize,
             ),
           );
     } else {
-      // Hiçbir şey yoksa normal listele
       context.read<DeviceBloc>().add(
-            LoadDevices(page: _currentPage, pageSize: _pageSize),
+            LoadDevices(page: 1, pageSize: _pageSize),
           );
     }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
+      _loadNextPage();
+    }
+  }
+
+  void _loadNextPage() {
+    final state = context.read<DeviceBloc>().state;
+    if (state is! DeviceLoaded) return;
+    if (!state.hasMore || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _currentPage++;
+    });
+
+    context.read<DeviceBloc>().add(
+          LoadMoreDevices(
+            nextPage: _currentPage,
+            existingDevices: state.devices,
+            searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+            activeFilter: _activeFilter.isNotEmpty ? _activeFilter : null,
+          ),
+        );
   }
 
   void _onSearch(String query) {
     setState(() {
       _currentPage = 1;
+      _isLoadingMore = false;
       _searchQuery = query;
-      _activeFilter = DeviceFilterModel.empty; // Arama başlayınca filtreyi sıfırla
+      _activeFilter = DeviceFilterModel.empty;
     });
 
     if (query.trim().isEmpty) {
@@ -82,23 +115,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
       context.read<DeviceBloc>().add(
             SearchDevices(
               serialNumber: query.trim(),
-              page: _currentPage,
-              pageSize: _pageSize,
-            ),
-          );
-    }
-  }
-
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
-    if (_activeFilter.isEmpty && _searchQuery.isEmpty) {
-      _loadDevices();
-    } else {
-      context.read<DeviceBloc>().add(
-            SearchDevices(
-              serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
-              filter: _activeFilter.isEmpty ? null : _activeFilter,
-              page: _currentPage,
+              page: 1,
               pageSize: _pageSize,
             ),
           );
@@ -106,12 +123,10 @@ class _DeviceListPageState extends State<DeviceListPage> {
   }
 
   Future<void> _openFilterSheet() async {
-    // Cihaz tiplerini ilk açılışta bir kez çek; sonraki açılışlarda cache'den gelir.
-    // DeviceBloc'a hiç dokunmaz — DeviceLoaded state bozulmaz.
     if (_availableDeviceTypes.isEmpty) {
       final result = await _deviceTypesUseCase();
       result.fold(
-        (_) {}, // Hata olursa boş liste ile devam et
+        (_) {},
         (types) {
           if (mounted) setState(() => _availableDeviceTypes = types);
         },
@@ -129,6 +144,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
       setState(() {
         _activeFilter = result;
         _currentPage = 1;
+        _isLoadingMore = false;
         _searchQuery = '';
         _searchController.clear();
       });
@@ -136,7 +152,8 @@ class _DeviceListPageState extends State<DeviceListPage> {
         _loadDevices();
       } else {
         context.read<DeviceBloc>().add(
-              FilterDevices(filter: _activeFilter, page: 1, pageSize: _pageSize),
+              FilterDevices(
+                  filter: _activeFilter, page: 1, pageSize: _pageSize),
             );
       }
     }
@@ -185,7 +202,8 @@ class _DeviceListPageState extends State<DeviceListPage> {
                       ),
                       child: PopupMenuButton<String>(
                         tooltip: 'Diğer İşlemler',
-                        icon: const Icon(Icons.more_vert, color: Colors.black54),
+                        icon:
+                            const Icon(Icons.more_vert, color: Colors.black54),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -196,7 +214,8 @@ class _DeviceListPageState extends State<DeviceListPage> {
                               context,
                               AppRouter.deviceAdd,
                             );
-                            if (result == true) _loadDevices(); // Geri gelince listeyi yenile
+                            if (result == true)
+                              _loadDevices(); // Geri gelince listeyi yenile
                           } else if (value == 'Toplu Cihaz Ekle') {
                             final result = await Navigator.pushNamed(
                               context,
@@ -218,7 +237,9 @@ class _DeviceListPageState extends State<DeviceListPage> {
                           } else {
                             // TODO: Diğer menü aksiyonları buraya gelecek
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('$value işlemi yakında eklenecek')),
+                              SnackBar(
+                                  content:
+                                      Text('$value işlemi yakında eklenecek')),
                             );
                           }
                         },
@@ -227,15 +248,20 @@ class _DeviceListPageState extends State<DeviceListPage> {
                           Widget buildMenuButton(IconData icon, String text) {
                             return Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF57C00).withAlpha(15), // Turuncunun hafif saydam tonu (Arka plan)
-                                border: Border.all(color: const Color(0xFFF57C00).withAlpha(60)), // Hafif turuncu kenarlık
+                                color: const Color(0xFFF57C00).withAlpha(
+                                    15), // Turuncunun hafif saydam tonu (Arka plan)
+                                border: Border.all(
+                                    color: const Color(0xFFF57C00).withAlpha(
+                                        60)), // Hafif turuncu kenarlık
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(icon, size: 20, color: const Color(0xFFF57C00)),
+                                  Icon(icon,
+                                      size: 20, color: const Color(0xFFF57C00)),
                                   const SizedBox(width: 12),
                                   Text(
                                     text,
@@ -253,23 +279,32 @@ class _DeviceListPageState extends State<DeviceListPage> {
                           return <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
                               value: 'Yeni Cihaz Ekle',
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Dış boşluklar
-                              child: buildMenuButton(Icons.add_circle_outline, 'Yeni Cihaz Ekle'),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4), // Dış boşluklar
+                              child: buildMenuButton(
+                                  Icons.add_circle_outline, 'Yeni Cihaz Ekle'),
                             ),
                             PopupMenuItem<String>(
                               value: 'Toplu Cihaz Ekle',
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: buildMenuButton(Icons.library_add_outlined, 'Toplu Cihaz Ekle'),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              child: buildMenuButton(Icons.library_add_outlined,
+                                  'Toplu Cihaz Ekle'),
                             ),
                             PopupMenuItem<String>(
                               value: 'Cihaz Modelleri',
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: buildMenuButton(Icons.category_outlined, 'Cihaz Modelleri'),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              child: buildMenuButton(
+                                  Icons.category_outlined, 'Cihaz Modelleri'),
                             ),
                             PopupMenuItem<String>(
                               value: 'Tedarikçiler',
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: buildMenuButton(Icons.local_shipping_outlined, 'Tedarikçiler'),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              child: buildMenuButton(
+                                  Icons.local_shipping_outlined,
+                                  'Tedarikçiler'),
                             ),
                           ];
                         },
@@ -304,8 +339,13 @@ class _DeviceListPageState extends State<DeviceListPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: _activeFilter.totalSelectedCount > 0 ? const Color(0xFFF57C00) : Colors.white,
-                        border: Border.all(color: _activeFilter.totalSelectedCount > 0 ? const Color(0xFFF57C00) : Colors.grey[300]!),
+                        color: _activeFilter.totalSelectedCount > 0
+                            ? const Color(0xFFF57C00)
+                            : Colors.white,
+                        border: Border.all(
+                            color: _activeFilter.totalSelectedCount > 0
+                                ? const Color(0xFFF57C00)
+                                : Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Material(
@@ -316,7 +356,9 @@ class _DeviceListPageState extends State<DeviceListPage> {
                           child: Center(
                             child: Icon(
                               Icons.filter_list,
-                              color: _activeFilter.totalSelectedCount > 0 ? Colors.white : Colors.grey[700],
+                              color: _activeFilter.totalSelectedCount > 0
+                                  ? Colors.white
+                                  : Colors.grey[700],
                             ),
                           ),
                         ),
@@ -336,43 +378,47 @@ class _DeviceListPageState extends State<DeviceListPage> {
                           child: Center(
                             child: Text(
                               '${_activeFilter.totalSelectedCount}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
                       ),
                   ],
                 ),
-
               ],
             ),
             const SizedBox(height: 16),
 
-            // 3. Tablo / Kart Listesi ve Sayfalama
+            // 3. Liste (Infinite Scroll)
             Expanded(
-              child: BlocBuilder<DeviceBloc, DeviceState>(
+              child: BlocConsumer<DeviceBloc, DeviceState>(
+                listener: (context, state) {
+                  // Yükleme bitince kilit açılır
+                  if (state is DeviceLoaded && !state.isLoadingMore) {
+                    setState(() => _isLoadingMore = false);
+                  }
+                  if (state is DeviceError) {
+                    setState(() => _isLoadingMore = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: Colors.red),
+                    );
+                  }
+                },
                 builder: (context, state) {
                   if (state is DeviceLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   if (state is DeviceLoaded) {
-                    final devices = state.result.items;
+                    final devices = state.devices;
                     if (devices.isEmpty) return _buildEmptyState();
-
-                    return Column(
-                      children: [
-                        Expanded(child: _buildDeviceList(devices)),
-                        const SizedBox(height: 8),
-                        PaginationWidget(
-                          currentPage: state.result.page,
-                          totalPages: state.result.totalPages,
-                          totalItems: state.result.totalCount,
-                          itemsPerPage: _pageSize,
-                          onPageChanged: _onPageChanged,
-                        ),
-                      ],
-                    );
+                    return _buildDeviceList(
+                        devices, state.hasMore, state.isLoadingMore);
                   }
 
                   if (state is DeviceError) {
@@ -457,18 +503,44 @@ class _DeviceListPageState extends State<DeviceListPage> {
     );
   }
 
-  Widget _buildDeviceList(List<DeviceEntity> devices) {
+  Widget _buildDeviceList(
+      List<DeviceEntity> devices, bool hasMore, bool isLoadingMore) {
     return Card(
       color: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: devices.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        // Ekstra 1 öğe: yükleniyor göstergesi veya "tümü listelendi" mesajı
+        itemCount: devices.length + 1,
+        separatorBuilder: (context, index) => index < devices.length - 1
+            ? const Divider(height: 1)
+            : const SizedBox.shrink(),
         itemBuilder: (context, index) {
-          final device = devices[index];
+          // Son öğe: alt gösterge
+          if (index == devices.length) {
+            if (isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+            if (!hasMore && devices.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    '${devices.length} cihaz listelendi',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }
 
+          final device = devices[index];
           return InkWell(
             onTap: () async {
               final result = await Navigator.pushNamed(
@@ -476,49 +548,46 @@ class _DeviceListPageState extends State<DeviceListPage> {
                 AppRouter.deviceDetail,
                 arguments: device,
               );
-
               if (result == true) {
                 _loadDevices();
               }
             },
             child: Container(
               padding: const EdgeInsets.all(16.0),
-              color: Colors.transparent, 
+              color: Colors.transparent,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- KARTIN ÜST KISMI (Daima Görünür) ---
                   Row(
                     children: [
-                      // Sol Fotoğraf / Avatar
                       DeviceImageWidget(
                         deviceTypeName: device.deviceTypeName,
                         size: 48,
                       ),
                       const SizedBox(width: 14),
-
-                      // Başlık & Alt Başlık
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               device.deviceTypeName ?? 'Bilinmeyen Model',
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black87),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: Colors.black87),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               device.deviceSerialNumber ?? 'Seri No Yok',
-                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 13),
                               maxLines: 1,
                             ),
                           ],
                         ),
                       ),
-                      
-                      // Durum Etiketi (Badge) ve Ok (İleri) İşareti
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -544,5 +613,4 @@ class _DeviceListPageState extends State<DeviceListPage> {
       ),
     );
   }
-
 }

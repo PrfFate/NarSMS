@@ -19,6 +19,30 @@ class LoadDevices extends DeviceEvent {
   List<Object?> get props => [page, pageSize, status];
 }
 
+/// Mevcut listenin sonum gelince bir sonraki sayfayı yükler.
+/// [existingDevices] — şu an ekranda görünen tüm cihazlar (append için)
+class LoadMoreDevices extends DeviceEvent {
+  final int nextPage;
+  final int pageSize;
+  // Hangi modda olduğumuzu taşıyoruz:
+  final String? searchQuery;
+  final DeviceFilterModel? activeFilter;
+  final String? status;
+  final List existingDevices; // DeviceEntity listesi
+
+  const LoadMoreDevices({
+    required this.nextPage,
+    required this.existingDevices,
+    this.pageSize = 15,
+    this.searchQuery,
+    this.activeFilter,
+    this.status,
+  });
+
+  @override
+  List<Object?> get props => [nextPage, pageSize, searchQuery, activeFilter, status];
+}
+
 class LoadAssignedBackupDevices extends DeviceEvent {
   final bool isReturned;
   final String? serialNumber;

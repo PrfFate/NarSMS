@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/device_entity.dart';
 import '../../domain/usecases/search_devices_usecase.dart';
 import '../../domain/usecases/search_backup_assignments_usecase.dart';
 import '../../domain/usecases/assign_backup_assignment_usecase.dart';
@@ -37,6 +38,7 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     required this.getSuppliersUseCase,
   }) : super(DeviceInitial()) {
     on<LoadDevices>(_onLoadDevices);
+    on<LoadMoreDevices>(_onLoadMoreDevices);
     on<LoadAssignedBackupDevices>(_onLoadAssignedBackupDevices);
     on<SearchDevices>(_onSearchDevices);
     on<FilterDevices>(_onFilterDevices);
@@ -106,7 +108,6 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
   ) async {
     emit(DeviceLoading());
 
-    // Başlangıçta boş query ile arama kullanılarak listeleme yapılır.
     final result = await searchDevicesUseCase(
       status: event.status,
       page: event.page,
@@ -116,9 +117,51 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         status: event.status,
       )),
+    );
+  }
+
+  Future<void> _onLoadMoreDevices(
+    LoadMoreDevices event,
+    Emitter<DeviceState> emit,
+  ) async {
+    // Mevcut listeyi koruyarak 'yükleniyor' göster
+    if (state is DeviceLoaded) {
+      emit((state as DeviceLoaded).copyWith(isLoadingMore: true));
+    }
+
+    // Hangi modda olduğuna göre doğru API'yi çağır
+    final result = await searchDevicesUseCase(
+      serialNumber: event.searchQuery,
+      filter: event.activeFilter,
+      status: event.status,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) {
+        if (state is DeviceLoaded) {
+          emit((state as DeviceLoaded).copyWith(isLoadingMore: false));
+        }
+      },
+      (paginatedResult) {
+        final existing = List<DeviceEntity>.from(event.existingDevices);
+        final merged = [...existing, ...paginatedResult.items];
+        emit(DeviceLoaded(
+          devices: merged,
+          totalCount: paginatedResult.totalCount,
+          hasMore: merged.length < paginatedResult.totalCount,
+          isLoadingMore: false,
+          searchQuery: event.searchQuery,
+          activeFilter: event.activeFilter,
+          status: event.status,
+        ));
+      },
     );
   }
 
@@ -139,7 +182,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         status: 'AssignedBackup',
         searchQuery: event.serialNumber,
         activeFilter: event.filter,
@@ -164,7 +209,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         searchQuery: event.serialNumber,
         activeFilter: event.filter,
       )),
@@ -186,7 +233,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         activeFilter: event.filter,
       )),
     );

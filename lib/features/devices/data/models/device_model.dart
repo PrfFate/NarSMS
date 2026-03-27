@@ -34,11 +34,27 @@ class DeviceModel extends DeviceEntity {
     super.features,
     super.featuresName,
     super.featuresValue,
+    super.shipmentId,
+    super.shipmentStatus,
+    super.assignmentId,
+    super.customerId,
+    super.customerName,
+    super.assignmentDate,
+    super.returnDate,
+    super.isReturned,
+    super.notes,
+    super.returnReason,
   });
 
   factory DeviceModel.fromJson(Map<String, dynamic> json) {
+    // BackupAssignment API'den geliyorsa id alanı assignment id'yi temsil eder.
+    final bool isBackupAssignment = json.containsKey('deviceId') && json.containsKey('customerId');
+    final int deviceId = isBackupAssignment ? (json['deviceId'] as int? ?? 0) : (json['id'] as int? ?? 0);
+    final int? assignmentId = isBackupAssignment ? json['id'] as int? : null;
+
     return DeviceModel(
-      id: json['id'] as int? ?? 0,
+      id: deviceId,
+      assignmentId: assignmentId,
       deviceSerialNumber: json['deviceSerialNumber'] as String?,
       status: json['status'] as String?,
       purchaseDate: json['purchaseDate'] != null
@@ -57,6 +73,19 @@ class DeviceModel extends DeviceEntity {
       featuresValue: (json['featuresValue'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
+      shipmentId: json['shipmentId'] as int?,
+      shipmentStatus: json['shipmentStatus'] as String?,
+      customerId: isBackupAssignment ? json['customerId'] as int? : null,
+      customerName: json['customerName'] as String?,
+      assignmentDate: json['assignmentDate'] != null
+          ? DateTime.tryParse(json['assignmentDate'] as String)
+          : null,
+      returnDate: json['returnDate'] != null
+          ? DateTime.tryParse(json['returnDate'] as String)
+          : null,
+      isReturned: json['isReturned'] as bool?,
+      notes: json['notes'] as String?,
+      returnReason: json['returnReason'] as String?,
     );
   }
 
@@ -78,6 +107,16 @@ class DeviceModel extends DeviceEntity {
           .toList(),
       'featuresName': featuresName,
       'featuresValue': featuresValue,
+      'shipmentId': shipmentId,
+      'shipmentStatus': shipmentStatus,
+      'assignmentId': assignmentId,
+      'customerId': customerId,
+      'customerName': customerName,
+      'assignmentDate': assignmentDate?.toIso8601String(),
+      'returnDate': returnDate?.toIso8601String(),
+      'isReturned': isReturned,
+      'notes': notes,
+      'returnReason': returnReason,
     };
   }
 }

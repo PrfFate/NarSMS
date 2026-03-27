@@ -19,6 +19,25 @@ class LoadDevices extends DeviceEvent {
   List<Object?> get props => [page, pageSize, status];
 }
 
+class LoadAssignedBackupDevices extends DeviceEvent {
+  final bool isReturned;
+  final String? serialNumber;
+  final DeviceFilterModel? filter;
+  final int page;
+  final int pageSize;
+
+  const LoadAssignedBackupDevices({
+    this.isReturned = false,
+    this.serialNumber,
+    this.filter,
+    this.page = 1,
+    this.pageSize = 15,
+  });
+
+  @override
+  List<Object?> get props => [isReturned, serialNumber, filter, page, pageSize];
+}
+
 class SearchDevices extends DeviceEvent {
   final String? serialNumber;
   final String? status;
@@ -90,4 +109,24 @@ class DeleteDevice extends DeviceEvent {
 
   @override
   List<Object?> get props => [id];
+}
+
+class AssignBackupAssignment extends DeviceEvent {
+  final int deviceId;
+  final Map<String, dynamic> requestData;
+
+  const AssignBackupAssignment({required this.deviceId, required this.requestData});
+
+  @override
+  List<Object?> get props => [deviceId, requestData];
+}
+
+class ReturnBackupAssignment extends DeviceEvent {
+  final int assignmentId;
+  final String? reason;
+
+  const ReturnBackupAssignment({required this.assignmentId, this.reason});
+
+  @override
+  List<Object?> get props => [assignmentId, reason];
 }

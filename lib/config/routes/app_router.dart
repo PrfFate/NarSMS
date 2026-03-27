@@ -74,6 +74,7 @@ import '../../features/devices/presentation/pages/device_return_page.dart';
 import '../../features/devices/presentation/pages/depot_devices_page.dart';
 import '../../features/devices/presentation/pages/depot_backup_devices_page.dart';
 import '../../features/devices/presentation/pages/assigned_backup_devices_page.dart';
+import '../../features/devices/presentation/pages/backup_assignment_assign_page.dart';
 
 // Customers
 import '../../features/customers/presentation/pages/customer_list_page.dart';
@@ -166,6 +167,7 @@ class AppRouter {
   static const String depotDevices = '/devices/depot';
   static const String depotBackupDevices = '/devices/depot-backup';
   static const String assignedBackupDevices = '/devices/assigned-backup';
+  static const String backupAssignmentAssign = '/devices/backup-assign';
 
   // Customer routes
   static const String customerList = '/customers/list';
@@ -361,10 +363,11 @@ class AppRouter {
         );
 
       case deviceAdd:
+        final isBackup = settings.arguments as bool? ?? false;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (_) => getIt<DeviceBloc>(),
-            child: const DeviceAddPage(),
+            child: DeviceAddPage(isBackup: isBackup),
           ),
         );
 
@@ -455,6 +458,15 @@ class AppRouter {
       case assignedBackupDevices:
         return MaterialPageRoute(
             builder: (_) => const AssignedBackupDevicesPage());
+
+      case backupAssignmentAssign:
+        final device = settings.arguments as DeviceEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: BackupAssignmentAssignPage(device: device),
+          ),
+        );
 
       // Customers
       case customerList:

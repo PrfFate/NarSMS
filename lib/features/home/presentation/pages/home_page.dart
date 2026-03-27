@@ -12,6 +12,7 @@ import '../../../devices/presentation/pages/device_list_page.dart';
 import '../../../devices/presentation/bloc/device_bloc.dart';
 import '../../../devices/presentation/pages/depot_devices_page.dart';
 import '../../../devices/presentation/pages/depot_backup_devices_page.dart';
+import '../../../devices/presentation/pages/assigned_backup_devices_page.dart';
 import '../../../sales/presentation/pages/pending_sales_page.dart';
 import '../../../sales/presentation/pages/shipped_sales_page.dart';
 import '../../../sales/presentation/pages/delivered_sales_page.dart';
@@ -219,7 +220,15 @@ class HomePage extends StatelessWidget {
           child: const DepotDevicesPage(),
         );
       case AppRouter.depotBackupDevices:
-        return const DepotBackupDevicesPage();
+        return BlocProvider(
+          create: (_) => getIt<DeviceBloc>(),
+          child: const DepotBackupDevicesPage(),
+        );
+      case AppRouter.assignedBackupDevices:
+        return BlocProvider(
+          create: (_) => getIt<DeviceBloc>(),
+          child: const AssignedBackupDevicesPage(),
+        );
 
       // Satışlar
       case AppRouter.pendingSales:

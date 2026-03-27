@@ -10,7 +10,8 @@ import '../../../../core/widgets/custom_text_field.dart';
 import '../../../home/presentation/pages/barcode_scanner_page.dart';
 
 class DeviceAddPage extends StatefulWidget {
-  const DeviceAddPage({super.key});
+  final bool isBackup;
+  const DeviceAddPage({super.key, this.isBackup = false});
 
   @override
   State<DeviceAddPage> createState() => _DeviceAddPageState();
@@ -135,7 +136,7 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
         deviceSerialNumber: _serialNumberController.text.trim(),
         deviceTypeName: _selectedDeviceType!,
         supplierName: _selectedSupplier!,
-        status: 'InStock',
+        status: widget.isBackup ? 'Returned' : 'InStock',
         purchaseDate: purchaseDate,
         purchasePrice: purchasePrice,
         features: features,
@@ -157,7 +158,8 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50], // Müşteri UI uyumu
       appBar: AppBar(
-        title: const Text('Yeni Cihaz Ekle', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: Text(widget.isBackup ? 'Yeni Yedek Cihaz Ekle' : 'Yeni Cihaz Ekle', 
+            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),

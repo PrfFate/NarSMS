@@ -32,6 +32,9 @@ class ApiConstants {
   static String deviceUpdate(int id) => '$apiVersion/Device/$id';
   static String deviceDelete(int id) => '$apiVersion/Device/$id';
   static const String deviceBulkCreate = '$apiVersion/Device/bulk-create';
+  
+  // Backup Assignment endpoints
+  static const String backupAssignmentSearch = '$apiVersion/BackupAssignment/search';
 
   // Device Type and Supplier API Endpoints
   static const String deviceTypes = '$apiVersion/devicetype';

@@ -5,6 +5,9 @@ import '../data/datasources/device_remote_datasource.dart';
 import '../data/repositories/device_repository_impl.dart';
 import '../domain/repositories/device_repository.dart';
 import '../domain/usecases/search_devices_usecase.dart';
+import '../domain/usecases/search_backup_assignments_usecase.dart';
+import '../domain/usecases/assign_backup_assignment_usecase.dart';
+import '../domain/usecases/return_backup_assignment_usecase.dart';
 import '../domain/usecases/create_device_usecase.dart';
 import '../domain/usecases/bulk_create_devices_usecase.dart';
 import '../domain/usecases/update_device_usecase.dart';
@@ -32,6 +35,9 @@ Future<void> initDeviceModule() async {
   getIt.registerFactory(
     () => DeviceBloc(
       searchDevicesUseCase: getIt(),
+      searchBackupAssignmentsUseCase: getIt(),
+      assignBackupAssignmentUseCase: getIt(),
+      returnBackupAssignmentUseCase: getIt(),
       createDeviceUseCase: getIt(),
       bulkCreateDevicesUseCase: getIt(),
       updateDeviceUseCase: getIt(),
@@ -61,6 +67,9 @@ Future<void> initDeviceModule() async {
 
   // Use cases
   getIt.registerLazySingleton(() => SearchDevicesUseCase(getIt()));
+  getIt.registerLazySingleton(() => SearchBackupAssignmentsUseCase(getIt()));
+  getIt.registerLazySingleton(() => AssignBackupAssignmentUseCase(getIt()));
+  getIt.registerLazySingleton(() => ReturnBackupAssignmentUseCase(getIt()));
   getIt.registerLazySingleton(() => CreateDeviceUseCase(getIt()));
   getIt.registerLazySingleton(() => BulkCreateDevicesUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateDeviceUseCase(getIt()));

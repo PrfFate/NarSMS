@@ -15,6 +15,21 @@ abstract class DeviceRepository {
     int pageSize = 15,
   });
 
+  Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchBackupAssignments({
+    bool isReturned = false,
+    String? serialNumber,
+    DeviceFilterModel? filter,
+    int page = 1,
+    int pageSize = 15,
+  });
+
+  Future<Either<Failure, void>> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData);
+
+  Future<Either<Failure, void>> returnBackupAssignment(
+    int assignmentId,
+    String? reason,
+  );
+
   Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevicesWithFilters({
     String? serialNumber,
     DeviceFilterModel? filter,

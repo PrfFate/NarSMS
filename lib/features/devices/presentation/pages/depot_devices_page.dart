@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/models/device_filter_model.dart';
 import '../../../../core/widgets/device_filter_bottom_sheet.dart';
 import '../../../../core/widgets/device_status_badge.dart';
-import '../../../../core/widgets/pagination_widget.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/device_image_widget.dart';
@@ -30,27 +29,81 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
   DeviceFilterModel _activeFilter = const DeviceFilterModel(status: _status);
   List<String> _availableDeviceTypes = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  bool _isLoadingMore = false;
+  bool _showScrollToTop = false;
 
   final _deviceTypesUseCase = GetIt.instance<GetDeviceTypesUseCase>();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScrollListener);
     _loadDevices();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _loadDevices() {
+  void _onScrollListener() {
+    _onScroll();
+    _updateFabVisibility();
+  }
+
+  void _updateFabVisibility() {
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 200;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
+      _loadNextPage();
+    }
+  }
+
+  void _loadNextPage() {
+    final state = context.read<DeviceBloc>().state;
+    if (state is! DeviceLoaded) return;
+    if (!state.hasMore || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _currentPage++;
+    });
+
     context.read<DeviceBloc>().add(
-          LoadDevices(
+          LoadMoreDevices(
+            nextPage: _currentPage,
+            existingDevices: state.devices,
             status: _status,
+            searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+            activeFilter: _activeFilter.isEmpty ? null : _activeFilter,
+          ),
+        );
+  }
+
+  void _loadDevices() {
+    setState(() {
+      _currentPage = 1;
+      _isLoadingMore = false;
+    });
+    context.read<DeviceBloc>().add(
+          SearchDevices(
+            status: _status,
+            filter: _activeFilter.isEmpty ? null : _activeFilter,
             page: _currentPage,
             pageSize: _pageSize,
+            serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
           ),
         );
   }
@@ -58,8 +111,8 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
   void _onSearch(String query) {
     setState(() {
       _currentPage = 1;
+      _isLoadingMore = false;
       _searchQuery = query;
-      // Status'u koruyarak filtreyi sıfırla
       _activeFilter = const DeviceFilterModel(status: _status);
     });
 
@@ -67,19 +120,6 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
           SearchDevices(
             serialNumber: query.trim().isEmpty ? null : query.trim(),
             status: _status,
-            page: _currentPage,
-            pageSize: _pageSize,
-          ),
-        );
-  }
-
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
-    context.read<DeviceBloc>().add(
-          SearchDevices(
-            serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
-            status: _status,
-            filter: _activeFilter.isEmpty ? null : _activeFilter,
             page: _currentPage,
             pageSize: _pageSize,
           ),
@@ -107,9 +147,9 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
 
     if (result != null) {
       setState(() {
-        // Gelen filtreye her zaman status=InStock ekliyoruz
         _activeFilter = result.copyWith(status: _status);
         _currentPage = 1;
+        _isLoadingMore = false;
         _searchQuery = '';
         _searchController.clear();
       });
@@ -127,33 +167,30 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DeviceBloc, DeviceState>(
-      listener: (context, state) {
-        if (state is DeviceError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Padding(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton.small(
+              onPressed: () {
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                  );
+                }
+              },
+              backgroundColor: const Color(0xFFF57C00),
+              foregroundColor: Colors.white,
+              tooltip: 'Başa Dön',
+              child: const Icon(Icons.keyboard_arrow_up),
+            )
+          : null,
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Üst Kısım: Başlık
-            const Text(
-              'Depodaki Cihazlar',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-
             // 2. Arama ve Filtre
             Row(
               children: [
@@ -177,7 +214,6 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        // Sadece extra filtreler (status hariç) varsa turuncu yap
                         color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.white,
                         border: Border.all(color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(8),
@@ -221,9 +257,23 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
             ),
             const SizedBox(height: 16),
 
-            // 3. Tablo / Kart Listesi ve Sayfalama
+            // 3. Tablo / Kart Listesi ve Sayfalama (Infinite Scroll)
             Expanded(
-              child: BlocBuilder<DeviceBloc, DeviceState>(
+              child: BlocConsumer<DeviceBloc, DeviceState>(
+                listener: (context, state) {
+                  if (state is DeviceLoaded && !state.isLoadingMore) {
+                    setState(() => _isLoadingMore = false);
+                  }
+                  if (state is DeviceError) {
+                    setState(() => _isLoadingMore = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
                 builder: (context, state) {
                   if (state is DeviceLoading) {
                     return const Center(child: CircularProgressIndicator());
@@ -233,19 +283,7 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
                     final devices = state.devices;
                     if (devices.isEmpty) return _buildEmptyState();
 
-                    return Column(
-                      children: [
-                        Expanded(child: _buildDeviceList(devices)),
-                        const SizedBox(height: 8),
-                        PaginationWidget(
-                          currentPage: _currentPage,
-                          totalPages: (state.totalCount / _pageSize).ceil(),
-                          totalItems: state.totalCount,
-                          itemsPerPage: _pageSize,
-                          onPageChanged: _onPageChanged,
-                        ),
-                      ],
-                    );
+                    return _buildDeviceList(devices, state.hasMore, state.isLoadingMore);
                   }
 
                   if (state is DeviceError) {
@@ -329,16 +367,40 @@ class _DepotDevicesPageState extends State<DepotDevicesPage> {
     );
   }
 
-  Widget _buildDeviceList(List<DeviceEntity> devices) {
+  Widget _buildDeviceList(List<DeviceEntity> devices, bool hasMore, bool isLoadingMore) {
     return Card(
       color: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: devices.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemCount: devices.length + 1,
+        separatorBuilder: (context, index) => index < devices.length - 1
+            ? const Divider(height: 1)
+            : const SizedBox.shrink(),
         itemBuilder: (context, index) {
+          if (index == devices.length) {
+            if (isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+            if (!hasMore && devices.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    'Tüm ${devices.length} cihaz listelendi',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }
+
           final device = devices[index];
 
           return Container(

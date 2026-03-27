@@ -62,6 +62,27 @@ class LoadAssignedBackupDevices extends DeviceEvent {
   List<Object?> get props => [isReturned, serialNumber, filter, page, pageSize];
 }
 
+class LoadMoreAssignedBackupDevices extends DeviceEvent {
+  final int nextPage;
+  final int pageSize;
+  final String? serialNumber;
+  final DeviceFilterModel? filter;
+  final bool isReturned;
+  final List existingDevices;
+
+  const LoadMoreAssignedBackupDevices({
+    required this.nextPage,
+    required this.existingDevices,
+    this.pageSize = 15,
+    this.serialNumber,
+    this.filter,
+    this.isReturned = false,
+  });
+
+  @override
+  List<Object?> get props => [nextPage, pageSize, serialNumber, filter, isReturned];
+}
+
 class SearchDevices extends DeviceEvent {
   final String? serialNumber;
   final String? status;

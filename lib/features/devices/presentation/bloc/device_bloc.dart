@@ -40,6 +40,7 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     on<LoadDevices>(_onLoadDevices);
     on<LoadMoreDevices>(_onLoadMoreDevices);
     on<LoadAssignedBackupDevices>(_onLoadAssignedBackupDevices);
+    on<LoadMoreAssignedBackupDevices>(_onLoadMoreAssignedBackupDevices);
     on<SearchDevices>(_onSearchDevices);
     on<FilterDevices>(_onFilterDevices);
     on<LoadDeviceOptions>(_onLoadDeviceOptions);
@@ -189,6 +190,44 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
         searchQuery: event.serialNumber,
         activeFilter: event.filter,
       )),
+    );
+  }
+
+  Future<void> _onLoadMoreAssignedBackupDevices(
+    LoadMoreAssignedBackupDevices event,
+    Emitter<DeviceState> emit,
+  ) async {
+    if (state is DeviceLoaded) {
+      emit((state as DeviceLoaded).copyWith(isLoadingMore: true));
+    }
+
+    final result = await searchBackupAssignmentsUseCase(
+      isReturned: event.isReturned,
+      serialNumber: event.serialNumber,
+      filter: event.filter,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) {
+        if (state is DeviceLoaded) {
+          emit((state as DeviceLoaded).copyWith(isLoadingMore: false));
+        }
+      },
+      (paginatedResult) {
+        final existing = List<DeviceEntity>.from(event.existingDevices);
+        final merged = [...existing, ...paginatedResult.items];
+        emit(DeviceLoaded(
+          devices: merged,
+          totalCount: paginatedResult.totalCount,
+          hasMore: merged.length < paginatedResult.totalCount,
+          isLoadingMore: false,
+          searchQuery: event.serialNumber,
+          activeFilter: event.filter,
+          status: 'AssignedBackup',
+        ));
+      },
     );
   }
 

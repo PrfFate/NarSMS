@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/models/device_filter_model.dart';
 import '../../../../core/widgets/device_filter_bottom_sheet.dart';
 import '../../../../core/widgets/device_status_badge.dart';
-import '../../../../core/widgets/pagination_widget.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/device_image_widget.dart';
@@ -33,27 +32,81 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
   DeviceFilterModel _activeFilter = const DeviceFilterModel(status: _status);
   List<String> _availableDeviceTypes = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  bool _isLoadingMore = false;
+  bool _showScrollToTop = false;
 
   final _deviceTypesUseCase = GetIt.instance<GetDeviceTypesUseCase>();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScrollListener);
     _loadDevices();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _loadDevices() {
+  void _onScrollListener() {
+    _onScroll();
+    _updateFabVisibility();
+  }
+
+  void _updateFabVisibility() {
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 200;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
+      _loadNextPage();
+    }
+  }
+
+  void _loadNextPage() {
+    final state = context.read<DeviceBloc>().state;
+    if (state is! DeviceLoaded) return;
+    if (!state.hasMore || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _currentPage++;
+    });
+
     context.read<DeviceBloc>().add(
-          LoadDevices(
+          LoadMoreDevices(
+            nextPage: _currentPage,
+            existingDevices: state.devices,
             status: _status,
+            searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+            activeFilter: _activeFilter.isEmpty ? null : _activeFilter,
+          ),
+        );
+  }
+
+  void _loadDevices() {
+    setState(() {
+      _currentPage = 1;
+      _isLoadingMore = false;
+    });
+    context.read<DeviceBloc>().add(
+          SearchDevices(
+            status: _status,
+            filter: _activeFilter.isEmpty ? null : _activeFilter,
             page: _currentPage,
             pageSize: _pageSize,
+            serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
           ),
         );
   }
@@ -61,6 +114,7 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
   void _onSearch(String query) {
     setState(() {
       _currentPage = 1;
+      _isLoadingMore = false;
       _searchQuery = query;
       _activeFilter = const DeviceFilterModel(status: _status);
     });
@@ -69,19 +123,6 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
           SearchDevices(
             serialNumber: query.trim().isEmpty ? null : query.trim(),
             status: _status,
-            page: _currentPage,
-            pageSize: _pageSize,
-          ),
-        );
-  }
-
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
-    context.read<DeviceBloc>().add(
-          SearchDevices(
-            serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
-            status: _status,
-            filter: _activeFilter.isEmpty ? null : _activeFilter,
             page: _currentPage,
             pageSize: _pageSize,
           ),
@@ -111,6 +152,7 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
       setState(() {
         _activeFilter = result.copyWith(status: _status);
         _currentPage = 1;
+        _isLoadingMore = false;
         _searchQuery = '';
         _searchController.clear();
       });
@@ -128,188 +170,162 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DeviceBloc, DeviceState>(
-      listener: (context, state) {
-        if (state is DeviceError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Padding(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton.small(
+              onPressed: () {
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                  );
+                }
+              },
+              backgroundColor: const Color(0xFFF57C00),
+              foregroundColor: Colors.white,
+              tooltip: 'Başa Dön',
+              child: const Icon(Icons.keyboard_arrow_up),
+            )
+          : null,
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Üst Kısım: Başlık ve Navigasyon
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Yedek Cihaz Yönetimi',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                Expanded(
+                  child: _buildMenuButton(
+                    title: 'Depodaki Yedekler',
+                    isSelected: true,
+                    icon: Icons.warehouse,
+                    onTap: () {},
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      AppRouter.deviceAdd,
-                      arguments: true, // isBackup = true
-                    );
-                    if (result == true) _loadDevices();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF57C00),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    elevation: 0,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMenuButton(
+                    title: 'Atanmış Yedekler',
+                    isSelected: false,
+                    icon: Icons.person_pin_circle,
+                    onTap: () => context.read<HomeBloc>().add(const SelectPage(AppRouter.assignedBackupDevices)),
                   ),
-                  icon: const Icon(Icons.add, size: 20),
-                  label: const Text('Yeni Yedek', 
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMenuButton(
-                      title: 'Depodaki Yedekler',
-                      isSelected: true,
-                      icon: Icons.warehouse,
-                      onTap: () {},
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMenuButton(
-                      title: 'Atanmış Yedekler',
-                      isSelected: false,
-                      icon: Icons.person_pin_circle,
-                      onTap: () => context.read<HomeBloc>().add(const SelectPage(AppRouter.assignedBackupDevices)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // 2. Arama ve Filtre
-              Row(
-                children: [
-                  CustomRefreshButton(
-                    onPressed: _loadDevices,
+            // 2. Arama ve Filtre
+            Row(
+              children: [
+                CustomRefreshButton(
+                  onPressed: _loadDevices,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SearchInputWidget(
+                    hintText: 'Seri numarasına göre ara...',
+                    onSearch: _onSearch,
+                    controller: _searchController,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SearchInputWidget(
-                      hintText: 'Seri numarasına göre ara...',
-                      onSearch: _onSearch,
-                      controller: _searchController,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.white,
-                          border: Border.all(color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.grey[300]!),
+                ),
+                const SizedBox(width: 8),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.white,
+                        border: Border.all(color: _activeFilter.totalSelectedCount > 1 ? const Color(0xFFF57C00) : Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
                           borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            onTap: () => _openFilterSheet(),
-                            child: Center(
-                              child: Icon(
-                                Icons.filter_list,
-                                color: _activeFilter.totalSelectedCount > 1 ? Colors.white : Colors.grey[700],
-                              ),
+                          onTap: () => _openFilterSheet(),
+                          child: Center(
+                            child: Icon(
+                              Icons.filter_list,
+                              color: _activeFilter.totalSelectedCount > 1 ? Colors.white : Colors.grey[700],
                             ),
                           ),
                         ),
                       ),
-                      if (_activeFilter.totalSelectedCount > 1)
-                        Positioned(
-                          top: -6,
-                          right: -6,
-                          child: Container(
-                            width: 18,
-                            height: 18,
-                            decoration: const BoxDecoration(
-                              color: Colors.redAccent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${_activeFilter.totalSelectedCount - 1}',
-                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                              ),
+                    ),
+                    if (_activeFilter.totalSelectedCount > 1)
+                      Positioned(
+                        top: -6,
+                        right: -6,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Colors.redAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${_activeFilter.totalSelectedCount - 1}',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // 3. Liste ve Sayfalama
-              Expanded(
-                child: BlocBuilder<DeviceBloc, DeviceState>(
-                  builder: (context, state) {
-                    if (state is DeviceLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (state is DeviceLoaded) {
-                      final devices = state.devices;
-                      if (devices.isEmpty) return _buildEmptyState();
-
-                      return Column(
-                        children: [
-                          Expanded(child: _buildDeviceList(devices)),
-                          const SizedBox(height: 8),
-                          PaginationWidget(
-                            currentPage: _currentPage,
-                            totalPages: (state.totalCount / _pageSize).ceil(),
-                            totalItems: state.totalCount,
-                            itemsPerPage: _pageSize,
-                            onPageChanged: _onPageChanged,
-                          ),
-                        ],
-                      );
-                    }
-
-                    if (state is DeviceError) {
-                      return _buildErrorState(state.message);
-                    }
-
-                    return _buildEmptyState();
-                  },
+                      ),
+                  ],
                 ),
+                const SizedBox(width: 8),
+                _buildActionsMenu(context),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // 3. Liste ve Sayfalama (Infinite Scroll)
+            Expanded(
+              child: BlocConsumer<DeviceBloc, DeviceState>(
+                listener: (context, state) {
+                  if (state is DeviceLoaded && !state.isLoadingMore) {
+                    setState(() => _isLoadingMore = false);
+                  }
+                  if (state is DeviceError) {
+                    setState(() => _isLoadingMore = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  if (state is DeviceLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (state is DeviceLoaded) {
+                    final devices = state.devices;
+                    if (devices.isEmpty) return _buildEmptyState();
+
+                    return _buildDeviceList(devices, state.hasMore, state.isLoadingMore);
+                  }
+
+                  if (state is DeviceError) {
+                    return _buildErrorState(state.message);
+                  }
+
+                  return _buildEmptyState();
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
   Widget _buildMenuButton({
     required String title,
@@ -430,16 +446,40 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
     );
   }
 
-  Widget _buildDeviceList(List<DeviceEntity> devices) {
+  Widget _buildDeviceList(List<DeviceEntity> devices, bool hasMore, bool isLoadingMore) {
     return Card(
       color: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: devices.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemCount: devices.length + 1,
+        separatorBuilder: (context, index) => index < devices.length - 1
+            ? const Divider(height: 1)
+            : const SizedBox.shrink(),
         itemBuilder: (context, index) {
+          if (index == devices.length) {
+            if (isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+            if (!hasMore && devices.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    'Tüm ${devices.length} cihaz listelendi',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }
+
           final device = devices[index];
 
           return InkWell(
@@ -498,6 +538,67 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// ⋮ İşlemler açılır menüsü
+  Widget _buildActionsMenu(BuildContext context) {
+    Widget menuItem(IconData icon, String text) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF57C00).withAlpha(15),
+          border: Border.all(color: const Color(0xFFF57C00).withAlpha(60)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: const Color(0xFFF57C00)),
+            const SizedBox(width: 12),
+            Text(text,
+                style: const TextStyle(
+                    color: Color(0xFFF57C00),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: PopupMenuButton<String>(
+        tooltip: 'Diğer İşlemler',
+        icon: const Icon(Icons.more_vert, color: Colors.black54),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        offset: const Offset(0, 48),
+        onSelected: (value) async {
+          if (value == 'Yeni Yedek Ekle') {
+            final result = await Navigator.pushNamed(
+              context,
+              AppRouter.deviceAdd,
+              arguments: true, // isBackup = true
+            );
+            if (result == true) _loadDevices();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$value işlemi yakında eklenecek')),
+            );
+          }
+        },
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem<String>(
+            value: 'Yeni Yedek Ekle',
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: menuItem(Icons.add_circle_outline, 'Yeni Yedek Ekle'),
+          ),
+        ],
       ),
     );
   }

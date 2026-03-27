@@ -5,7 +5,6 @@ import '../../../../features/home/presentation/bloc/home_bloc.dart';
 import '../../../../features/home/presentation/bloc/home_event.dart';
 import '../../../../core/widgets/device_status_badge.dart';
 import '../../../../core/widgets/device_image_widget.dart';
-import '../../../../core/widgets/pagination_widget.dart';
 import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import '../../../../core/widgets/device_filter_bottom_sheet.dart';
@@ -34,22 +33,74 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
       const DeviceFilterModel(status: 'AssignedBackup');
   List<String> _availableDeviceTypes = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  bool _isLoadingMore = false;
+  bool _showScrollToTop = false;
 
   final _deviceTypesUseCase = GetIt.instance<GetDeviceTypesUseCase>();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScrollListener);
     _loadDevices();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScrollListener() {
+    _onScroll();
+    _updateFabVisibility();
+  }
+
+  void _updateFabVisibility() {
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 200;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
+      _loadNextPage();
+    }
+  }
+
+  void _loadNextPage() {
+    final state = context.read<DeviceBloc>().state;
+    if (state is! DeviceLoaded) return;
+    if (!state.hasMore || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _currentPage++;
+    });
+
+    context.read<DeviceBloc>().add(
+          LoadMoreAssignedBackupDevices(
+            nextPage: _currentPage,
+            existingDevices: state.devices,
+            isReturned: false,
+            serialNumber: _searchQuery.isNotEmpty ? _searchQuery : null,
+            filter: _activeFilter.isEmpty ? null : _activeFilter,
+          ),
+        );
+  }
+
   void _loadDevices() {
+    setState(() {
+      _currentPage = 1;
+      _isLoadingMore = false;
+    });
     context.read<DeviceBloc>().add(
           LoadAssignedBackupDevices(
             isReturned: false,
@@ -64,6 +115,7 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
   void _onSearch(String query) {
     setState(() {
       _currentPage = 1;
+      _isLoadingMore = false;
       _searchQuery = query;
     });
 
@@ -101,6 +153,7 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
       setState(() {
         _activeFilter = result.copyWith(status: 'AssignedBackup');
         _currentPage = 1;
+        _isLoadingMore = false;
         _searchQuery = '';
         _searchController.clear();
       });
@@ -109,72 +162,32 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
     }
   }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
-    _loadDevices();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DeviceBloc, DeviceState>(
-      listener: (context, state) {
-        if (state is DeviceError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Padding(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton.small(
+              onPressed: () {
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                  );
+                }
+              },
+              backgroundColor: const Color(0xFFF57C00),
+              foregroundColor: Colors.white,
+              tooltip: 'Başa Dön',
+              child: const Icon(Icons.keyboard_arrow_up),
+            )
+          : null,
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Başlık ve Menü Butonları
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Yedek Cihaz Yönetimi',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      AppRouter.deviceAdd,
-                      arguments: true, // isBackup = true
-                    );
-                    if (result == true) _loadDevices();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF57C00),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.add, size: 20),
-                  label: const Text('Yeni Yedek',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // İki ana menü seçeneği (Butonlar)
             Row(
               children: [
                 Expanded(
@@ -271,12 +284,29 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
                       ),
                   ],
                 ),
+                const SizedBox(width: 8),
+                _buildActionsMenu(context),
               ],
             ),
             const SizedBox(height: 16),
 
+            // 3. Tablo / Kart Listesi ve Sayfalama (Infinite Scroll)
             Expanded(
-              child: BlocBuilder<DeviceBloc, DeviceState>(
+              child: BlocConsumer<DeviceBloc, DeviceState>(
+                listener: (context, state) {
+                  if (state is DeviceLoaded && !state.isLoadingMore) {
+                    setState(() => _isLoadingMore = false);
+                  }
+                  if (state is DeviceError) {
+                    setState(() => _isLoadingMore = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
                 builder: (context, state) {
                   if (state is DeviceLoading) {
                     return const Center(child: CircularProgressIndicator());
@@ -286,19 +316,8 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
                     final devices = state.devices;
                     if (devices.isEmpty) return _buildEmptyState();
 
-                    return Column(
-                      children: [
-                        Expanded(child: _buildDeviceList(devices)),
-                        const SizedBox(height: 8),
-                        PaginationWidget(
-                          currentPage: _currentPage,
-                          totalPages: (state.totalCount / _pageSize).ceil(),
-                          totalItems: state.totalCount,
-                          itemsPerPage: _pageSize,
-                          onPageChanged: _onPageChanged,
-                        ),
-                      ],
-                    );
+                    return _buildDeviceList(
+                        devices, state.hasMore, state.isLoadingMore);
                   }
 
                   if (state is DeviceError) {
@@ -421,16 +440,41 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
     );
   }
 
-  Widget _buildDeviceList(List<DeviceEntity> devices) {
+  Widget _buildDeviceList(
+      List<DeviceEntity> devices, bool hasMore, bool isLoadingMore) {
     return Card(
       color: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: devices.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemCount: devices.length + 1,
+        separatorBuilder: (context, index) => index < devices.length - 1
+            ? const Divider(height: 1)
+            : const SizedBox.shrink(),
         itemBuilder: (context, index) {
+          if (index == devices.length) {
+            if (isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+            if (!hasMore && devices.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    'Tüm ${devices.length} cihaz listelendi',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }
+
           final device = devices[index];
 
           return InkWell(
@@ -519,6 +563,67 @@ class _AssignedBackupDevicesPageState extends State<AssignedBackupDevicesPage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// ⋮ İşlemler açılır menüsü
+  Widget _buildActionsMenu(BuildContext context) {
+    Widget menuItem(IconData icon, String text) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF57C00).withAlpha(15),
+          border: Border.all(color: const Color(0xFFF57C00).withAlpha(60)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: const Color(0xFFF57C00)),
+            const SizedBox(width: 12),
+            Text(text,
+                style: const TextStyle(
+                    color: Color(0xFFF57C00),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: PopupMenuButton<String>(
+        tooltip: 'Diğer İşlemler',
+        icon: const Icon(Icons.more_vert, color: Colors.black54),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        offset: const Offset(0, 48),
+        onSelected: (value) async {
+          if (value == 'Yeni Yedek Ekle') {
+            final result = await Navigator.pushNamed(
+              context,
+              AppRouter.deviceAdd,
+              arguments: true, // isBackup = true
+            );
+            if (result == true) _loadDevices();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$value işlemi yakında eklenecek')),
+            );
+          }
+        },
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem<String>(
+            value: 'Yeni Yedek Ekle',
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: menuItem(Icons.add_circle_outline, 'Yeni Yedek Ekle'),
+          ),
+        ],
       ),
     );
   }

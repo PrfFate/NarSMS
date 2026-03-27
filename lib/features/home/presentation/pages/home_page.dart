@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
+import 'package:tasarim_app/core/utils/page_title_notifier.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_event.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_state.dart';
@@ -40,39 +41,52 @@ import '../../../../core/di/injection.dart';
 import '../../../reporting/presentation/pages/customer_reports_page.dart';
 import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
-import 'package:tasarim_app/features/devices/presentation/pages/device_list_page.dart';
-import 'package:tasarim_app/features/devices/presentation/pages/depot_devices_page.dart';
-import 'package:tasarim_app/features/devices/presentation/pages/depot_backup_devices_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/pending_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/shipped_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/delivered_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/completed_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/rejected_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
 import 'package:tasarim_app/features/admin/presentation/pages/approval_mechanism_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/approved_sales_page.dart';
-import 'package:tasarim_app/features/sales/presentation/pages/partially_shipped_sales_page.dart';
-import 'package:tasarim_app/features/technical_service/presentation/pages/service_pre_registrations_page.dart';
-import 'package:tasarim_app/features/technical_service/presentation/pages/service_ongoing_page.dart';
-import 'package:tasarim_app/features/technical_service/presentation/pages/service_final_checks_page.dart';
-import 'package:tasarim_app/features/technical_service/presentation/pages/service_completed_page.dart';
-import 'package:tasarim_app/features/field_management/presentation/pages/pending_tasks_page.dart';
-import 'package:tasarim_app/features/field_management/presentation/pages/accepted_tasks_page.dart';
-import 'package:tasarim_app/features/field_management/presentation/pages/ongoing_tasks_page.dart';
-import 'package:tasarim_app/features/field_management/presentation/pages/completed_tasks_page.dart';
-import 'package:tasarim_app/features/field_management/presentation/pages/cancelled_tasks_page.dart';
-import 'package:tasarim_app/features/field_tasks/presentation/pages/my_assigned_tasks_page.dart';
-import 'package:tasarim_app/features/field_tasks/presentation/pages/my_accepted_tasks_page.dart';
-import 'package:tasarim_app/features/field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
-import 'package:tasarim_app/features/field_tasks/presentation/pages/my_completed_tasks_page.dart';
-import 'package:tasarim_app/features/customers/presentation/pages/customer_list_page.dart';
-import 'package:tasarim_app/features/customers/presentation/bloc/customer_bloc.dart';
-import 'package:tasarim_app/core/di/injection.dart';
-import 'package:tasarim_app/features/reporting/presentation/pages/customer_reports_page.dart';
-import 'package:tasarim_app/features/admin/presentation/pages/logging_page.dart';
-import 'package:tasarim_app/features/admin/presentation/pages/users_management_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
+
+/// Route → Sayfa başlığı eşleştirmesi
+const Map<String, String> _routeTitles = {
+  AppRouter.home: 'Dashboard',
+  // Cihazlar
+  AppRouter.deviceList: 'Tüm Cihazlar',
+  AppRouter.depotDevices: 'Depodaki Cihazlar',
+  AppRouter.depotBackupDevices: 'Depodaki Yedek Cihazlar',
+  AppRouter.assignedBackupDevices: 'Atanmış Yedek Cihazlar',
+  // Satışlar
+  AppRouter.pendingSales: 'Onay Bekleyen Satışlar',
+  AppRouter.shippedSales: 'Kargolanan Satışlar',
+  AppRouter.deliveredSales: 'Teslim Edilen Satışlar',
+  AppRouter.completedSales: 'Tamamlanan Satışlar',
+  AppRouter.rejectedSales: 'Reddedilen Satışlar',
+  AppRouter.approvalWorkflows: 'Onay Mekanizması',
+  AppRouter.approvedSales: 'Onaylanan Satışlar',
+  AppRouter.partiallyShippedSales: 'Kısmi Kargolanan Satışlar',
+  // Teknik Servis
+  AppRouter.servicePreRegistrations: 'Servis Ön Kayıtları',
+  AppRouter.serviceOngoing: 'Devam Eden Servisler',
+  AppRouter.serviceFinalChecks: 'Son Kontroller',
+  AppRouter.serviceCompleted: 'Tamamlanan Servisler',
+  // Saha Yönetimi
+  AppRouter.pendingTasks: 'Bekleyen Görevler',
+  AppRouter.acceptedTasks: 'Kabul Edilen Görevler',
+  AppRouter.ongoingTasks: 'Devam Eden Görevler',
+  AppRouter.completedTasks: 'Tamamlanan Görevler',
+  AppRouter.cancelledTasks: 'İptal Edilen Görevler',
+  // Saha Görevlerim
+  AppRouter.myAssignedTasks: 'Atanan Görevlerim',
+  AppRouter.myAcceptedTasks: 'Kabul Ettiğim Görevlerim',
+  AppRouter.myOngoingTasks: 'Devam Eden Görevlerim',
+  AppRouter.myCompletedTasks: 'Tamamladığım Görevlerim',
+  // Müşteriler
+  AppRouter.customerList: 'Müşteriler',
+  // Raporlama
+  AppRouter.customerReports: 'Müşteri Raporları',
+  // Admin
+  AppRouter.logging: 'Sistem Logları',
+  AppRouter.usersManagement: 'Kullanıcı Yönetimi',
+};
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -143,6 +157,10 @@ class HomePage extends StatelessWidget {
   Widget _buildMobileLayout(BuildContext context, HomeLoaded state) {
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
+    // Route değişince başlığı güncelle
+    final title = _routeTitles[state.selectedPageRoute] ?? 'Admin Paneli';
+    PageTitleNotifier.instance.value = title;
+
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: Colors.grey[100],
@@ -161,27 +179,29 @@ class HomePage extends StatelessWidget {
                 scaffoldKey.currentState?.openDrawer();
               },
             ),
-            const Text(
-              'Admin Paneli',
-              style: TextStyle(
-                color: Color(0xFFF57C00),
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+            ValueListenableBuilder<String>(
+              valueListenable: PageTitleNotifier.instance,
+              builder: (context, pageTitle, _) {
+                return Text(
+                  pageTitle,
+                  style: const TextStyle(
+                    color: Color(0xFFF57C00),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                );
+              },
             ),
           ],
         ),
         actions: const [],
       ),
-      onDrawerChanged: (isOpened) {
-        // Drawer açıldığında veya kapandığında callback
-      },
+      onDrawerChanged: (isOpened) {},
       drawerScrimColor: Colors.black26,
       drawerEnableOpenDragGesture: false,
       drawer: const HomeDrawerWidget(),
       body: BlocBuilder<HomeBloc, HomeState>(
         buildWhen: (previous, current) {
-          // Sadece selectedPageRoute değiştiğinde rebuild et
           if (previous is HomeLoaded && current is HomeLoaded) {
             return previous.selectedPageRoute != current.selectedPageRoute;
           }

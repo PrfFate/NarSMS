@@ -484,10 +484,14 @@ class _DepotBackupDevicesPageState extends State<DepotBackupDevicesPage> {
 
           return InkWell(
             onTap: () async {
+              final bloc = context.read<DeviceBloc>();
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => BackupDeviceDetailPage(device: device),
+                  builder: (context) => BlocProvider.value(
+                    value: bloc,
+                    child: BackupDeviceDetailPage(device: device),
+                  ),
                 ),
               );
               if (result == true) {

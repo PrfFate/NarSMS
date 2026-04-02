@@ -80,4 +80,9 @@ class ApiConstants {
 
   static String deviceActiveWarranty(int deviceId) =>
       '$apiVersion/Warranty/device/$deviceId/active';
+
+  // Service Request endpoints
+  static const String serviceRequestPaged = '$apiVersion/ServiceRequest/paged';
+  static const String serviceRequestCreate = '$apiVersion/ServiceRequest';
+  static const String serviceRequestShipment = '$apiVersion/Shipment/service-request';
 }

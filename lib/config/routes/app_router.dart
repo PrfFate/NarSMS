@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/pending_user_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
@@ -100,6 +98,11 @@ import '../../features/technical_service/presentation/pages/service_pre_registra
 import '../../features/technical_service/presentation/pages/service_ongoing_page.dart';
 import '../../features/technical_service/presentation/pages/service_final_checks_page.dart';
 import '../../features/technical_service/presentation/pages/service_completed_page.dart';
+import '../../features/technical_service/presentation/pages/service_request_shipment_page.dart';
+import '../../features/technical_service/domain/entities/service_request_entity.dart';
+import '../../features/technical_service/presentation/bloc/technical_service_bloc.dart';
+import '../../features/technical_service/presentation/pages/service_pre_registration_add_page.dart';
+import '../../features/technical_service/presentation/pages/service_pre_registration_detail_page.dart';
 
 // Admin
 import '../../features/admin/presentation/pages/approval_mechanism_page.dart';
@@ -193,6 +196,10 @@ class AppRouter {
   static const String serviceOngoing = '/technical-service/ongoing';
   static const String serviceFinalChecks = '/technical-service/final-checks';
   static const String serviceCompleted = '/technical-service/completed';
+  static const String servicePreRegistrationAdd = '/technical-service/pre-registration/add';
+  static const String servicePreRegistrationDetail = '/technical-service/pre-registration/detail';
+  static const String serviceRequestShipment = '/technical-service/pre-registration/shipment';
+
 
   // Admin routes
   static const String approvalMechanism = '/admin/approval-mechanism';
@@ -578,6 +585,35 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (_) => getIt<ApprovalBloc>(),
             child: const WorkflowCreatePage(),
+          ),
+        );
+
+      case servicePreRegistrationAdd:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServicePreRegistrationAddPage(),
+          ),
+        );
+
+      case servicePreRegistrationDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: ServicePreRegistrationDetailPage(request: request),
+          ),
+        );
+
+      case serviceRequestShipment:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: ServiceRequestShipmentPage(
+              requestId: args['requestId'] as int,
+              shipmentType: args['shipmentType'] as int,
+            ),
           ),
         );
 

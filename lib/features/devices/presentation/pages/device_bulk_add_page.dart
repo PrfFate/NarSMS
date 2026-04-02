@@ -21,7 +21,9 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
 
   // Form Controllers
   final _purchasePriceController = TextEditingController();
-  final List<TextEditingController> _serialNumberControllers = [TextEditingController()];
+  final List<TextEditingController> _serialNumberControllers = [
+    TextEditingController()
+  ];
 
   String? _selectedDeviceType;
   String? _selectedSupplier;
@@ -135,26 +137,40 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
 
       final features = <Map<String, dynamic>>[];
       final dt = _selectedDeviceType!.toLowerCase();
-      
+
       if (dt.contains('bilgisayar')) {
-        if (_selectedRam != null) features.add({"featureName": "RAM", "featureValue": _selectedRam});
-        if (_selectedHafiza != null) features.add({"featureName": "Hafıza", "featureValue": _selectedHafiza});
-        if (_selectedEkran != null) features.add({"featureName": "Ekran", "featureValue": _selectedEkran});
-        if (_selectedIslemci != null) features.add({"featureName": "İşlemci", "featureValue": _selectedIslemci});
+        if (_selectedRam != null)
+          features.add({"featureName": "RAM", "featureValue": _selectedRam});
+        if (_selectedHafiza != null)
+          features
+              .add({"featureName": "Hafıza", "featureValue": _selectedHafiza});
+        if (_selectedEkran != null)
+          features
+              .add({"featureName": "Ekran", "featureValue": _selectedEkran});
+        if (_selectedIslemci != null)
+          features.add(
+              {"featureName": "İşlemci", "featureValue": _selectedIslemci});
       } else if (dt.contains('hard disk') || dt.contains('harddisk')) {
-        if (_selectedHardDiskHafiza != null) features.add({"featureName": "Hafıza", "featureValue": _selectedHardDiskHafiza});
+        if (_selectedHardDiskHafiza != null)
+          features.add({
+            "featureName": "Hafıza",
+            "featureValue": _selectedHardDiskHafiza
+          });
       } else if (dt.contains('switch')) {
-        if (_selectedPort != null) features.add({"featureName": "Port", "featureValue": _selectedPort});
+        if (_selectedPort != null)
+          features.add({"featureName": "Port", "featureValue": _selectedPort});
       } else if (dt.contains('ups')) {
-        if (_selectedUpsGuc != null) features.add({"featureName": "Güç", "featureValue": _selectedUpsGuc});
+        if (_selectedUpsGuc != null)
+          features.add({"featureName": "Güç", "featureValue": _selectedUpsGuc});
       }
-      
+
       if (features.isEmpty) {
         features.add({"featureName": "No Properties", "featureValue": null});
       }
 
       final purchaseDate = _isPastDate ? _selectedDate! : DateTime.now();
-      final double purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
+      final double purchasePrice =
+          double.tryParse(_purchasePriceController.text) ?? 0.0;
 
       final devicesList = serialNumbers.map((sn) {
         return CreateDeviceRequestModel(
@@ -189,7 +205,9 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Toplu Cihaz Ekle', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text('Toplu Cihaz Ekle',
+            style:
+                TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -205,12 +223,14 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
         listener: (context, state) {
           if (state is DeviceActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+              SnackBar(
+                  content: Text(state.message), backgroundColor: Colors.green),
             );
             Navigator.pop(context, true);
           } else if (state is DeviceError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text(state.message), backgroundColor: Colors.red),
             );
           }
         },
@@ -220,8 +240,8 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
           List<String> suppliers = [];
 
           if (state is DeviceOptionsLoaded) {
-             deviceTypes = state.deviceTypes;
-             suppliers = state.suppliers;
+            deviceTypes = state.deviceTypes;
+            suppliers = state.suppliers;
           }
 
           return Stack(
@@ -235,13 +255,15 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                     children: [
                       _buildSectionTitle('Temel Bilgiler'),
                       const SizedBox(height: 12),
-                      
+
                       // CİHAZ MODELLERİ (DeviceType)
                       DropdownButtonFormField<String>(
                         value: _selectedDeviceType,
-                        decoration: _dropdownDecoration('Cihaz Modeli', Icons.devices),
+                        decoration:
+                            _dropdownDecoration('Cihaz Modeli', Icons.devices),
                         items: deviceTypes.map((type) {
-                          return DropdownMenuItem(value: type, child: Text(type));
+                          return DropdownMenuItem(
+                              value: type, child: Text(type));
                         }).toList(),
                         onChanged: (val) {
                           setState(() {
@@ -262,7 +284,8 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                       // TEDARİKÇİLER (Supplier)
                       DropdownButtonFormField<String>(
                         value: _selectedSupplier,
-                        decoration: _dropdownDecoration('Tedarikçi', Icons.local_shipping),
+                        decoration: _dropdownDecoration(
+                            'Tedarikçi', Icons.local_shipping),
                         items: suppliers.map((sup) {
                           return DropdownMenuItem(value: sup, child: Text(sup));
                         }).toList(),
@@ -277,10 +300,12 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                       CustomTextField(
                         controller: _purchasePriceController,
                         label: 'Alış Fiyatı (\$)',
-                        hint: 'Örn: 15000',
+                        hint: 'Alış Fiyatı girin',
                         keyboardType: TextInputType.number,
                         prefixIcon: const Icon(Icons.attach_money),
-                        validator: (value) => value == null || value.isEmpty ? 'Kayıt için alış fiyatı giriniz' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Kayıt için alış fiyatı giriniz'
+                            : null,
                       ),
                       const SizedBox(height: 24),
 
@@ -288,15 +313,17 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                       const SizedBox(height: 12),
 
                       // DİNAMİK ÖZELLİK LİSTESİ (Cihaza göre)
-                      if (_selectedDeviceType != null) ..._buildDynamicFeatures(),
-                      
+                      if (_selectedDeviceType != null)
+                        ..._buildDynamicFeatures(),
+
                       const SizedBox(height: 24),
                       _buildSectionTitle('Kayıt Tarihi (Ortak)'),
                       const SizedBox(height: 8),
 
                       CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Geçmiş Tarihli Cihaz Kaydı', style: TextStyle(fontSize: 14)),
+                        title: const Text('Geçmiş Tarihli Cihaz Kaydı',
+                            style: TextStyle(fontSize: 14)),
                         activeColor: const Color(0xFFF57C00),
                         value: _isPastDate,
                         onChanged: (val) {
@@ -313,7 +340,8 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                         InkWell(
                           onTap: () => _selectDate(context),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               border: Border.all(color: Colors.grey[300]!),
@@ -321,14 +349,18 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.calendar_today, color: Colors.grey),
+                                const Icon(Icons.calendar_today,
+                                    color: Colors.grey),
                                 const SizedBox(width: 12),
                                 Text(
-                                  _selectedDate == null 
-                                      ? 'Tarih Seçiniz' 
-                                      : DateFormat('dd.MM.yyyy').format(_selectedDate!),
+                                  _selectedDate == null
+                                      ? 'Tarih Seçiniz'
+                                      : DateFormat('dd.MM.yyyy')
+                                          .format(_selectedDate!),
                                   style: TextStyle(
-                                    color: _selectedDate == null ? Colors.grey[600] : Colors.black87,
+                                    color: _selectedDate == null
+                                        ? Colors.grey[600]
+                                        : Colors.black87,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -361,31 +393,38 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                                     controller: _serialNumberControllers[index],
                                     decoration: InputDecoration(
                                       hintText: 'Cihaz ${index + 1} Seri No',
-                                      prefixIcon: const Icon(Icons.numbers, color: Colors.grey),
+                                      prefixIcon: const Icon(Icons.numbers,
+                                          color: Colors.grey),
                                       suffixIcon: IconButton(
-                                        icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFF57C00)),
+                                        icon: const Icon(Icons.qr_code_scanner,
+                                            color: Color(0xFFF57C00)),
                                         tooltip: 'Barkod Okut',
                                         onPressed: () async {
                                           final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => const BarcodeScannerPage(),
+                                              builder: (context) =>
+                                                  const BarcodeScannerPage(),
                                             ),
                                           );
-                                          if (result != null && result is String) {
+                                          if (result != null &&
+                                              result is String) {
                                             setState(() {
-                                              _serialNumberControllers[index].text = result;
+                                              _serialNumberControllers[index]
+                                                  .text = result;
                                             });
                                           }
                                         },
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFE0E0E0)),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color(0xFFF57C00), width: 2),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFF57C00), width: 2),
                                       ),
                                       filled: true,
                                       fillColor: Colors.white,
@@ -393,18 +432,24 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) {
                                       // Yeni satır açmak için kolaylık
-                                      if (index == _serialNumberControllers.length - 1) {
+                                      if (index ==
+                                          _serialNumberControllers.length - 1) {
                                         _addSerialNumberField();
                                       }
                                     },
-                                    validator: (value) => value == null || value.isEmpty ? 'Gereklidir' : null,
+                                    validator: (value) =>
+                                        value == null || value.isEmpty
+                                            ? 'Gereklidir'
+                                            : null,
                                   ),
                                 ),
                                 if (_serialNumberControllers.length > 1) ...[
                                   const SizedBox(width: 8),
                                   IconButton(
-                                    icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
-                                    onPressed: () => _removeSerialNumberField(index),
+                                    icon: const Icon(Icons.remove_circle,
+                                        color: Colors.redAccent),
+                                    onPressed: () =>
+                                        _removeSerialNumberField(index),
                                   ),
                                 ]
                               ],
@@ -417,11 +462,15 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
                           onPressed: _addSerialNumberField,
-                          icon: const Icon(Icons.add_circle, color: Color(0xFFF57C00)),
-                          label: const Text('Yeni Seri Numarası Ekle', style: TextStyle(color: Color(0xFFF57C00), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.add_circle,
+                              color: Color(0xFFF57C00)),
+                          label: const Text('Yeni Seri Numarası Ekle',
+                              style: TextStyle(
+                                  color: Color(0xFFF57C00),
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 100), // Bottom button spacer
                     ],
                   ),
@@ -450,12 +499,22 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF57C00),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    child: isLoading 
-                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('${_serialNumberControllers.length} Cihazı Toplu Kaydet', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : Text(
+                            '${_serialNumberControllers.length} Cihazı Toplu Kaydet',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                   ),
                 ),
               ),
@@ -486,98 +545,118 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
   }
 
   InputDecoration _dropdownDecoration(String label, IconData icon) {
-     return InputDecoration(
-       labelText: label,
-       floatingLabelStyle: const TextStyle(color: Color(0xFFF57C00)),
-       prefixIcon: Icon(icon, color: Colors.grey[600]),
-       border: OutlineInputBorder(
-         borderRadius: BorderRadius.circular(12),
-         borderSide: BorderSide(color: Colors.grey[300]!),
-       ),
-       enabledBorder: OutlineInputBorder(
-         borderRadius: BorderRadius.circular(12),
-         borderSide: BorderSide(color: Colors.grey[300]!),
-       ),
-       focusedBorder: OutlineInputBorder(
-         borderRadius: BorderRadius.circular(12),
-         borderSide: const BorderSide(color: Color(0xFFF57C00), width: 2),
-       ),
-       filled: true,
-       fillColor: Colors.white,
-       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-     );
+    return InputDecoration(
+      labelText: label,
+      floatingLabelStyle: const TextStyle(color: Color(0xFFF57C00)),
+      prefixIcon: Icon(icon, color: Colors.grey[600]),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFF57C00), width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
   }
 
   List<Widget> _buildDynamicFeatures() {
-     final dt = _selectedDeviceType!.toLowerCase();
-     if (dt.contains('bilgisayar')) {
-        return [
-           // RAM
-           DropdownButtonFormField<String>(
-             value: _selectedRam,
-             decoration: _dropdownDecoration('RAM Seçimi', Icons.memory),
-             items: ramOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedRam = val),
-           ),
-           const SizedBox(height: 12),
-           // HAFIZA
-           DropdownButtonFormField<String>(
-             value: _selectedHafiza,
-             decoration: _dropdownDecoration('Hafıza Seçimi', Icons.storage),
-             items: hafizaOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedHafiza = val),
-           ),
-           const SizedBox(height: 12),
-           // EKRAN
-           DropdownButtonFormField<String>(
-             value: _selectedEkran,
-             decoration: _dropdownDecoration('Ekran Boyutu', Icons.desktop_windows),
-             items: ekranOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedEkran = val),
-           ),
-           const SizedBox(height: 12),
-           // İşlemci
-           DropdownButtonFormField<String>(
-             value: _selectedIslemci,
-             decoration: _dropdownDecoration('İşlemci Seçimi', Icons.developer_board),
-             items: islemciOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedIslemci = val),
-           ),
-        ];
-     } else if (dt.contains('hard disk') || dt.contains('harddisk')) {
-        return [
-           DropdownButtonFormField<String>(
-             value: _selectedHardDiskHafiza,
-             decoration: _dropdownDecoration('Hard Disk Kapasitesi', Icons.save),
-             items: hardDiskHafizaOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedHardDiskHafiza = val),
-           ),
-        ];
-     } else if (dt.contains('switch')) {
-        return [
-           DropdownButtonFormField<String>(
-             value: _selectedPort,
-             decoration: _dropdownDecoration('Port Sayısı', Icons.settings_ethernet),
-             items: portOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedPort = val),
-           ),
-        ];
-     } else if (dt.contains('ups')) {
-        return [
-           DropdownButtonFormField<String>(
-             value: _selectedUpsGuc,
-             decoration: _dropdownDecoration('UPS Gücü', Icons.battery_charging_full),
-             items: upsGucOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-             onChanged: (val) => setState(() => _selectedUpsGuc = val),
-           ),
-        ];
-     }
+    final dt = _selectedDeviceType!.toLowerCase();
+    if (dt.contains('bilgisayar')) {
+      return [
+        // RAM
+        DropdownButtonFormField<String>(
+          value: _selectedRam,
+          decoration: _dropdownDecoration('RAM Seçimi', Icons.memory),
+          items: ramOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedRam = val),
+        ),
+        const SizedBox(height: 12),
+        // HAFIZA
+        DropdownButtonFormField<String>(
+          value: _selectedHafiza,
+          decoration: _dropdownDecoration('Hafıza Seçimi', Icons.storage),
+          items: hafizaOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedHafiza = val),
+        ),
+        const SizedBox(height: 12),
+        // EKRAN
+        DropdownButtonFormField<String>(
+          value: _selectedEkran,
+          decoration:
+              _dropdownDecoration('Ekran Boyutu', Icons.desktop_windows),
+          items: ekranOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedEkran = val),
+        ),
+        const SizedBox(height: 12),
+        // İşlemci
+        DropdownButtonFormField<String>(
+          value: _selectedIslemci,
+          decoration:
+              _dropdownDecoration('İşlemci Seçimi', Icons.developer_board),
+          items: islemciOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedIslemci = val),
+        ),
+      ];
+    } else if (dt.contains('hard disk') || dt.contains('harddisk')) {
+      return [
+        DropdownButtonFormField<String>(
+          value: _selectedHardDiskHafiza,
+          decoration: _dropdownDecoration('Hard Disk Kapasitesi', Icons.save),
+          items: hardDiskHafizaOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedHardDiskHafiza = val),
+        ),
+      ];
+    } else if (dt.contains('switch')) {
+      return [
+        DropdownButtonFormField<String>(
+          value: _selectedPort,
+          decoration:
+              _dropdownDecoration('Port Sayısı', Icons.settings_ethernet),
+          items: portOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedPort = val),
+        ),
+      ];
+    } else if (dt.contains('ups')) {
+      return [
+        DropdownButtonFormField<String>(
+          value: _selectedUpsGuc,
+          decoration:
+              _dropdownDecoration('UPS Gücü', Icons.battery_charging_full),
+          items: upsGucOptions
+              .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedUpsGuc = val),
+        ),
+      ];
+    }
 
-     return [
-       const Padding(
-         padding: EdgeInsets.only(top: 8.0),
-         child: Text('Bu cihaz modeli özel ek donanım bilgisi gerektirmiyor.', style: TextStyle(color: Colors.grey, fontSize: 13, fontStyle: FontStyle.italic)),
-       )
-     ];
+    return [
+      const Padding(
+        padding: EdgeInsets.only(top: 8.0),
+        child: Text('Bu cihaz modeli özel ek donanım bilgisi gerektirmiyor.',
+            style: TextStyle(
+                color: Colors.grey, fontSize: 13, fontStyle: FontStyle.italic)),
+      )
+    ];
   }
 }

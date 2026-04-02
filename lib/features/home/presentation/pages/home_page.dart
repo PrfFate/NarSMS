@@ -23,6 +23,7 @@ import '../../../sales/presentation/pages/approval_mechanism_page.dart';
 import '../../../sales/presentation/pages/approved_sales_page.dart';
 import '../../../sales/presentation/pages/partially_shipped_sales_page.dart';
 import '../../../technical_service/presentation/pages/service_pre_registrations_page.dart';
+import '../../../technical_service/presentation/bloc/technical_service_bloc.dart';
 import '../../../technical_service/presentation/pages/service_ongoing_page.dart';
 import '../../../technical_service/presentation/pages/service_final_checks_page.dart';
 import '../../../technical_service/presentation/pages/service_completed_page.dart';
@@ -287,7 +288,10 @@ class HomePage extends StatelessWidget {
 
       // Teknik Servis
       case AppRouter.servicePreRegistrations:
-        return const ServicePreRegistrationsPage();
+        return BlocProvider(
+          create: (_) => getIt<TechnicalServiceBloc>(),
+          child: const ServicePreRegistrationsPage(),
+        );
       case AppRouter.serviceOngoing:
         return const ServiceOngoingPage();
       case AppRouter.serviceFinalChecks:

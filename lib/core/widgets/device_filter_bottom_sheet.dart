@@ -117,10 +117,6 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
                   ),
                 ],
                 const Spacer(),
-                TextButton(
-                  onPressed: _clear,
-                  child: const Text('Temizle', style: TextStyle(color: Colors.grey)),
-                ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close, color: Colors.grey),

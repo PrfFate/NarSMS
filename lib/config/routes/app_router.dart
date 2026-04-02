@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/pending_user_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
@@ -48,6 +46,9 @@ import 'package:tasarim_app/features/sales/presentation/pages/sale_detail_page.d
 import 'package:tasarim_app/features/sales/presentation/pages/shipped_sale_detail_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/carrier_bloc.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/carrier_add_page.dart';
+import 'package:tasarim_app/features/sales/presentation/pages/shipment_add_page.dart';
+import 'package:tasarim_app/features/sales/domain/entities/carrier_entity.dart';
 import 'package:tasarim_app/features/sales/domain/entities/sale_entity.dart';
 
 // Devices
@@ -71,6 +72,7 @@ import '../../features/devices/presentation/pages/device_return_page.dart';
 import '../../features/devices/presentation/pages/depot_devices_page.dart';
 import '../../features/devices/presentation/pages/depot_backup_devices_page.dart';
 import '../../features/devices/presentation/pages/assigned_backup_devices_page.dart';
+import '../../features/devices/presentation/pages/backup_assignment_assign_page.dart';
 
 // Customers
 import '../../features/customers/presentation/pages/customer_list_page.dart';
@@ -96,6 +98,11 @@ import '../../features/technical_service/presentation/pages/service_pre_registra
 import '../../features/technical_service/presentation/pages/service_ongoing_page.dart';
 import '../../features/technical_service/presentation/pages/service_final_checks_page.dart';
 import '../../features/technical_service/presentation/pages/service_completed_page.dart';
+import '../../features/technical_service/presentation/pages/service_request_shipment_page.dart';
+import '../../features/technical_service/domain/entities/service_request_entity.dart';
+import '../../features/technical_service/presentation/bloc/technical_service_bloc.dart';
+import '../../features/technical_service/presentation/pages/service_pre_registration_add_page.dart';
+import '../../features/technical_service/presentation/pages/service_pre_registration_detail_page.dart';
 
 // Admin
 import '../../features/admin/presentation/pages/approval_mechanism_page.dart';
@@ -146,6 +153,7 @@ class AppRouter {
   static const String saleAdd = '/sales/add';
   static const String saleDetail = '/sales/detail';
   static const String shippedSaleDetail = '/sales/shipped-detail';
+  static const String saleShip = '/sales/ship';
 
   // Device routes
   static const String deviceList = '/devices/list';
@@ -162,6 +170,7 @@ class AppRouter {
   static const String depotDevices = '/devices/depot';
   static const String depotBackupDevices = '/devices/depot-backup';
   static const String assignedBackupDevices = '/devices/assigned-backup';
+  static const String backupAssignmentAssign = '/devices/backup-assign';
 
   // Customer routes
   static const String customerList = '/customers/list';
@@ -177,6 +186,7 @@ class AppRouter {
 
   // Helper routes
   static const String carrierManagement = '/carrier-management';
+  static const String carrierAdd = '/carrier/add';
   static const String supplierManagement = '/supplier-management';
   static const String technicalService = '/technical-service';
 
@@ -186,6 +196,10 @@ class AppRouter {
   static const String serviceOngoing = '/technical-service/ongoing';
   static const String serviceFinalChecks = '/technical-service/final-checks';
   static const String serviceCompleted = '/technical-service/completed';
+  static const String servicePreRegistrationAdd = '/technical-service/pre-registration/add';
+  static const String servicePreRegistrationDetail = '/technical-service/pre-registration/detail';
+  static const String serviceRequestShipment = '/technical-service/pre-registration/shipment';
+
 
   // Admin routes
   static const String approvalMechanism = '/admin/approval-mechanism';
@@ -309,7 +323,13 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
 
       case saleAdd:
-        return MaterialPageRoute(builder: (_) => const SaleAddPage());
+        final initialDevice = settings.arguments as DeviceEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: SaleAddPage(initialDevice: initialDevice),
+          ),
+        );
 
       case completedSales:
         return MaterialPageRoute(builder: (_) => const CompletedSalesPage());
@@ -322,6 +342,15 @@ class AppRouter {
             child: SaleDetailPage(sale: sale),
           ),
         );
+      case saleShip:
+        final sale = settings.arguments as SaleEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: ShipmentAddPage(sale: sale),
+          ),
+        );
+
       case shippedSaleDetail:
         final sale = settings.arguments as SaleEntity;
         return MaterialPageRoute(
@@ -341,10 +370,11 @@ class AppRouter {
         );
 
       case deviceAdd:
+        final isBackup = settings.arguments as bool? ?? false;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (_) => getIt<DeviceBloc>(),
-            child: const DeviceAddPage(),
+            child: DeviceAddPage(isBackup: isBackup),
           ),
         );
 
@@ -421,7 +451,12 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeviceReturnPage());
 
       case depotDevices:
-        return MaterialPageRoute(builder: (_) => const DepotDevicesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: const DepotDevicesPage(),
+          ),
+        );
 
       case depotBackupDevices:
         return MaterialPageRoute(
@@ -430,6 +465,15 @@ class AppRouter {
       case assignedBackupDevices:
         return MaterialPageRoute(
             builder: (_) => const AssignedBackupDevicesPage());
+
+      case backupAssignmentAssign:
+        final device = settings.arguments as DeviceEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<DeviceBloc>(),
+            child: BackupAssignmentAssignPage(device: device),
+          ),
+        );
 
       // Customers
       case customerList:
@@ -487,6 +531,14 @@ class AppRouter {
             child: const CarrierManagementPage(),
           ),
         );
+      case carrierAdd:
+        final carrier = settings.arguments as CarrierEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CarrierBloc>(),
+            child: CarrierAddPage(carrier: carrier),
+          ),
+        );
 
       case supplierManagement:
         return MaterialPageRoute(
@@ -533,6 +585,35 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (_) => getIt<ApprovalBloc>(),
             child: const WorkflowCreatePage(),
+          ),
+        );
+
+      case servicePreRegistrationAdd:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServicePreRegistrationAddPage(),
+          ),
+        );
+
+      case servicePreRegistrationDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: ServicePreRegistrationDetailPage(request: request),
+          ),
+        );
+
+      case serviceRequestShipment:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: ServiceRequestShipmentPage(
+              requestId: args['requestId'] as int,
+              shipmentType: args['shipmentType'] as int,
+            ),
           ),
         );
 

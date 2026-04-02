@@ -6,6 +6,7 @@ import 'package:tasarim_app/features/sales/domain/usecases/carrier_management_us
 import 'package:tasarim_app/features/sales/domain/usecases/get_fielders_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/mark_shipment_delivered_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/sale_approval_usecases.dart';
+import 'package:tasarim_app/features/sales/domain/usecases/create_sale_usecase.dart';
 import 'sale_event.dart';
 import 'sale_state.dart';
 
@@ -19,6 +20,7 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
   final MarkShipmentDeliveredUseCase markDeliveredUseCase;
   final ApproveSaleUseCase approveSaleUseCase;
   final RejectSaleUseCase rejectSaleUseCase;
+  final CreateSaleUseCase createSaleUseCase;
 
   SaleBloc({
     required this.getSalesByStatus,
@@ -29,6 +31,7 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     required this.markDeliveredUseCase,
     required this.approveSaleUseCase,
     required this.rejectSaleUseCase,
+    required this.createSaleUseCase,
   }) : super(const SaleInitial()) {
     on<LoadSalesByStatus>(_onLoadSalesByStatus);
     on<LoadShipmentDetail>(_onLoadShipmentDetail);
@@ -37,6 +40,7 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     on<MarkShipmentDelivered>(_onMarkShipmentDelivered);
     on<ApproveSale>(_onApproveSale);
     on<RejectSale>(_onRejectSale);
+    on<CreateSale>(_onCreateSale);
   }
 
   Future<void> _onLoadSalesByStatus(
@@ -161,6 +165,20 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     result.fold(
       (failure) => emit(SaleError(failure.message)),
       (_) => emit(const SaleRejected()),
+    );
+  }
+
+  Future<void> _onCreateSale(
+    CreateSale event,
+    Emitter<SaleState> emit,
+  ) async {
+    emit(const SaleLoading());
+
+    final result = await createSaleUseCase(event.request);
+
+    result.fold(
+      (failure) => emit(SaleError(failure.message)),
+      (_) => emit(const SaleCreated()),
     );
   }
 }

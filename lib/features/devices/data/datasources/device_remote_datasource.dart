@@ -11,8 +11,21 @@ import '../models/supplier_model.dart';
 import '../../../../core/models/device_filter_model.dart';
 
 abstract class DeviceRemoteDataSource {
+  Future<Map<String, dynamic>> searchBackupAssignments({
+    bool isReturned = false,
+    String? serialNumber,
+    DeviceFilterModel? filter,
+    int page = 1,
+    int pageSize = 15,
+  });
+
+  Future<void> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData);
+
+  Future<void> returnBackupAssignment(int assignmentId, String? reason);
+
   Future<Map<String, dynamic>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   });
@@ -111,6 +124,7 @@ class DeviceRemoteDataSourceImpl
   @override
   Future<Map<String, dynamic>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   }) async {
@@ -121,7 +135,11 @@ class DeviceRemoteDataSourceImpl
       };
 
       if (serialNumber != null && serialNumber.isNotEmpty) {
-        queryParams['deviceSerialNumber'] = serialNumber; // Veya backend'in beklediği argüman
+        queryParams['deviceSerialNumber'] = serialNumber;
+      }
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
       }
 
       final response = await dioClient.get(
@@ -131,15 +149,124 @@ class DeviceRemoteDataSourceImpl
       );
 
       if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+        final data = response.data as Map<String, dynamic>;
+        // API seviyesinde başarı kontrolü
+        if (data['isSuccess'] == false) {
+          throw ServerException(
+            message: data['error'] ?? 'Cihaz araması başarısız',
+            statusCode: response.statusCode,
+          );
+        }
+        return data;
       }
 
       throw ServerException(
-        message: 'Cihaz araması başarısız',
+        message: 'Sunucu hatası: ${response.statusCode}',
         statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       handleDioException(e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> searchBackupAssignments({
+    bool isReturned = false,
+    String? serialNumber,
+    DeviceFilterModel? filter,
+    int page = 1,
+    int pageSize = 15,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'pageSize': pageSize,
+        'isReturned': isReturned,
+      };
+
+      if (serialNumber != null && serialNumber.isNotEmpty) {
+        queryParams['deviceSerialNumber'] = serialNumber;
+      }
+
+      if (filter != null && !filter.isEmpty) {
+        queryParams.addAll(filter.toQueryParams());
+      }
+
+      final response = await dioClient.get(
+        ApiConstants.backupAssignmentSearch,
+        queryParameters: queryParams,
+        options: _authOptions(),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+
+      throw ServerException(
+        message: 'Sunucu hatası: ${response.statusCode}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      handleDioException(e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData) async {
+    try {
+      final response = await dioClient.post(
+        '${ApiConstants.apiVersion}/BackupAssignment/assign/$deviceId',
+        data: requestData,
+        options: _authOptions(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return;
+      }
+
+      throw ServerException(
+        message: 'Sunucu hatası: ${response.statusCode}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      handleDioException(e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> returnBackupAssignment(int assignmentId, String? reason) async {
+    try {
+      final String requestBody = reason != null && reason.trim().isNotEmpty 
+          ? '"${reason.trim()}"' 
+          : '""';
+
+      final token = sharedPreferences.getString(StorageConstants.accessToken);
+
+      final response = await dioClient.post(
+        '${ApiConstants.apiVersion}/BackupAssignment/return/$assignmentId',
+        data: requestBody,
+        options: Options(
+          headers: {
+            if (token != null) 'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return;
+      }
+
+      throw ServerException(
+        message: 'Sunucu hatası: ${response.statusCode}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      handleDioException(e);
+      rethrow;
     }
   }
 

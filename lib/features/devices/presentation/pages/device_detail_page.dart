@@ -336,7 +336,7 @@ class DeviceDetailPage extends StatelessWidget {
               ),
               if (mov.customerName != null && mov.customerName!.isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text('Müşteri: ' + mov.customerName!, style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                Text('Müşteri: ' + mov.customerName!, style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w500)),
               ],
               const SizedBox(height: 2),
               Text(

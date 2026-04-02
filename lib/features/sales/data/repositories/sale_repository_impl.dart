@@ -10,6 +10,7 @@ import '../../domain/entities/carrier_entity.dart';
 import '../../domain/repositories/sale_repository.dart';
 import '../models/sale_model.dart';
 import '../models/shipment_create_request.dart';
+import '../models/sale_create_request.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/data/models/user_model.dart';
 
@@ -39,6 +40,11 @@ class SaleRepositoryImpl extends BaseRepository implements SaleRepository {
       );
       return _parsePaginatedResponse(data);
     });
+  }
+
+  @override
+  Future<Either<Failure, void>> createSale(SaleCreateRequest request) {
+    return runNetworkCall(() => remoteDataSource.createSale(request));
   }
 
   @override

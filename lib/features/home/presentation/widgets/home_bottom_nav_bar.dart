@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../pages/barcode_scanner_page.dart';
 import '../pages/profile_page.dart';
 import '../bloc/home_bloc.dart';
 
@@ -37,77 +36,13 @@ class HomeBottomNavBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
         children: [
-          Row(
-            children: [
-              _buildNavItem(context, Icons.home_outlined, 'Ana Sayfa', 0),
-              _buildNavItem(context, Icons.search_outlined, 'Arama', 1),
-              const Spacer(),
-              _buildNavItem(
-                  context, Icons.notifications_outlined, 'Bildirimler', 3),
-              _buildNavItem(context, Icons.person_outline, 'Profil', 4),
-            ],
-          ),
-
-          // Ortadaki barkod okuyucu butonu
-          Positioned(
-            left: MediaQuery.of(context).size.width / 2 - 35,
-            top: -20,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [AppColors.accent, AppColors.accentDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accentDark.withValues(alpha: 0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    onIndexChanged(2);
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BarcodeScannerPage(),
-                      ),
-                    );
-
-                    if (result != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Seri No: $result'),
-                          backgroundColor: AppColors.accentDark,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(35),
-                  child: Container(
-                    width: 70,
-                    height: 70,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.qr_code_scanner_rounded,
-                      size: 35,
-                      color: AppColors.textWhite,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _buildNavItem(context, Icons.home_outlined, 'Ana Sayfa', 0),
+          _buildNavItem(context, Icons.search_outlined, 'Arama', 1),
+          _buildNavItem(
+              context, Icons.notifications_outlined, 'Bildirimler', 3),
+          _buildNavItem(context, Icons.person_outline, 'Profil', 4),
         ],
       ),
     );

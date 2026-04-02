@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../../customers/domain/entities/paginated_result.dart';
 import '../../domain/entities/device_entity.dart';
 import '../../../../core/models/device_filter_model.dart';
 
@@ -15,14 +14,54 @@ class DeviceInitial extends DeviceState {}
 class DeviceLoading extends DeviceState {}
 
 class DeviceLoaded extends DeviceState {
-  final PaginatedResult<DeviceEntity> result;
+  final List<DeviceEntity> devices;
+  final int totalCount;
+  final bool hasMore;
+  final bool isLoadingMore;
   final String? searchQuery;
   final DeviceFilterModel? activeFilter;
+  final String? status;
 
-  const DeviceLoaded({required this.result, this.searchQuery, this.activeFilter});
+  const DeviceLoaded({
+    required this.devices,
+    required this.totalCount,
+    this.hasMore = false,
+    this.isLoadingMore = false,
+    this.searchQuery,
+    this.activeFilter,
+    this.status,
+  });
+
+  DeviceLoaded copyWith({
+    List<DeviceEntity>? devices,
+    int? totalCount,
+    bool? hasMore,
+    bool? isLoadingMore,
+    String? searchQuery,
+    DeviceFilterModel? activeFilter,
+    String? status,
+  }) {
+    return DeviceLoaded(
+      devices: devices ?? this.devices,
+      totalCount: totalCount ?? this.totalCount,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      searchQuery: searchQuery ?? this.searchQuery,
+      activeFilter: activeFilter ?? this.activeFilter,
+      status: status ?? this.status,
+    );
+  }
 
   @override
-  List<Object?> get props => [result, searchQuery, activeFilter];
+  List<Object?> get props => [
+        devices,
+        totalCount,
+        hasMore,
+        isLoadingMore,
+        searchQuery,
+        activeFilter,
+        status,
+      ];
 }
 
 class DeviceError extends DeviceState {

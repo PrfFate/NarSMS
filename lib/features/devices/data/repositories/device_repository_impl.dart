@@ -20,12 +20,14 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevices({
     String? serialNumber,
+    String? status,
     int page = 1,
     int pageSize = 15,
   }) async {
     try {
       final data = await remoteDataSource.searchDevices(
         serialNumber: serialNumber,
+        status: status,
         page: page,
         pageSize: pageSize,
       );
@@ -119,6 +121,69 @@ class DeviceRepositoryImpl implements DeviceRepository {
         pageSize: pageSizeVal,
         totalPages: totalPagesVal,
       ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchBackupAssignments({
+    bool isReturned = false,
+    String? serialNumber,
+    DeviceFilterModel? filter,
+    int page = 1,
+    int pageSize = 15,
+  }) async {
+    try {
+      final data = await remoteDataSource.searchBackupAssignments(
+        isReturned: isReturned,
+        serialNumber: serialNumber,
+        filter: filter,
+        page: page,
+        pageSize: pageSize,
+      );
+
+      final items = (data['items'] as List).map((item) {
+        return DeviceModel.fromJson(item as Map<String, dynamic>);
+      }).toList();
+
+      int totalCountVal = data['totalCount'] as int? ?? data['totalItems'] as int? ?? data['count'] as int? ?? items.length;
+      int pageVal = data['page'] as int? ?? data['pageNumber'] as int? ?? data['currentPage'] as int? ?? (data['index'] != null ? (data['index'] as int) + 1 : page);
+
+      return Right(PaginatedResult<DeviceEntity>(
+        items: items,
+        totalCount: totalCountVal,
+        page: pageVal,
+        pageSize: pageSize,
+        totalPages: (totalCountVal / pageSize).ceil(),
+      ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Beklenmeyen bir hata oluştu: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData) async {
+    try {
+      await remoteDataSource.assignBackupAssignment(deviceId, requestData);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Beklenmeyen bir hata oluştu: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> returnBackupAssignment(
+      int assignmentId, String? reason) async {
+    try {
+      await remoteDataSource.returnBackupAssignment(assignmentId, reason);
+      return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

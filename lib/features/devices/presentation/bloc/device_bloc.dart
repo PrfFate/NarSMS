@@ -1,5 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/device_entity.dart';
 import '../../domain/usecases/search_devices_usecase.dart';
+import '../../domain/usecases/search_backup_assignments_usecase.dart';
+import '../../domain/usecases/assign_backup_assignment_usecase.dart';
+import '../../domain/usecases/return_backup_assignment_usecase.dart';
 import '../../domain/usecases/create_device_usecase.dart';
 import '../../domain/usecases/bulk_create_devices_usecase.dart';
 import '../../domain/usecases/update_device_usecase.dart';
@@ -11,6 +15,9 @@ import 'device_state.dart';
 
 class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
   final SearchDevicesUseCase searchDevicesUseCase;
+  final SearchBackupAssignmentsUseCase searchBackupAssignmentsUseCase;
+  final AssignBackupAssignmentUseCase assignBackupAssignmentUseCase;
+  final ReturnBackupAssignmentUseCase returnBackupAssignmentUseCase;
   final CreateDeviceUseCase createDeviceUseCase;
   final BulkCreateDevicesUseCase bulkCreateDevicesUseCase;
   final UpdateDeviceUseCase updateDeviceUseCase;
@@ -20,6 +27,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
 
   DeviceBloc({
     required this.searchDevicesUseCase,
+    required this.searchBackupAssignmentsUseCase,
+    required this.assignBackupAssignmentUseCase,
+    required this.returnBackupAssignmentUseCase,
     required this.createDeviceUseCase,
     required this.bulkCreateDevicesUseCase,
     required this.updateDeviceUseCase,
@@ -28,6 +38,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     required this.getSuppliersUseCase,
   }) : super(DeviceInitial()) {
     on<LoadDevices>(_onLoadDevices);
+    on<LoadMoreDevices>(_onLoadMoreDevices);
+    on<LoadAssignedBackupDevices>(_onLoadAssignedBackupDevices);
+    on<LoadMoreAssignedBackupDevices>(_onLoadMoreAssignedBackupDevices);
     on<SearchDevices>(_onSearchDevices);
     on<FilterDevices>(_onFilterDevices);
     on<LoadDeviceOptions>(_onLoadDeviceOptions);
@@ -35,6 +48,8 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     on<BulkCreateDevices>(_onBulkCreateDevices);
     on<UpdateDevice>(_onUpdateDevice);
     on<DeleteDevice>(_onDeleteDevice);
+    on<AssignBackupAssignment>(_onAssignBackupAssignment);
+    on<ReturnBackupAssignment>(_onReturnBackupAssignment);
   }
 
   Future<void> _onLoadDeviceOptions(
@@ -94,15 +109,125 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
   ) async {
     emit(DeviceLoading());
 
-    // Başlangıçta boş query ile arama kullanılarak listeleme yapılır.
     final result = await searchDevicesUseCase(
+      status: event.status,
       page: event.page,
       pageSize: event.pageSize,
     );
 
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
-      (paginatedResult) => emit(DeviceLoaded(result: paginatedResult)),
+      (paginatedResult) => emit(DeviceLoaded(
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
+        status: event.status,
+      )),
+    );
+  }
+
+  Future<void> _onLoadMoreDevices(
+    LoadMoreDevices event,
+    Emitter<DeviceState> emit,
+  ) async {
+    // Mevcut listeyi koruyarak 'yükleniyor' göster
+    if (state is DeviceLoaded) {
+      emit((state as DeviceLoaded).copyWith(isLoadingMore: true));
+    }
+
+    // Hangi modda olduğuna göre doğru API'yi çağır
+    final result = await searchDevicesUseCase(
+      serialNumber: event.searchQuery,
+      filter: event.activeFilter,
+      status: event.status,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) {
+        if (state is DeviceLoaded) {
+          emit((state as DeviceLoaded).copyWith(isLoadingMore: false));
+        }
+      },
+      (paginatedResult) {
+        final existing = List<DeviceEntity>.from(event.existingDevices);
+        final merged = [...existing, ...paginatedResult.items];
+        emit(DeviceLoaded(
+          devices: merged,
+          totalCount: paginatedResult.totalCount,
+          hasMore: merged.length < paginatedResult.totalCount,
+          isLoadingMore: false,
+          searchQuery: event.searchQuery,
+          activeFilter: event.activeFilter,
+          status: event.status,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onLoadAssignedBackupDevices(
+    LoadAssignedBackupDevices event,
+    Emitter<DeviceState> emit,
+  ) async {
+    emit(DeviceLoading());
+
+    final result = await searchBackupAssignmentsUseCase(
+      isReturned: event.isReturned,
+      serialNumber: event.serialNumber,
+      filter: event.filter,
+      page: event.page,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) => emit(DeviceError(failure.message)),
+      (paginatedResult) => emit(DeviceLoaded(
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
+        status: 'AssignedBackup',
+        searchQuery: event.serialNumber,
+        activeFilter: event.filter,
+      )),
+    );
+  }
+
+  Future<void> _onLoadMoreAssignedBackupDevices(
+    LoadMoreAssignedBackupDevices event,
+    Emitter<DeviceState> emit,
+  ) async {
+    if (state is DeviceLoaded) {
+      emit((state as DeviceLoaded).copyWith(isLoadingMore: true));
+    }
+
+    final result = await searchBackupAssignmentsUseCase(
+      isReturned: event.isReturned,
+      serialNumber: event.serialNumber,
+      filter: event.filter,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) {
+        if (state is DeviceLoaded) {
+          emit((state as DeviceLoaded).copyWith(isLoadingMore: false));
+        }
+      },
+      (paginatedResult) {
+        final existing = List<DeviceEntity>.from(event.existingDevices);
+        final merged = [...existing, ...paginatedResult.items];
+        emit(DeviceLoaded(
+          devices: merged,
+          totalCount: paginatedResult.totalCount,
+          hasMore: merged.length < paginatedResult.totalCount,
+          isLoadingMore: false,
+          searchQuery: event.serialNumber,
+          activeFilter: event.filter,
+          status: 'AssignedBackup',
+        ));
+      },
     );
   }
 
@@ -114,6 +239,7 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
 
     final result = await searchDevicesUseCase(
       serialNumber: event.serialNumber,
+      status: event.status,
       filter: event.filter,
       page: event.page,
       pageSize: event.pageSize,
@@ -122,7 +248,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         searchQuery: event.serialNumber,
         activeFilter: event.filter,
       )),
@@ -144,7 +272,9 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (paginatedResult) => emit(DeviceLoaded(
-        result: paginatedResult,
+        devices: paginatedResult.items,
+        totalCount: paginatedResult.totalCount,
+        hasMore: paginatedResult.items.length < paginatedResult.totalCount,
         activeFilter: event.filter,
       )),
     );
@@ -175,6 +305,37 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     result.fold(
       (failure) => emit(DeviceError(failure.message)),
       (_) => emit(const DeviceActionSuccess('Cihaz başarıyla silindi')),
+    );
+  }
+
+  Future<void> _onAssignBackupAssignment(
+    AssignBackupAssignment event,
+    Emitter<DeviceState> emit,
+  ) async {
+    emit(DeviceLoading());
+
+    final result = await assignBackupAssignmentUseCase(event.deviceId, event.requestData);
+
+    result.fold(
+      (failure) => emit(DeviceError(failure.message)),
+      (_) => emit(const DeviceActionSuccess('Yedek cihaz başarıyla müşteriye atandı')),
+    );
+  }
+
+  Future<void> _onReturnBackupAssignment(
+    ReturnBackupAssignment event,
+    Emitter<DeviceState> emit,
+  ) async {
+    emit(DeviceLoading());
+
+    final result = await returnBackupAssignmentUseCase(
+      assignmentId: event.assignmentId,
+      reason: event.reason,
+    );
+
+    result.fold(
+      (failure) => emit(DeviceError(failure.message)),
+      (_) => emit(const DeviceActionSuccess('Cihaz başarıyla geri alındı')),
     );
   }
 }

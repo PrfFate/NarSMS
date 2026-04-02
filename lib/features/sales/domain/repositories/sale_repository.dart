@@ -6,6 +6,7 @@ import '../entities/shipment_entity.dart';
 import '../entities/warranty_entity.dart';
 import '../entities/carrier_entity.dart';
 import '../../data/models/shipment_create_request.dart';
+import '../../data/models/sale_create_request.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 
 /// Satış işlemleri için soyut repository sözleşmesi.
@@ -18,6 +19,8 @@ abstract class SaleRepository {
     required int page,
     required int pageSize,
   });
+  
+  Future<Either<Failure, void>> createSale(SaleCreateRequest request);
 
   /// Belirli bir satışa ait kargo detayını getirir.
   ///

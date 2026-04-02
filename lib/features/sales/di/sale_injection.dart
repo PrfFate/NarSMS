@@ -16,6 +16,7 @@ import 'package:tasarim_app/features/sales/domain/usecases/get_fielders_usecase.
 import 'package:tasarim_app/features/sales/domain/usecases/approval_usecases.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/mark_shipment_delivered_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/sale_approval_usecases.dart';
+import 'package:tasarim_app/features/sales/domain/usecases/create_sale_usecase.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/carrier_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
@@ -75,6 +76,8 @@ Future<void> initSaleModule() async {
       () => ApproveSaleUseCase(getIt.get<SaleRepository>()));
   getIt.registerLazySingleton(
       () => RejectSaleUseCase(getIt.get<SaleRepository>()));
+  getIt.registerLazySingleton(
+      () => CreateSaleUseCase(getIt.get<SaleRepository>()));
 
   // Approval Use Cases
   getIt.registerLazySingleton(
@@ -103,6 +106,7 @@ Future<void> initSaleModule() async {
       markDeliveredUseCase: getIt.get<MarkShipmentDeliveredUseCase>(),
       approveSaleUseCase: getIt.get<ApproveSaleUseCase>(),
       rejectSaleUseCase: getIt.get<RejectSaleUseCase>(),
+      createSaleUseCase: getIt.get<CreateSaleUseCase>(),
     ),
   );
 

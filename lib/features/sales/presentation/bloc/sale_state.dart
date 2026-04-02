@@ -69,6 +69,10 @@ class SaleRejected extends SaleState {
   const SaleRejected();
 }
 
+class SaleCreated extends SaleState {
+  const SaleCreated();
+}
+
 class SaleError extends SaleState {
   final String message;
 

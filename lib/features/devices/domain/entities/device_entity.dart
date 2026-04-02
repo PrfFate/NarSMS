@@ -25,6 +25,18 @@ class DeviceEntity extends Equatable {
   final List<DeviceFeatureEntity>? features;
   final List<String>? featuresName;
   final List<String>? featuresValue;
+  final int? shipmentId;
+  final String? shipmentStatus;
+  
+  // Backup Assignment özel alanları
+  final int? assignmentId;
+  final int? customerId;
+  final String? customerName;
+  final DateTime? assignmentDate;
+  final DateTime? returnDate;
+  final bool? isReturned;
+  final String? notes;
+  final String? returnReason;
 
   const DeviceEntity({
     required this.id,
@@ -38,6 +50,16 @@ class DeviceEntity extends Equatable {
     this.features,
     this.featuresName,
     this.featuresValue,
+    this.shipmentId,
+    this.shipmentStatus,
+    this.assignmentId,
+    this.customerId,
+    this.customerName,
+    this.assignmentDate,
+    this.returnDate,
+    this.isReturned,
+    this.notes,
+    this.returnReason,
   });
 
   @override
@@ -53,5 +75,15 @@ class DeviceEntity extends Equatable {
         features,
         featuresName,
         featuresValue,
+        shipmentId,
+        shipmentStatus,
+        assignmentId,
+        customerId,
+        customerName,
+        assignmentDate,
+        returnDate,
+        isReturned,
+        notes,
+        returnReason,
       ];
 }

@@ -12,7 +12,6 @@ import '../models/sale_model.dart';
 import '../models/shipment_create_request.dart';
 import '../models/sale_create_request.dart';
 import '../../../auth/domain/entities/user_entity.dart';
-import '../../../auth/data/models/user_model.dart';
 
 /// [SaleRepository] implementasyonu.
 ///

@@ -8,7 +8,6 @@ import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import '../../../../core/widgets/custom_list_card.dart';
-import '../../../../core/widgets/delete_confirmation_dialog.dart';
 
 /// Page displaying the paginated customer list.
 /// Design matches the existing device_list_page pattern.
@@ -67,16 +66,6 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
-  Future<void> _onDeleteCustomer(int id, String name) async {
-    final confirmed = await DeleteConfirmationDialog.show(
-      context: context,
-      title: 'Müşteri Sil',
-      itemName: name,
-    );
-    if (confirmed == true && mounted) {
-      context.read<CustomerBloc>().add(DeleteCustomer(id));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

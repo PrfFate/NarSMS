@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
-import 'package:tasarim_app/core/theme/app_colors.dart';
 import 'package:tasarim_app/core/widgets/generic_confirmation_dialog.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_event.dart';
@@ -237,7 +236,7 @@ class _WorkflowCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      workflow.name ?? 'İsimsiz Akış',
+                      workflow.name,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -249,12 +248,12 @@ class _WorkflowCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Entity: ${workflow.entityType ?? "Bilinmiyor"}',
+                'Entity: ${workflow.entityType}',
                 style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
               const SizedBox(height: 4),
               Text(
-                'Adım Sayısı: ${workflow.steps?.length ?? 0}',
+                'Adım Sayısı: ${workflow.steps.length}',
                 style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
               const Divider(height: 24),

@@ -22,7 +22,7 @@ class CreateDeviceRequestModel {
     if (iso.contains('.')) {
       List<String> parts = iso.split('.');
       String ms = parts[1].replaceAll('Z', '').padRight(3, '0').substring(0, 3);
-      return "${parts[0]}.$ms" + "Z"; // 3 MS digit + Z
+      return "${parts[0]}.${ms}Z"; // 3 MS digit + Z
     } else {
       return "${iso.replaceAll('Z', '')}.000Z";
     }

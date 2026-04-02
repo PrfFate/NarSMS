@@ -9,8 +9,6 @@ import '../bloc/sale_bloc.dart';
 import '../bloc/sale_event.dart';
 import '../bloc/sale_state.dart';
 
-import '../widgets/carrier_management_dialog.dart';
-
 /// Kargolama bekleyen (Onaylanmış) satışlar sayfası.
 ///
 /// [GET /api/sale/search?status=Approved&page=n&pageSize=20]

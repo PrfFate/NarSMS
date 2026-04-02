@@ -302,8 +302,9 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   Color _getStatusColor(String? status) {
     if (status == null) return Colors.grey;
     final lower = status.toLowerCase();
-    if (lower.contains('onaylandı') || lower.contains('approved'))
+    if (lower.contains('onaylandı') || lower.contains('approved')) {
       return Colors.green;
+    }
     if (lower.contains('red') || lower.contains('rejected')) return Colors.red;
     return AppColors.primary; // Bekliyor / Pending
   }

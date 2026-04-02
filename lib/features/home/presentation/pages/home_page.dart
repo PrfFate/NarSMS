@@ -19,7 +19,6 @@ import '../../../sales/presentation/pages/shipped_sales_page.dart';
 import '../../../sales/presentation/pages/delivered_sales_page.dart';
 import '../../../sales/presentation/pages/completed_sales_page.dart';
 import '../../../sales/presentation/pages/rejected_sales_page.dart';
-import '../../../sales/presentation/pages/approval_mechanism_page.dart';
 import '../../../sales/presentation/pages/approved_sales_page.dart';
 import '../../../sales/presentation/pages/partially_shipped_sales_page.dart';
 import '../../../technical_service/presentation/pages/service_pre_registrations_page.dart';
@@ -44,7 +43,6 @@ import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
-import 'package:tasarim_app/features/admin/presentation/pages/approval_mechanism_page.dart';
 import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
 
 /// Route → Sayfa başlığı eşleştirmesi

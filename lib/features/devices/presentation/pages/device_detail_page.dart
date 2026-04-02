@@ -82,7 +82,9 @@ class DeviceDetailPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushNamed(context, AppRouter.deviceEdit, arguments: device).then((value) {
                     if (value == true) {
-                      Navigator.pop(context, true); // Eğer düzenlendiyse çıkarken ana listeye sinyal ver
+                      if (context.mounted) {
+                        Navigator.pop(context, true); // Eğer düzenlendiyse çıkarken ana listeye sinyal ver
+                      }
                     }
                   });
                 },
@@ -128,7 +130,7 @@ class DeviceDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Seri Numarası: ' + (device.deviceSerialNumber ?? '-'),
+                          'Seri Numarası: ${device.deviceSerialNumber ?? '-'}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -176,7 +178,7 @@ class DeviceDetailPage extends StatelessWidget {
                   _buildInfoRow(
                     icon: Icons.local_shipping_outlined,
                     title: 'Tedarikçi',
-                    value: device.supplierName ?? (device.supplierId != null ? 'Tedarikçi ID: ' + device.supplierId.toString() : '-'),
+                    value: device.supplierName ?? (device.supplierId != null ? 'Tedarikçi ID: ${device.supplierId}' : '-'),
                   ),
                   const SizedBox(height: 16),
                   _buildInfoRow(
@@ -331,12 +333,12 @@ class DeviceDetailPage extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                (mov.fromLocation ?? "-") + " ➔ " + (mov.toLocation ?? "-"),
+                "${mov.fromLocation ?? "-"} ➔ ${mov.toLocation ?? "-"}",
                 style: TextStyle(color: Colors.grey[700], fontSize: 13),
               ),
               if (mov.customerName != null && mov.customerName!.isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text('Müşteri: ' + mov.customerName!, style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w500)),
+                Text('Müşteri: ${mov.customerName!}', style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500)),
               ],
               const SizedBox(height: 2),
               Text(

@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../bloc/device_bloc.dart';
 import '../bloc/device_event.dart';
 import '../bloc/device_state.dart';
-import '../../data/models/create_device_request_model.dart';
 import '../../domain/entities/device_entity.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 

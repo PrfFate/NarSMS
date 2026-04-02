@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
@@ -300,8 +299,9 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
   Color _getStatusColor(String? status) {
     if (status == null) return Colors.grey;
     final lower = status.toLowerCase();
-    if (lower.contains('onaylandı') || lower.contains('approved'))
+    if (lower.contains('onaylandı') || lower.contains('approved')) {
       return Colors.green;
+    }
     if (lower.contains('red') || lower.contains('rejected')) return Colors.red;
     return AppColors.primary; // Bekliyor / Pending
   }

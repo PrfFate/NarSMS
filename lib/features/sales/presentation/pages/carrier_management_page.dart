@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/routes/app_router.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
@@ -70,7 +69,7 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () => Navigator.pushNamed(context, AppRouter.carrierAdd).then((value) {
-                      if (value == true) {
+                      if (value == true && context.mounted) {
                         context.read<CarrierBloc>().add(LoadCarriers());
                       }
                     }),
@@ -114,7 +113,7 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
                           return _CarrierCard(
                             carrier: carrier,
                             onEdit: () => Navigator.pushNamed(context, AppRouter.carrierAdd, arguments: carrier).then((value) {
-                              if (value == true) {
+                              if (value == true && context.mounted) {
                                 context.read<CarrierBloc>().add(LoadCarriers());
                               }
                             }),

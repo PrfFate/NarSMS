@@ -83,7 +83,7 @@ class DeviceRemoteDataSourceImpl
     int pageSize = 15,
   }) async {
     try {
-      final hasFilters = filter != null && !filter.isEmpty;
+      final hasFilters = filter != null && filter.isNotEmpty;
       final endpoint = hasFilters
           ? ApiConstants.deviceFilterSearch
           : ApiConstants.deviceSearch;
@@ -98,7 +98,7 @@ class DeviceRemoteDataSourceImpl
       }
 
       if (hasFilters) {
-        queryParams.addAll(filter!.toQueryParams());
+        queryParams.addAll(filter.toQueryParams());
       }
 
       final response = await dioClient.get(
@@ -117,7 +117,6 @@ class DeviceRemoteDataSourceImpl
       );
     } on DioException catch (e) {
       handleDioException(e);
-      rethrow;
     }
   }
 

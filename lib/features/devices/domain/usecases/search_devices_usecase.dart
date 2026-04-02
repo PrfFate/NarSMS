@@ -24,7 +24,7 @@ class SearchDevicesUseCase {
       // Teknik filtreler varsa mecburen 'search-by-multiple-features' kullanılır.
       // Kullanıcı uyarısı: 'status' değeri bu endpoint ile atılmıyor.
       // Bu yüzden varsa filter içindeki status'u siliyoruz.
-      final cleanFilter = filter!.copyWith(status: null);
+      final cleanFilter = filter.copyWith(status: null);
 
       return repository.searchDevicesWithFilters(
         serialNumber: serialNumber,

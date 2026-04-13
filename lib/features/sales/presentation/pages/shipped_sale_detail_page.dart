@@ -96,6 +96,74 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
     );
   }
 
+  void _showReturnDialog(int saleItemId) {
+    String selectedCondition = 'Sealed';
+    final notesController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cihaz İade Al'),
+          content: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedCondition,
+                    decoration: const InputDecoration(
+                      labelText: 'Durumu',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Sealed', child: Text('Sealed (Kapalı)')),
+                      DropdownMenuItem(value: 'Opened', child: Text('Opened (Açık)')),
+                      DropdownMenuItem(value: 'Damaged', child: Text('Damaged (Hasarlı)')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() => selectedCondition = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notlar (İsteğe Bağlı)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+                context.read<SaleBloc>().add(ReturnSaleItem(
+                      saleId: widget.sale.id,
+                      saleItemId: saleItemId,
+                      condition: selectedCondition,
+                      conditionNotes: notesController.text,
+                    ));
+              },
+              child: const Text('İadeyi Onayla'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String _fmtDateStr(String? raw) {
     if (raw == null) return '-';
     final dt = DateTime.tryParse(raw);
@@ -285,12 +353,56 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
                   ],
                 ),
               ),
-              Text(
-                '${item.price.toStringAsFixed(2)} \$',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.navy),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${item.price.toStringAsFixed(2)} \$',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.navy),
+                  ),
+                  const SizedBox(height: 8),
+                  if (widget.sale.approvalStatus == 'Delivered' || widget.sale.approvalStatus == 'Completed' || widget.sale.approvalStatus == 'Shipped' || widget.sale.approvalStatus == 'PartiallyShipped')
+                    if (item.isReturned)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.green),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 14, color: Colors.green),
+                            SizedBox(width: 4),
+                            Text('İade Edildi', style: TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      )
+                    else
+                      InkWell(
+                        onTap: () => _showReturnDialog(item.id ?? 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.primary),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.keyboard_return_outlined, size: 14, color: AppColors.primary),
+                              SizedBox(width: 4),
+                              Text('İade Al', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                ],
               ),
             ],
           ),
@@ -444,6 +556,13 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
+        } else if (state is SaleItemReturned) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Cihaz başarıyla iade alındı.'),
+                backgroundColor: Colors.green),
+          );
+          Navigator.pop(context, true); // Ekranı kapat ve listeyi yenile
         }
       },
       child: CustomFormScaffold(

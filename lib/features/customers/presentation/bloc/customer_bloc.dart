@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/customer_entity.dart';
+import '../../domain/entities/paginated_result.dart';
 import '../../domain/usecases/get_customers_usecase.dart';
 import '../../domain/usecases/search_customers_usecase.dart';
 import '../../domain/usecases/get_customer_detail_usecase.dart';
@@ -32,7 +34,9 @@ class CustomerBloc extends Bloc<CustomerEvent, CustomerState> {
     required this.deleteCustomerUseCase,
   }) : super(CustomerInitial()) {
     on<LoadCustomers>(_onLoadCustomers);
+    on<LoadMoreCustomers>(_onLoadMoreCustomers);
     on<SearchCustomers>(_onSearchCustomers);
+    on<LoadMoreSearchCustomers>(_onLoadMoreSearchCustomers);
     on<LoadCustomerDetail>(_onLoadCustomerDetail);
     on<CreateCustomer>(_onCreateCustomer);
     on<UpdateCustomer>(_onUpdateCustomer);
@@ -53,7 +57,50 @@ class CustomerBloc extends Bloc<CustomerEvent, CustomerState> {
 
     result.fold(
       (failure) => emit(CustomerError(failure.message)),
-      (paginatedResult) => emit(CustomerLoaded(result: paginatedResult)),
+      (paginatedResult) => emit(CustomerLoaded(
+        result: paginatedResult,
+        hasMore: paginatedResult.hasNextPage,
+      )),
+    );
+  }
+
+  Future<void> _onLoadMoreCustomers(
+    LoadMoreCustomers event,
+    Emitter<CustomerState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is CustomerLoaded) {
+      emit(CustomerLoaded(
+        result: currentState.result,
+        searchQuery: currentState.searchQuery,
+        hasMore: currentState.hasMore,
+        isLoadingMore: true,
+      ));
+    }
+
+    final result = await getCustomersUseCase(
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) => emit(CustomerError(failure.message)),
+      (paginatedResult) {
+        final existing = event.existingCustomers.cast<CustomerEntity>();
+        final allItems = [...existing, ...paginatedResult.items];
+        final merged = PaginatedResult<CustomerEntity>(
+          items: allItems,
+          totalCount: paginatedResult.totalCount,
+          page: paginatedResult.page,
+          pageSize: paginatedResult.pageSize,
+          totalPages: paginatedResult.totalPages,
+        );
+        emit(CustomerLoaded(
+          result: merged,
+          hasMore: paginatedResult.hasNextPage,
+          isLoadingMore: false,
+        ));
+      },
     );
   }
 
@@ -79,7 +126,50 @@ class CustomerBloc extends Bloc<CustomerEvent, CustomerState> {
       (paginatedResult) => emit(CustomerLoaded(
         result: paginatedResult,
         searchQuery: event.name,
+        hasMore: paginatedResult.hasNextPage,
       )),
+    );
+  }
+
+  Future<void> _onLoadMoreSearchCustomers(
+    LoadMoreSearchCustomers event,
+    Emitter<CustomerState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is CustomerLoaded) {
+      emit(CustomerLoaded(
+        result: currentState.result,
+        searchQuery: currentState.searchQuery,
+        hasMore: currentState.hasMore,
+        isLoadingMore: true,
+      ));
+    }
+
+    final result = await searchCustomersUseCase(
+      name: event.name,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+    );
+
+    result.fold(
+      (failure) => emit(CustomerError(failure.message)),
+      (paginatedResult) {
+        final existing = event.existingCustomers.cast<CustomerEntity>();
+        final allItems = [...existing, ...paginatedResult.items];
+        final merged = PaginatedResult<CustomerEntity>(
+          items: allItems,
+          totalCount: paginatedResult.totalCount,
+          page: paginatedResult.page,
+          pageSize: paginatedResult.pageSize,
+          totalPages: paginatedResult.totalPages,
+        );
+        emit(CustomerLoaded(
+          result: merged,
+          searchQuery: event.name,
+          hasMore: paginatedResult.hasNextPage,
+          isLoadingMore: false,
+        ));
+      },
     );
   }
 

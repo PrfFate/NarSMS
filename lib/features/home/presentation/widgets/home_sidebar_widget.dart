@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class HomeSidebarWidget extends StatelessWidget {
   final String currentRoute;
@@ -387,19 +388,19 @@ class HomeSidebarWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFF57C00).withValues(alpha: 0.1) : null,
+        color: isActive ? AppColors.primaryDark.withValues(alpha: 0.1) : null,
       ),
       child: ListTile(
         selected: isActive,
-        selectedTileColor: const Color(0xFFF57C00).withValues(alpha: 0.1),
+        selectedTileColor: AppColors.primaryDark.withValues(alpha: 0.1),
         leading: Icon(
           icon,
-          color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+          color: isActive ? AppColors.primaryDark : Colors.black87,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+            color: isActive ? AppColors.primaryDark : Colors.black87,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -428,23 +429,23 @@ class HomeSidebarWidget extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: isAnyChildActive ? const Color(0xFFF57C00).withValues(alpha: 0.1) : null,
+            color: isAnyChildActive ? AppColors.primaryDark.withValues(alpha: 0.1) : null,
           ),
           child: ListTile(
             leading: Icon(
               icon,
-              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
+              color: isAnyChildActive ? AppColors.primaryDark : Colors.black87,
             ),
             title: Text(
               title,
               style: TextStyle(
-                color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
+                color: isAnyChildActive ? AppColors.primaryDark : Colors.black87,
                 fontWeight: isAnyChildActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             trailing: Icon(
               isExpanded ? Icons.expand_more : Icons.chevron_right,
-              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black54,
+              color: isAnyChildActive ? AppColors.primaryDark : Colors.black54,
             ),
             onTap: () {
               // Toggle menu expansion - DRAWER KAPANMAZ
@@ -472,12 +473,12 @@ class HomeSidebarWidget extends StatelessWidget {
         leading: Icon(
           icon,
           size: 20,
-          color: isActive ? const Color(0xFFF57C00) : Colors.black54,
+          color: isActive ? AppColors.primaryDark : Colors.black54,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+            color: isActive ? AppColors.primaryDark : Colors.black87,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             fontSize: 14,
           ),

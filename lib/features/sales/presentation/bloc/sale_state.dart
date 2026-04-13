@@ -22,11 +22,17 @@ class SaleLoading extends SaleState {
 
 class SalesLoaded extends SaleState {
   final PaginatedResult<SaleEntity> result;
+  final bool hasMore;
+  final bool isLoadingMore;
 
-  const SalesLoaded(this.result);
+  const SalesLoaded(
+    this.result, {
+    this.hasMore = true,
+    this.isLoadingMore = false,
+  });
 
   @override
-  List<Object?> get props => [result];
+  List<Object?> get props => [result, hasMore, isLoadingMore];
 }
 
 class ShipmentLoaded extends SaleState {
@@ -71,6 +77,10 @@ class SaleRejected extends SaleState {
 
 class SaleCreated extends SaleState {
   const SaleCreated();
+}
+
+class SaleItemReturned extends SaleState {
+  const SaleItemReturned();
 }
 
 class SaleError extends SaleState {

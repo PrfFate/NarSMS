@@ -12,6 +12,7 @@ import '../models/sale_model.dart';
 import '../models/shipment_create_request.dart';
 import '../models/sale_create_request.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../../core/errors/exceptions.dart';
 
 /// [SaleRepository] implementasyonu.
 ///
@@ -30,12 +31,14 @@ class SaleRepositoryImpl extends BaseRepository implements SaleRepository {
     required String status,
     required int page,
     required int pageSize,
+    String? customerName,
   }) {
     return runNetworkCall(() async {
       final data = await remoteDataSource.getSalesByStatus(
         status: status,
         page: page,
         pageSize: pageSize,
+        customerName: customerName,
       );
       return _parsePaginatedResponse(data);
     });
@@ -114,6 +117,28 @@ class SaleRepositoryImpl extends BaseRepository implements SaleRepository {
   @override
   Future<Either<Failure, void>> rejectSale(int id, String? note) {
     return runNetworkCall(() => remoteDataSource.rejectSale(id, note));
+  }
+
+  @override
+  Future<Either<Failure, void>> returnSaleItem({
+    required int saleId,
+    required int saleItemId,
+    required String condition,
+    String? conditionNotes,
+  }) async {
+    try {
+      await remoteDataSource.returnSaleItem(
+        saleId: saleId,
+        saleItemId: saleItemId,
+        condition: condition,
+        conditionNotes: conditionNotes,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Beklenmeyen bir hata oluştu: ${e.toString()}'));
+    }
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────

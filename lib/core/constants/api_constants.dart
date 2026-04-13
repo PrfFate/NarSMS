@@ -46,6 +46,9 @@ class ApiConstants {
   static String saleApprove(int id) => '$apiVersion/Sale/$id/approve';
   static String saleReject(int id) => '$apiVersion/Sale/$id/reject';
 
+  // Return endpoints
+  static const String returnCreateAndComplete = '$apiVersion/Return/create-and-complete';
+
   // Shipment endpoints
   static String shipmentBySaleId(int saleId) =>
       '$apiVersion/shipment/sale/$saleId';

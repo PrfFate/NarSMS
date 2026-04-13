@@ -25,14 +25,6 @@ class _ApprovalMechanismPageState extends State<ApprovalMechanismPage> {
             ),
             SizedBox(height: 16),
             Text(
-              'Onay Adımları',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
               'Satış onay mekanizması yönetimi buraya gelecek',
               style: TextStyle(
                 fontSize: 14,

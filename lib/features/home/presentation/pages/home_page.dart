@@ -261,11 +261,20 @@ class HomePage extends StatelessWidget {
           child: const ShippedSalesPage(),
         );
       case AppRouter.deliveredSales:
-        return const DeliveredSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const DeliveredSalesPage(),
+        );
       case AppRouter.completedSales:
-        return const CompletedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const CompletedSalesPage(),
+        );
       case AppRouter.rejectedSales:
-        return const RejectedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const RejectedSalesPage(),
+        );
       case AppRouter.approvalWorkflows:
         return BlocProvider(
           create: (_) => getIt<ApprovalBloc>(),

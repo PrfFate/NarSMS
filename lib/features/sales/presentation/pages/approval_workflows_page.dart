@@ -7,6 +7,8 @@ import 'package:tasarim_app/features/sales/presentation/bloc/approval_event.dart
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_state.dart';
 import 'package:tasarim_app/features/sales/domain/entities/approval_workflow_entity.dart';
 
+import '../../../../core/widgets/custom_action_menu_widget.dart';
+
 class ApprovalWorkflowsPage extends StatefulWidget {
   const ApprovalWorkflowsPage({super.key});
 
@@ -46,38 +48,20 @@ class _ApprovalWorkflowsPageState extends State<ApprovalWorkflowsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Onay Adımları',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+            Align(
+              alignment: Alignment.centerRight,
+              child: CustomActionMenuWidget(
+                items: [
+                  CustomActionMenuItem(
+                    title: 'Yeni Akış',
+                    icon: Icons.add,
+                    onTap: () async {
+                      final res = await Navigator.pushNamed(context, AppRouter.workflowCreate);
+                      if (res == true && context.mounted) _load();
+                    },
                   ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final res = await Navigator.pushNamed(
-                      context,
-                      AppRouter.workflowCreate,
-                    );
-                    if (res == true) _load();
-                  },
-                  icon: const Icon(Icons.add, size: 20, color: Colors.white),
-                  label: const Text('Yeni Akış'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF57C00),
-                    foregroundColor: Colors.white,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(

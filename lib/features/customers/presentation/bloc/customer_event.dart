@@ -54,6 +54,40 @@ class SearchCustomers extends CustomerEvent {
   String toString() => 'SearchCustomers(name: $name, page: $page)';
 }
 
+/// Sonsuz kaydırma için bir sonraki müşteri sayfasını yükler.
+class LoadMoreCustomers extends CustomerEvent {
+  final int nextPage;
+  final List<dynamic> existingCustomers;
+  final int pageSize;
+
+  const LoadMoreCustomers({
+    required this.nextPage,
+    required this.existingCustomers,
+    this.pageSize = 15,
+  });
+
+  @override
+  List<Object?> get props => [nextPage, existingCustomers, pageSize];
+}
+
+/// Arama sonucunda sonsuz kaydırma için bir sonraki sayfayı ekler.
+class LoadMoreSearchCustomers extends CustomerEvent {
+  final String? name;
+  final int nextPage;
+  final List<dynamic> existingCustomers;
+  final int pageSize;
+
+  const LoadMoreSearchCustomers({
+    this.name,
+    required this.nextPage,
+    required this.existingCustomers,
+    this.pageSize = 15,
+  });
+
+  @override
+  List<Object?> get props => [name, nextPage, existingCustomers, pageSize];
+}
+
 /// Event to load a single customer's detail.
 class LoadCustomerDetail extends CustomerEvent {
   final int customerId;

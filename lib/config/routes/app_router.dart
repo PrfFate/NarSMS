@@ -301,7 +301,12 @@ class AppRouter {
         );
 
       case rejectedSales:
-        return MaterialPageRoute(builder: (_) => const RejectedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const RejectedSalesPage(),
+          ),
+        );
 
       case partiallyShippedSales:
         return MaterialPageRoute(
@@ -320,7 +325,12 @@ class AppRouter {
         );
 
       case deliveredSales:
-        return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const DeliveredSalesPage(),
+          ),
+        );
 
       case saleAdd:
         final initialDevice = settings.arguments as DeviceEntity?;
@@ -332,7 +342,12 @@ class AppRouter {
         );
 
       case completedSales:
-        return MaterialPageRoute(builder: (_) => const CompletedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const CompletedSalesPage(),
+          ),
+        );
 
       case saleDetail:
         final sale = settings.arguments as SaleEntity;

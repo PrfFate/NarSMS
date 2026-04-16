@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_user_info_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/auth/role_access_policy.dart';
 import '../../../../core/realtime/role_change_hub_service.dart';
 import 'home_event.dart';
 import 'home_state.dart';
@@ -145,8 +146,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         newExpandedMenus[activeMenuKey!] = true;
       }
 
+      final nextRoute = _isRouteAllowedForRole(
+        route: event.route,
+        role: currentState.userRole,
+      )
+          ? event.route
+          : _defaultRouteForRole(currentState.userRole);
+
       emit(currentState.copyWith(
-        selectedPageRoute: event.route,
+        selectedPageRoute: nextRoute,
         expandedMenus: newExpandedMenus,
       ));
     }
@@ -172,19 +180,31 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (state is! HomeLoaded) return;
 
     final currentState = state as HomeLoaded;
-    final normalizedRole = event.roleName.toLowerCase().trim();
-    final shouldLeaveUserManagement =
-        currentState.selectedPageRoute == AppRouter.usersManagement &&
-            normalizedRole != 'admin';
+    final nextRoute = _isRouteAllowedForRole(
+      route: currentState.selectedPageRoute,
+      role: event.roleName,
+    )
+        ? currentState.selectedPageRoute
+        : _defaultRouteForRole(event.roleName);
 
     emit(currentState.copyWith(
       userRole: event.roleName,
-      selectedPageRoute: shouldLeaveUserManagement
-          ? AppRouter.home
-          : currentState.selectedPageRoute,
-      selectedNavIndex:
-          shouldLeaveUserManagement ? 0 : currentState.selectedNavIndex,
+      selectedPageRoute: nextRoute,
+      selectedNavIndex: nextRoute == currentState.selectedPageRoute
+          ? currentState.selectedNavIndex
+          : 0,
     ));
+  }
+
+  String _defaultRouteForRole(String role) {
+    return AppRouter.home;
+  }
+
+  bool _isRouteAllowedForRole({
+    required String route,
+    required String role,
+  }) {
+    return RoleAccessPolicy.isRouteAllowedInHome(route: route, role: role);
   }
 
   @override

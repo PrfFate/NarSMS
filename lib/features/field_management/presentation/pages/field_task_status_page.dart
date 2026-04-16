@@ -1,17 +1,14 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/routes/app_router.dart';
 import '../../../../core/constants/api_constants.dart';
-import '../../../../core/constants/storage_constants.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/widgets/custom_action_menu_widget.dart';
 import '../../../../core/widgets/custom_list_card.dart';
 import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/search_input_widget.dart';
-import '../models/field_task_list_item.dart';
+import '../../domain/entities/field_task_entity.dart';
+import '../../domain/usecases/get_field_tasks_usecase.dart';
 import 'field_task_detail_page.dart';
 
 class FieldTaskStatusPage extends StatefulWidget {
@@ -19,6 +16,8 @@ class FieldTaskStatusPage extends StatefulWidget {
   final IconData emptyIcon;
   final String emptyMessage;
   final bool showPendingActions;
+  final String endpoint;
+  final bool enableAcceptActionInDetail;
 
   const FieldTaskStatusPage({
     super.key,
@@ -26,6 +25,8 @@ class FieldTaskStatusPage extends StatefulWidget {
     required this.emptyIcon,
     required this.emptyMessage,
     this.showPendingActions = false,
+    this.endpoint = ApiConstants.fieldTasks,
+    this.enableAcceptActionInDetail = false,
   });
 
   @override
@@ -38,7 +39,7 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  final List<FieldTaskListItem> _tasks = [];
+  final List<FieldTaskEntity> _tasks = [];
   int _currentPage = 1;
   int _totalCount = 0;
   bool _isLoading = false;
@@ -46,8 +47,8 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
   bool _hasMore = true;
   String _searchQuery = '';
 
-  Dio get _dio => getIt<DioClient>().dio;
-  SharedPreferences get _prefs => getIt<SharedPreferences>();
+  GetFieldTasksUseCase get _getFieldTasksUseCase =>
+      getIt<GetFieldTasksUseCase>();
 
   @override
   void initState() {
@@ -71,13 +72,6 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
     }
   }
 
-  Options _authOptions() {
-    final token = _prefs.getString(StorageConstants.accessToken);
-    return Options(
-      headers: {if (token != null) 'Authorization': 'Bearer $token'},
-    );
-  }
-
   Future<void> _loadTasks({bool loadMore = false}) async {
     if (loadMore) {
       if (_isLoadingMore || !_hasMore) return;
@@ -95,27 +89,31 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
     }
 
     try {
-      final response = await _dio.get(
-        ApiConstants.fieldTasks,
-        queryParameters: {
-          'Status': widget.status,
-          'PageNumber': _currentPage,
-          'PageSize': _pageSize,
-          if (_searchQuery.trim().isNotEmpty)
-            'CustomerName': _searchQuery.trim(),
+      final result = await _getFieldTasksUseCase(
+        endpoint: widget.endpoint,
+        status: widget.status,
+        pageNumber: _currentPage,
+        pageSize: _pageSize,
+        customerName: _searchQuery,
+      );
+      final items = <FieldTaskEntity>[];
+      int totalCount = 0;
+      String? errorMessage;
+      result.fold(
+        (failure) => errorMessage = failure.message,
+        (data) {
+          items.addAll(data.items);
+          totalCount = data.totalCount;
         },
-        options: _authOptions(),
       );
 
-      final data = Map<String, dynamic>.from(response.data as Map);
-      final items = (data['items'] as List? ?? const [])
-          .map((e) =>
-              FieldTaskListItem.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
+      if (errorMessage != null) {
+        throw Exception(errorMessage);
+      }
 
       if (!mounted) return;
       setState(() {
-        _totalCount = (data['totalCount'] as num?)?.toInt() ?? items.length;
+        _totalCount = totalCount;
         if (loadMore) {
           _tasks.addAll(items);
         } else {
@@ -235,13 +233,20 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
 
           final task = _tasks[index];
           return CustomListCard(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final shouldRefresh = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => FieldTaskDetailPage(task: task),
+                  builder: (_) => FieldTaskDetailPage(
+                    task: task,
+                    canAcceptTask: widget.enableAcceptActionInDetail &&
+                        task.status.toLowerCase() == 'pending',
+                  ),
                 ),
               );
+              if (shouldRefresh == true && mounted) {
+                _loadTasks();
+              }
             },
             title: task.title,
             subtitle:

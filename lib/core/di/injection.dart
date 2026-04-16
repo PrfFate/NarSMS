@@ -13,6 +13,7 @@ import '../../features/home/di/home_injection.dart';
 import '../../features/sales/di/sale_injection.dart';
 import '../../features/technical_service/di/technical_service_injection.dart';
 import '../../features/field_tasks/di/field_tasks_injection.dart';
+import '../../features/field_management/di/field_management_injection.dart';
 
 /// GetIt servis bulucu örneği — uygulama genelinde tek instance.
 final getIt = GetIt.instance;
@@ -55,5 +56,6 @@ Future<void> initializeDependencies() async {
   await initSaleModule();
   await initTechnicalServiceModule();
   await initFieldTasksModule();
+  await initFieldManagementModule();
   await initHomeModule();
 }

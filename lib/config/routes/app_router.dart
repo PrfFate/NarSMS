@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/auth/role_access_policy.dart';
 import '../../core/di/injection.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
@@ -15,7 +16,6 @@ import '../../features/roles/user/pages/user_dashboard_page.dart';
 import '../../features/roles/stock_manager/pages/stock_manager_dashboard_page.dart';
 import '../../features/roles/salesperson/pages/salesperson_dashboard_page.dart';
 import '../../features/roles/accounting/pages/accounting_dashboard_page.dart';
-import '../../features/roles/fielder/pages/fielder_dashboard_page.dart';
 
 // Field Management
 import '../../features/field_management/presentation/pages/pending_tasks_page.dart';
@@ -206,6 +206,10 @@ class AppRouter {
   static const String userRoleAssign = '/admin/users/role-assign';
   static const String logging = '/admin/logging';
 
+  static String initialRouteForRole(String? roleName) {
+    return RoleAccessPolicy.initialRouteForRole(roleName);
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
@@ -252,7 +256,12 @@ class AppRouter {
             builder: (_) => const AccountingDashboardPage());
 
       case fielderDashboard:
-        return MaterialPageRoute(builder: (_) => const FielderDashboardPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<HomeBloc>()..add(const LoadUserInfo()),
+            child: const HomePage(),
+          ),
+        );
 
       // Field Management
       case pendingTasks:

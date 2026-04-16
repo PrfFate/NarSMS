@@ -26,7 +26,9 @@ class SplashPage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRouter.home);
+          Navigator.of(context).pushReplacementNamed(
+            AppRouter.initialRouteForRole(state.user.roleName),
+          );
         } else if (state is AuthUnauthenticated) {
           Navigator.of(context).pushReplacementNamed(AppRouter.login);
         }

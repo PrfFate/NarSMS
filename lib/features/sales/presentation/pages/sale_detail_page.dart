@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/auth/role_access_policy.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
@@ -33,11 +34,8 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
   }
 
   void _openShipmentDialog(BuildContext context) async {
-    final result = await Navigator.pushNamed(
-      context, 
-      AppRouter.saleShip, 
-      arguments: widget.sale
-    );
+    final result = await Navigator.pushNamed(context, AppRouter.saleShip,
+        arguments: widget.sale);
 
     if (result == true) {
       // Kargo oluşturulduysa sayfayı kapat ve listeyi yenile
@@ -314,16 +312,21 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
       userRoleName = authState.user.roleName;
     }
 
-    final bool canShip =
-        widget.sale.approvalStatus?.toLowerCase() == 'approved' ||
-            widget.sale.approvalStatus?.toLowerCase() == 'partiallyshipped';
+    final bool canShipForRole = RoleAccessPolicy.canShipSale(userRoleName);
+    final bool canApproveOrRejectForRole =
+        RoleAccessPolicy.canApproveOrRejectSale(userRoleName);
+
+    final bool canShip = canShipForRole &&
+        (widget.sale.approvalStatus?.toLowerCase() == 'approved' ||
+            widget.sale.approvalStatus?.toLowerCase() == 'partiallyshipped');
 
     final bool isPending =
         widget.sale.approvalStatus?.toLowerCase() == 'pending';
 
     // Kullanıcının şu anki adımda onay yetkisi var mı?
     bool canApproveOrReject = false;
-    if (isPending &&
+    if (canApproveOrRejectForRole &&
+        isPending &&
         userRoleName != null &&
         widget.sale.approvalHistory != null) {
       // Bekleyen ilk adımı bul (İngilizce veya Türkçe durumları kontrol et)
@@ -341,7 +344,9 @@ class _SaleDetailPageState extends State<SaleDetailPage> {
         final userRole = userRoleName.trim().toLowerCase();
 
         // Admin ise her zaman onaylayabilir, veya adımın rolü kullanıcıyla eşleşiyorsa
-        if (userRole == 'admin' || userRole == 'administrator' || userRole == stepRole) {
+        if (userRole == 'admin' ||
+            userRole == 'administrator' ||
+            userRole == stepRole) {
           canApproveOrReject = true;
         }
       }

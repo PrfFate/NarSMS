@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
+import 'package:tasarim_app/core/auth/role_utils.dart';
 import 'package:tasarim_app/core/utils/page_title_notifier.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_event.dart';
@@ -155,7 +156,10 @@ class HomePage extends StatelessWidget {
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
     // Route değişince başlığı güncelle
-    final title = _routeTitles[state.selectedPageRoute] ?? 'Admin Paneli';
+    final title = state.selectedPageRoute == AppRouter.home &&
+            isFielderRole(state.userRole)
+        ? 'Sahacı Paneli'
+        : (_routeTitles[state.selectedPageRoute] ?? 'Admin Paneli');
     PageTitleNotifier.instance.value = title;
 
     return Scaffold(

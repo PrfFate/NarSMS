@@ -253,8 +253,8 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     leading: Icon(
                       tempRole == null
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
                       color: tempRole == null ? AppColors.primary : Colors.grey,
                     ),
                     title: const Text('Tüm Roller'),
@@ -268,8 +268,8 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                           const EdgeInsets.symmetric(horizontal: 16),
                       leading: Icon(
                         isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank,
                         color: isSelected ? AppColors.primary : Colors.grey,
                       ),
                       title: Text(

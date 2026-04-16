@@ -112,4 +112,6 @@ class ApiConstants {
 
   // Field task endpoints
   static const String fieldTasks = '$apiVersion/field-tasks';
+  static const String fieldTasksMyTasks = '$apiVersion/field-tasks/my-tasks';
+  static String fieldTaskAccept(int id) => '$apiVersion/field-tasks/$id/accept';
 }

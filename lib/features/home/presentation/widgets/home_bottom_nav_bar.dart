@@ -61,6 +61,10 @@ class HomeBottomNavBar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            if (index == 1 || index == 3) {
+              return;
+            }
+
             onIndexChanged(index);
 
             if (index == 4) {
@@ -91,11 +95,9 @@ class HomeBottomNavBar extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color:
-                      isSelected ? AppColors.accentDark : AppColors.textHint,
+                  color: isSelected ? AppColors.accentDark : AppColors.textHint,
                   fontSize: 11,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ],

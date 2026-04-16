@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
+import 'package:tasarim_app/core/widgets/custom_action_menu_widget.dart';
+import 'package:tasarim_app/core/widgets/custom_list_card.dart';
+import 'package:tasarim_app/core/widgets/error_widget.dart' as common;
 import 'package:tasarim_app/core/widgets/generic_confirmation_dialog.dart';
+import 'package:tasarim_app/core/widgets/loading_indicator.dart';
+import 'package:tasarim_app/features/sales/domain/entities/approval_workflow_entity.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_event.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_state.dart';
-import 'package:tasarim_app/features/sales/domain/entities/approval_workflow_entity.dart';
-
-import '../../../../core/widgets/custom_action_menu_widget.dart';
 
 class ApprovalWorkflowsPage extends StatefulWidget {
   const ApprovalWorkflowsPage({super.key});
@@ -36,72 +38,174 @@ class _ApprovalWorkflowsPageState extends State<ApprovalWorkflowsPage> {
             SnackBar(
                 content: Text(state.message), backgroundColor: Colors.green),
           );
-          _load(); // Başarı durumunda listeyi tekrar çek
+          _load();
         } else if (state is ApprovalError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: CustomActionMenuWidget(
-                items: [
-                  CustomActionMenuItem(
-                    title: 'Yeni Akış',
-                    icon: Icons.add,
-                    onTap: () async {
-                      final res = await Navigator.pushNamed(context, AppRouter.workflowCreate);
-                      if (res == true && context.mounted) _load();
-                    },
+      child: ColoredBox(
+        color: Colors.grey.shade50,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Tanımlı Onay Akışları',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  CustomActionMenuWidget(
+                    items: [
+                      CustomActionMenuItem(
+                        title: 'Yeni Akış Ekle',
+                        icon: Icons.add_circle_outline,
+                        onTap: () async {
+                          final result = await Navigator.pushNamed(
+                            context,
+                            AppRouter.workflowCreate,
+                          );
+                          if (result == true && context.mounted) {
+                            _load();
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: BlocBuilder<ApprovalBloc, ApprovalState>(
-                builder: (context, state) {
-                  if (state is ApprovalLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (state is WorkflowsLoaded) {
-                    final workflows = state.workflows;
-                    if (workflows.isEmpty) {
-                      return _buildEmpty();
+              const SizedBox(height: 12),
+              Expanded(
+                child: BlocBuilder<ApprovalBloc, ApprovalState>(
+                  builder: (context, state) {
+                    if (state is ApprovalLoading) {
+                      return const LoadingIndicator();
                     }
+                    if (state is WorkflowsLoaded) {
+                      if (state.workflows.isEmpty) return _buildEmptyState();
 
-                    // Aktif olanı başa al
-                    final sortedWorkflows = List.from(workflows);
-                    sortedWorkflows.sort((a, b) {
-                      if (a.isActive && !b.isActive) return -1;
-                      if (!a.isActive && b.isActive) return 1;
-                      return 0;
-                    });
+                      final workflows =
+                          List<ApprovalWorkflowEntity>.from(state.workflows)
+                            ..sort((a, b) {
+                              if (a.isActive && !b.isActive) return -1;
+                              if (!a.isActive && b.isActive) return 1;
+                              return a.name
+                                  .toLowerCase()
+                                  .compareTo(b.name.toLowerCase());
+                            });
 
-                    return ListView.builder(
-                      itemCount: sortedWorkflows.length,
-                      itemBuilder: (context, index) {
-                        return _WorkflowCard(
-                          workflow: sortedWorkflows[index],
-                          onToggle: (id, currentStatus) =>
-                              _showToggleConfirm(context, id, currentStatus),
-                          onDelete: (id) => _showDeleteConfirm(context, id),
-                        );
-                      },
-                    );
-                  }
-                  if (state is ApprovalError) {
-                    return _buildError(state.message);
-                  }
-                  return const SizedBox.shrink();
-                },
+                      return _buildList(workflows);
+                    }
+                    if (state is ApprovalError) {
+                      return common.CustomErrorWidget(
+                        message: state.message,
+                        onRetry: _load,
+                      );
+                    }
+                    return _buildEmptyState();
+                  },
+                ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(List<ApprovalWorkflowEntity> workflows) {
+    return Card(
+      color: Colors.white,
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: workflows.length,
+        separatorBuilder: (_, __) => const Divider(height: 1, indent: 70),
+        itemBuilder: (context, index) {
+          final workflow = workflows[index];
+          return CustomListCard(
+            title: workflow.name,
+            subtitle:
+                '${workflow.entityType} • ${workflow.steps.length} adım • v${workflow.version}',
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color:
+                    workflow.isActive ? const Color(0xFFF57C00) : Colors.grey,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '#${index + 1}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusChip(isActive: workflow.isActive),
+                const SizedBox(width: 4),
+                IconButton.filled(
+                  tooltip:
+                      workflow.isActive ? 'Devre Dışı Bırak' : 'Aktifleştir',
+                  style: IconButton.styleFrom(
+                    backgroundColor: workflow.isActive
+                        ? const Color(0xFFF57C00)
+                        : Colors.grey.shade400,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(34, 34),
+                    fixedSize: const Size(34, 34),
+                    padding: EdgeInsets.zero,
+                  ),
+                  icon: const Icon(Icons.add, size: 20),
+                  onPressed: () => _showToggleConfirm(
+                    context,
+                    workflow.id,
+                    workflow.isActive,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Sil',
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _showDeleteConfirm(context, workflow),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Card(
+      color: Colors.white,
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.approval_outlined, size: 64, color: Color(0xFFF57C00)),
+            SizedBox(height: 16),
+            Text(
+              'Onay akışı bulunamadı',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
@@ -109,47 +213,9 @@ class _ApprovalWorkflowsPageState extends State<ApprovalWorkflowsPage> {
     );
   }
 
-  Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.approval_outlined, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Henüz bir onay akışı oluşturulmamış',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _load,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF57C00),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Tekrar Dene'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showToggleConfirm(BuildContext context, int id, bool currentStatus) {
     final newStatus = !currentStatus;
-    final actionText = newStatus ? 'Aktifleştirmek' : 'Devre Dışı Bırakmak';
+    final actionText = newStatus ? 'aktifleştirmek' : 'devre dışı bırakmak';
 
     showDialog(
       context: context,
@@ -166,16 +232,18 @@ class _ApprovalWorkflowsPageState extends State<ApprovalWorkflowsPage> {
     );
   }
 
-  void _showDeleteConfirm(BuildContext context, int id) {
+  void _showDeleteConfirm(
+      BuildContext context, ApprovalWorkflowEntity workflow) {
     showDialog(
       context: context,
       builder: (_) => GenericConfirmationDialog(
-        title: 'Akışı Sil',
-        message: 'Bu onay akışını silmek istediğinizden emin misiniz?',
+        title: 'Onay Akışı Sil',
+        message:
+            '${workflow.name} onay akışını silmek istediğinizden emin misiniz?',
         confirmLabel: 'Sil',
         cancelLabel: 'Vazgeç',
         onConfirm: () {
-          context.read<ApprovalBloc>().add(DeleteWorkflow(id));
+          context.read<ApprovalBloc>().add(DeleteWorkflow(workflow.id));
         },
         accentColor: Colors.red,
       ),
@@ -183,128 +251,19 @@ class _ApprovalWorkflowsPageState extends State<ApprovalWorkflowsPage> {
   }
 }
 
-class _WorkflowCard extends StatelessWidget {
-  final ApprovalWorkflowEntity workflow;
-  final Function(int, bool) onToggle;
-  final Function(int) onDelete;
-
-  const _WorkflowCard({
-    required this.workflow,
-    required this.onToggle,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: const Border(
-            left: BorderSide(
-              color: Color(0xFFF57C00), // Her zaman turuncu çizgi
-              width: 6,
-            ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      workflow.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  _StatusChip(isActive: workflow.isActive),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Entity: ${workflow.entityType}',
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Adım Sayısı: ${workflow.steps.length}',
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-              ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => onDelete(workflow.id),
-                    icon: const Icon(Icons.delete_outline,
-                        color: Colors.red, size: 20),
-                    label:
-                        const Text('Sil', style: TextStyle(color: Colors.red)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () => onToggle(workflow.id, workflow.isActive),
-                    icon: Icon(
-                      workflow.isActive ? Icons.toggle_off : Icons.toggle_on,
-                      size: 20,
-                    ),
-                    label: Text(
-                        workflow.isActive ? 'Devre Dışı Bırak' : 'Aktifleştir'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: workflow.isActive
-                          ? Colors.grey[200]
-                          : Colors.green, // Aktifleştir butonu tam yeşil
-                      foregroundColor: workflow.isActive
-                          ? Colors.grey[800]
-                          : Colors.white, // Beyaz yazı
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _StatusChip extends StatelessWidget {
   final bool isActive;
+
   const _StatusChip({required this.isActive});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      width: 12,
+      height: 12,
       decoration: BoxDecoration(
-        color: isActive ? Colors.green[50] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isActive ? Colors.green[200]! : Colors.grey[300]!,
-        ),
-      ),
-      child: Text(
-        isActive ? 'AKTİF' : 'PASİF',
-        style: TextStyle(
-          color: isActive ? Colors.green[700] : Colors.grey[600],
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+        color: isActive ? Colors.green : Colors.grey,
+        shape: BoxShape.circle,
       ),
     );
   }

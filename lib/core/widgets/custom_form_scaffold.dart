@@ -43,7 +43,10 @@ class CustomFormScaffold extends StatelessWidget {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        iconTheme: const IconThemeData(color: Colors.black54),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+          onPressed: () => Navigator.maybePop(context),
+        ),
         title: Text(
           title,
           style: const TextStyle(

@@ -38,9 +38,9 @@ import '../../../field_tasks/presentation/pages/my_completed_tasks_page.dart';
 import '../../../customers/presentation/pages/customer_list_page.dart';
 import '../../../customers/presentation/bloc/customer_bloc.dart';
 import '../../../../core/di/injection.dart';
-import '../../../reporting/presentation/pages/customer_reports_page.dart';
 import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
+import 'dashboard_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
@@ -80,10 +80,8 @@ const Map<String, String> _routeTitles = {
   AppRouter.myCompletedTasks: 'Tamamladığım Görevlerim',
   // Müşteriler
   AppRouter.customerList: 'Müşteriler',
-  // Raporlama
-  AppRouter.customerReports: 'Müşteri Raporları',
   // Admin
-  AppRouter.logging: 'Sistem Logları',
+  AppRouter.logging: 'Loglama',
   AppRouter.usersManagement: 'Kullanıcı Yönetimi',
 };
 
@@ -165,7 +163,10 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shadowColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         shape: const Border(
           bottom: BorderSide(color: Colors.black12, width: 1),
         ),
@@ -335,10 +336,6 @@ class HomePage extends StatelessWidget {
           child: const CustomerListPage(),
         );
 
-      // Raporlama
-      case AppRouter.customerReports:
-        return const CustomerReportsPage();
-
       // Loglama
       case AppRouter.logging:
         return const LoggingPage();
@@ -350,38 +347,7 @@ class HomePage extends StatelessWidget {
       // Dashboard (Home)
       case AppRouter.home:
       default:
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Dashboard',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Hoş geldiniz! Lütfen sol menüden bir seçim yapın.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return const DashboardPage();
     }
   }
 }

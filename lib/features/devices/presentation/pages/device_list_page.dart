@@ -207,6 +207,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                const SizedBox(width: 8),
                 _buildFilterButton(),
                 const SizedBox(width: 8),
                 _buildActionsMenu(context),

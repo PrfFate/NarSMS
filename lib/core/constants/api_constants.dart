@@ -3,6 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiConstants {
   static String get baseUrl => dotenv.get('API_BASE_URL');
   static const String apiVersion = '/api';
+  static String get roleChangeHubUrl =>
+      '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/roleChangeHub';
+  static String get dashboardHubUrl =>
+      '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/dashboardHub';
 
   // Auth endpoints
   static const String login = '$apiVersion/auth/login';
@@ -26,15 +30,18 @@ class ApiConstants {
   // Device endpoints
   static const String devicePaged = '$apiVersion/Device/paged';
   static const String deviceSearch = '$apiVersion/Device/search';
-  static const String deviceFilterSearch = '$apiVersion/Device/search-by-multiple-features';
+  static const String deviceFilterSearch =
+      '$apiVersion/Device/search-by-multiple-features';
+  static const String deviceMovementsPaged = '$apiVersion/Device/movements';
   static String deviceById(int id) => '$apiVersion/Device/$id';
   static const String deviceCreate = '$apiVersion/Device';
   static String deviceUpdate(int id) => '$apiVersion/Device/$id';
   static String deviceDelete(int id) => '$apiVersion/Device/$id';
   static const String deviceBulkCreate = '$apiVersion/Device/bulk-create';
-  
+
   // Backup Assignment endpoints
-  static const String backupAssignmentSearch = '$apiVersion/BackupAssignment/search';
+  static const String backupAssignmentSearch =
+      '$apiVersion/BackupAssignment/search';
 
   // Device Type and Supplier API Endpoints
   static const String deviceTypes = '$apiVersion/devicetype';
@@ -47,7 +54,8 @@ class ApiConstants {
   static String saleReject(int id) => '$apiVersion/Sale/$id/reject';
 
   // Return endpoints
-  static const String returnCreateAndComplete = '$apiVersion/Return/create-and-complete';
+  static const String returnCreateAndComplete =
+      '$apiVersion/Return/create-and-complete';
 
   // Shipment endpoints
   static String shipmentBySaleId(int saleId) =>
@@ -62,11 +70,14 @@ class ApiConstants {
   static String carrierDelete(int id) => '$apiVersion/Carrier/$id';
 
   // User endpoints
+  static const String userPaged = '$apiVersion/User/paged';
   static const String userSearch = '$apiVersion/User/search';
+  static String userById(int id) => '$apiVersion/User/$id';
   static String shipmentMarkDelivered(int id) =>
       '$apiVersion/Shipment/$id/mark-delivered';
 
-  static String usersByRole(String role) => '$apiVersion/User/byrolename/$role';
+  static String usersByRole(String role) =>
+      '$apiVersion/User/byrolename/${Uri.encodeComponent(role)}';
   static String get userByRoleFielder => usersByRole('Fielder');
 
   // Role endpoints
@@ -87,5 +98,18 @@ class ApiConstants {
   // Service Request endpoints
   static const String serviceRequestPaged = '$apiVersion/ServiceRequest/paged';
   static const String serviceRequestCreate = '$apiVersion/ServiceRequest';
-  static const String serviceRequestShipment = '$apiVersion/Shipment/service-request';
+  static const String serviceRequestShipment =
+      '$apiVersion/Shipment/service-request';
+
+  // Task Type endpoints
+  static const String taskTypes = '$apiVersion/task-types';
+  static const String taskTypesAll = '$apiVersion/task-types/all';
+  static String taskTypeById(int id) => '$apiVersion/task-types/$id';
+
+  // Dashboard endpoints
+  static const String dashboardInventory =
+      '$apiVersion/Dashboard/kpi/inventory';
+
+  // Field task endpoints
+  static const String fieldTasks = '$apiVersion/field-tasks';
 }

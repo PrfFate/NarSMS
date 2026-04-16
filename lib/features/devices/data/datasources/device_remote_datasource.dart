@@ -250,7 +250,7 @@ class DeviceRemoteDataSourceImpl
         options: Options(
           headers: {
             if (token != null) 'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
         ),
       );

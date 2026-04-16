@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/device_filter_model.dart';
+import 'filter_bottom_sheet_scaffold.dart';
 
 /// Yeniden kullanılabilir cihaz filtre bottom sheet'i.
 ///
@@ -39,7 +40,8 @@ class DeviceFilterBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<DeviceFilterBottomSheet> createState() => _DeviceFilterBottomSheetState();
+  State<DeviceFilterBottomSheet> createState() =>
+      _DeviceFilterBottomSheetState();
 }
 
 class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
@@ -72,139 +74,54 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Container(
-      height: screenHeight * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
+    return FilterBottomSheetScaffold(
+      title: 'Filtreler',
+      selectedCount: _filter.totalSelectedCount,
+      maxHeightFraction: 0.85,
+      onClear: _clear,
+      onApply: _apply,
+      applyLabel: _filter.totalSelectedCount > 0
+          ? 'Uygula (${_filter.totalSelectedCount} seçim)'
+          : 'Uygula',
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         children: [
-          // Tutamaç
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
+          _buildMultiSelectGroup(
+            title: 'RAM',
+            options: _ramOptions,
+            selected: _filter.ram,
+            onChanged: (val) =>
+                setState(() => _filter = _filter.copyWith(ram: val)),
           ),
-
-          // Başlık
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-            child: Row(
-              children: [
-                const Text(
-                  'Filtreler',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-                ),
-                 if (_filter.totalSelectedCount > 0) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF57C00),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_filter.totalSelectedCount}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                ),
-              ],
-            ),
+          _buildMultiSelectGroup(
+            title: 'İşlemci',
+            options: _islemciOptions,
+            selected: _filter.islemci,
+            onChanged: (val) =>
+                setState(() => _filter = _filter.copyWith(islemci: val)),
           ),
-
-          const Divider(height: 1),
-
-          // Filtre grupları
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              children: [
-                _buildMultiSelectGroup(
-                  title: 'RAM',
-                  options: _ramOptions,
-                  selected: _filter.ram,
-                  onChanged: (val) => setState(() => _filter = _filter.copyWith(ram: val)),
-                ),
-                _buildMultiSelectGroup(
-                  title: 'İşlemci',
-                  options: _islemciOptions,
-                  selected: _filter.islemci,
-                  onChanged: (val) => setState(() => _filter = _filter.copyWith(islemci: val)),
-                ),
-                _buildMultiSelectGroup(
-                  title: 'Hafıza',
-                  options: _hafizaOptions,
-                  selected: _filter.hafiza,
-                  onChanged: (val) => setState(() => _filter = _filter.copyWith(hafiza: val)),
-                ),
-                _buildMultiSelectGroup(
-                  title: 'Ekran Boyutu',
-                  options: _ekranBoyutuOptions,
-                  selected: _filter.ekranBoyutu,
-                  onChanged: (val) => setState(() => _filter = _filter.copyWith(ekranBoyutu: val)),
-                ),
-                _buildMultiSelectGroup(
-                  title: 'Cihaz Tipi',
-                  options: widget.availableDeviceTypes,
-                  selected: _filter.cihazTipleri,
-                  onChanged: (val) => setState(() => _filter = _filter.copyWith(cihazTipleri: val)),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+          _buildMultiSelectGroup(
+            title: 'Hafıza',
+            options: _hafizaOptions,
+            selected: _filter.hafiza,
+            onChanged: (val) =>
+                setState(() => _filter = _filter.copyWith(hafiza: val)),
           ),
-
-          // Alt butonlar
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _clear,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFFF57C00)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Temizle', style: TextStyle(color: Color(0xFFF57C00), fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: _apply,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF57C00),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: Text(
-                      _filter.totalSelectedCount > 0
-                          ? 'Uygula (${_filter.totalSelectedCount} seçim)'
-                          : 'Uygula',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _buildMultiSelectGroup(
+            title: 'Ekran Boyutu',
+            options: _ekranBoyutuOptions,
+            selected: _filter.ekranBoyutu,
+            onChanged: (val) =>
+                setState(() => _filter = _filter.copyWith(ekranBoyutu: val)),
           ),
+          _buildMultiSelectGroup(
+            title: 'Cihaz Tipi',
+            options: widget.availableDeviceTypes,
+            selected: _filter.cihazTipleri,
+            onChanged: (val) =>
+                setState(() => _filter = _filter.copyWith(cihazTipleri: val)),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -219,7 +136,9 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
     return ExpansionTile(
       title: Row(
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+          Text(title,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
           if (selected.isNotEmpty) ...[
             const SizedBox(width: 8),
             Container(
@@ -229,7 +148,9 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFF57C00), width: 0.5),
               ),
-              child: Text('${selected.length} seçili', style: const TextStyle(fontSize: 11, color: Color(0xFFF57C00))),
+              child: Text('${selected.length} seçili',
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFFF57C00))),
             ),
           ],
         ],
@@ -245,7 +166,11 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
             color: isSelected ? const Color(0xFFF57C00) : Colors.grey,
             size: 20,
           ),
-          title: Text(option, style: TextStyle(fontSize: 14, color: isSelected ? const Color(0xFFF57C00) : Colors.black87)),
+          title: Text(option,
+              style: TextStyle(
+                  fontSize: 14,
+                  color:
+                      isSelected ? const Color(0xFFF57C00) : Colors.black87)),
           onTap: () {
             final newList = List<String>.from(selected);
             isSelected ? newList.remove(option) : newList.add(option);

@@ -37,10 +37,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       final response = await http.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: jsonEncode({
           'email': _emailController.text,
         }),
+        encoding: utf8,
       );
 
       if (!mounted) return;

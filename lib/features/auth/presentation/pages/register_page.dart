@@ -46,7 +46,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       final response = await http.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: jsonEncode({
           'username': _nameController.text,
           'email': _emailController.text,
@@ -54,6 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
           'password': _passwordController.text,
           'roleId': 3, // Default role ID
         }),
+        encoding: utf8,
       );
 
       if (!mounted) return;

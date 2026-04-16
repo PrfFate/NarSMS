@@ -4,13 +4,18 @@ class CustomListCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? leadingText;
-  final VoidCallback onTap;
+  final Widget? leading;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
   const CustomListCard({
     super.key,
     required this.title,
     required this.subtitle,
     this.leadingText,
-    required this.onTap,
+    this.leading,
+    this.trailing,
+    this.onTap,
   });
 
   @override
@@ -22,7 +27,7 @@ class CustomListCard extends StatelessWidget {
         child: Row(
           children: [
             // Leading Icon/Text Box
-            Container(
+            leading ?? Container(
               width: 42,
               height: 42,
               decoration: BoxDecoration(
@@ -71,8 +76,8 @@ class CustomListCard extends StatelessWidget {
               ),
             ),
             
-            // Trailing Chevron
-            const Icon(Icons.chevron_right, color: Colors.grey, size: 24),
+            // Trailing
+            trailing ?? const Icon(Icons.chevron_right, color: Colors.grey, size: 24),
           ],
         ),
       ),

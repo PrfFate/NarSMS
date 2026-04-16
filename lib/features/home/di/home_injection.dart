@@ -1,4 +1,5 @@
 import '../../../core/di/injection.dart';
+import '../../../core/realtime/role_change_hub_service.dart';
 import '../../../features/auth/domain/repositories/auth_repository.dart';
 import '../domain/usecases/get_user_info_usecase.dart';
 import '../domain/usecases/logout_usecase.dart';
@@ -22,6 +23,7 @@ Future<void> initHomeModule() async {
     () => HomeBloc(
       getUserInfoUseCase: getIt<GetUserInfoUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
+      roleChangeHubService: getIt<RoleChangeHubService>(),
     ),
   );
 }

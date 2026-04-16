@@ -10,45 +10,50 @@ class SupplierManagementPage extends StatefulWidget {
 class _SupplierManagementPageState extends State<SupplierManagementPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tedarikçi Yönetimi'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.business,
-              size: 64,
-              color: Colors.green,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tedarikçi Yönetimi',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            SizedBox(height: 16),
-            Text(
-              'Tedarikçi Yönetimi',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Card(
+              color: Colors.white,
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.business,
+                      size: 64,
+                      color: Color(0xFFF57C00),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Tedarikçi firmaları yönetimi buraya gelecek',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Tedarikçi firmaları yönetimi buraya gelecek',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add new supplier
-        },
-        backgroundColor: const Color(0xFFF57C00),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }

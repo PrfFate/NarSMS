@@ -82,7 +82,7 @@ class _DeliveredSalesPageState extends State<DeliveredSalesPage> {
       floatingActionButton: _showScrollToTop
           ? FloatingActionButton.small(
               onPressed: () => _scrollController.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOut),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               tooltip: 'Başa Dön',
               child: const Icon(Icons.keyboard_arrow_up),
@@ -197,8 +197,8 @@ class _SaleDeliveredCard extends StatelessWidget {
           children: [
             Container(
               width: 42, height: 42,
-              decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.done_all, color: Colors.green, size: 24),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: const Icon(Icons.done_all, color: AppColors.primary, size: 24),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -216,7 +216,7 @@ class _SaleDeliveredCard extends StatelessWidget {
                 ]),
               ]),
             ),
-            Text('${sale.totalAmount.toStringAsFixed(2)} \$', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.green)),
+            Text('${sale.totalAmount.toStringAsFixed(2)} \$', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary)),
             const SizedBox(width: 12),
             const Icon(Icons.chevron_right, color: Colors.grey, size: 24),
           ],

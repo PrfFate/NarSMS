@@ -48,13 +48,13 @@ class HomeSidebarWidget extends StatelessWidget {
             bottom: BorderSide(color: Colors.black12, width: 1),
           ),
         ),
-        child:Image.asset(
-              'assets/images/narposloginlogo.png',
-              height: 50,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.admin_panel_settings,
-                    size: 50, color: Color(0xFFF57C00));
-              },
+        child: Image.asset(
+          'assets/images/narposloginlogo.png',
+          height: 50,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(Icons.admin_panel_settings,
+                size: 50, color: Color(0xFFF57C00));
+          },
         ),
       ),
     );
@@ -339,18 +339,6 @@ class HomeSidebarWidget extends StatelessWidget {
       );
     }
 
-    // 📊 Raporlama - Sadece admin
-    if (normalizedRole == 'admin') {
-      items.add(
-        _buildMenuItem(
-          context: context,
-          icon: Icons.assessment_outlined,
-          title: 'Raporlama',
-          route: AppRouter.customerReports,
-        ),
-      );
-    }
-
     // 📝 Loglama - Sadece admin
     if (normalizedRole == 'admin') {
       items.add(
@@ -429,7 +417,9 @@ class HomeSidebarWidget extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: isAnyChildActive ? AppColors.primaryDark.withValues(alpha: 0.1) : null,
+            color: isAnyChildActive
+                ? AppColors.primaryDark.withValues(alpha: 0.1)
+                : null,
           ),
           child: ListTile(
             leading: Icon(
@@ -439,8 +429,10 @@ class HomeSidebarWidget extends StatelessWidget {
             title: Text(
               title,
               style: TextStyle(
-                color: isAnyChildActive ? AppColors.primaryDark : Colors.black87,
-                fontWeight: isAnyChildActive ? FontWeight.bold : FontWeight.normal,
+                color:
+                    isAnyChildActive ? AppColors.primaryDark : Colors.black87,
+                fontWeight:
+                    isAnyChildActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             trailing: Icon(

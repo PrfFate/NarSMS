@@ -26,15 +26,17 @@ class ApiConstants {
   // Device endpoints
   static const String devicePaged = '$apiVersion/Device/paged';
   static const String deviceSearch = '$apiVersion/Device/search';
-  static const String deviceFilterSearch = '$apiVersion/Device/search-by-multiple-features';
+  static const String deviceFilterSearch =
+      '$apiVersion/Device/search-by-multiple-features';
   static String deviceById(int id) => '$apiVersion/Device/$id';
   static const String deviceCreate = '$apiVersion/Device';
   static String deviceUpdate(int id) => '$apiVersion/Device/$id';
   static String deviceDelete(int id) => '$apiVersion/Device/$id';
   static const String deviceBulkCreate = '$apiVersion/Device/bulk-create';
-  
+
   // Backup Assignment endpoints
-  static const String backupAssignmentSearch = '$apiVersion/BackupAssignment/search';
+  static const String backupAssignmentSearch =
+      '$apiVersion/BackupAssignment/search';
 
   // Device Type and Supplier API Endpoints
   static const String deviceTypes = '$apiVersion/devicetype';
@@ -84,5 +86,6 @@ class ApiConstants {
   // Service Request endpoints
   static const String serviceRequestPaged = '$apiVersion/ServiceRequest/paged';
   static const String serviceRequestCreate = '$apiVersion/ServiceRequest';
-  static const String serviceRequestShipment = '$apiVersion/Shipment/service-request';
+  static const String serviceRequestShipment =
+      '$apiVersion/Shipment/service-request';
 }

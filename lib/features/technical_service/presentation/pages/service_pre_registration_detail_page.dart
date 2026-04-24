@@ -47,8 +47,12 @@ class _ServicePreRegistrationDetailPageState
   bool get _isPending =>
       widget.request.status?.toLowerCase() == 'pending';
 
-  bool get _isInTransit =>
-      widget.request.shipmentStatus?.toLowerCase() == 'intransit';
+  bool get _hasShipment => widget.request.shipmentId != null;
+
+  bool get _isInTransit {
+    final status = widget.request.shipmentStatus?.toLowerCase() ?? '';
+    return status.replaceAll(' ', '').replaceAll('-', '') == 'intransit';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +78,7 @@ class _ServicePreRegistrationDetailPageState
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: false,
+          iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
           title: const Text(
             'Servis Kaydı Detay',
             style: TextStyle(
@@ -273,6 +278,31 @@ class _ServicePreRegistrationDetailPageState
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 2,
           ),
+        ),
+      );
+    }
+
+    // Eğer bir kargo girişi yapılmışsa ama henüz InTransit değilse veya başka bir durumdaysa 
+    // "Gönder" butonlarını göstermeyelim.
+    if (_hasShipment) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.blue.shade700),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Bu cihaz için kargo kaydı zaten oluşturulmuş.',
+                style: TextStyle(fontSize: 14, color: Colors.blue),
+              ),
+            ),
+          ],
         ),
       );
     }

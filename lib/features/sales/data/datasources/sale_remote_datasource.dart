@@ -17,6 +17,7 @@ abstract class SaleRemoteDataSource {
     required String status,
     required int page,
     required int pageSize,
+    String? customerName,
   });
   
   Future<void> createSale(SaleCreateRequest request);
@@ -32,6 +33,12 @@ abstract class SaleRemoteDataSource {
   Future<void> markShipmentDelivered(int shipmentId);
   Future<void> approveSale(int id, String? note);
   Future<void> rejectSale(int id, String? note);
+  Future<void> returnSaleItem({
+    required int saleId,
+    required int saleItemId,
+    required String condition,
+    String? conditionNotes,
+  });
 }
 
 /// [SaleRemoteDataSource] Dio HTTP istemcisi ile implementasyonu.
@@ -59,6 +66,7 @@ class SaleRemoteDataSourceImpl
     required String status,
     required int page,
     required int pageSize,
+    String? customerName,
   }) async {
     try {
       final response = await dioClient.dio.get(
@@ -67,6 +75,9 @@ class SaleRemoteDataSourceImpl
           'status': status,
           'page': page,
           'pageSize': pageSize,
+          'sortDescending': true,
+          if (customerName != null && customerName.isNotEmpty)
+            'customerName': customerName,
         },
         options: _authOptions,
       );
@@ -323,6 +334,45 @@ class SaleRemoteDataSourceImpl
         },
         options: _authOptions,
       );
+    } on DioException catch (e) {
+      handleDioException(e);
+    }
+  }
+
+  @override
+  Future<void> returnSaleItem({
+    required int saleId,
+    required int saleItemId,
+    required String condition,
+    String? conditionNotes,
+  }) async {
+    try {
+      final response = await dioClient.dio.post(
+        ApiConstants.returnCreateAndComplete,
+        data: {
+          "saleId": saleId,
+          "returnDate": DateTime.now().toUtc().toIso8601String(),
+          "items": [
+            {
+              "saleItemId": saleItemId,
+              "condition": condition,
+              "conditionNotes": conditionNotes ?? "İade"
+            }
+          ]
+        },
+        options: _authOptions,
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      final isSuccess = data['isSuccess'] as bool? ?? true;
+
+      if (!isSuccess ||
+          (response.statusCode != 200 && response.statusCode != 201)) {
+        throw ServerException(
+          message: data['error']?.toString() ?? 'İade işlemi başarısız oldu',
+          statusCode: response.statusCode,
+        );
+      }
     } on DioException catch (e) {
       handleDioException(e);
     }

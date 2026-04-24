@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
@@ -42,11 +43,6 @@ class ProfilePage extends StatelessWidget {
       id: 'change_password',
       icon: Icons.lock_outline,
       title: 'Şifre Değiştir',
-    ),
-    _SettingItem(
-      id: 'privacy',
-      icon: Icons.security_outlined,
-      title: 'Gizlilik ve Güvenlik',
     ),
     _SettingItem(
       id: 'language',
@@ -142,9 +138,6 @@ class ProfilePage extends StatelessWidget {
       case 'change_password':
         _showComingSoonMessage(context, 'Şifre değiştirme yakında eklenecek');
         break;
-      case 'privacy':
-        _showComingSoonMessage(context, 'Gizlilik ayarları yakında eklenecek');
-        break;
       case 'language':
         _showComingSoonMessage(context, 'Dil ayarları yakında eklenecek');
         break;
@@ -186,55 +179,48 @@ class ProfilePage extends StatelessWidget {
 
   // Profile avatar widget - extracted for clarity
   Widget _buildProfileAvatar() {
+    final initials = _buildInitials(userName);
     return Container(
+      width: 75,
+      height: 75,
       decoration: BoxDecoration(
+        color: AppColors.accentDark,
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFF57C00),
-            Color(0xFFF34723),
-            Color(0xFFF57C00),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF57C00).withAlpha(51),
-            blurRadius: 12,
+            color: AppColors.accentDark.withValues(alpha: 0.26),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(2.5),
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-        ),
-        padding: const EdgeInsets.all(2.5),
-        child: Container(
-          width: 75,
-          height: 75,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Colors.grey[100]!,
-                Colors.grey[200]!,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Icon(
-            Icons.person_rounded,
-            size: 42,
-            color: Colors.grey[400],
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
           ),
         ),
       ),
     );
+  }
+
+  String _buildInitials(String fullName) {
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+
+    final first = parts.first[0].toUpperCase();
+    final last = parts.last[0].toUpperCase();
+    return '$first$last';
   }
 
   // User info widget - extracted for clarity

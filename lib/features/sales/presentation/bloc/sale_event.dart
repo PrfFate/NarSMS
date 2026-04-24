@@ -15,15 +15,37 @@ class LoadSalesByStatus extends SaleEvent {
   final String status;
   final int page;
   final int pageSize;
+  final String? customerName;
 
   const LoadSalesByStatus({
     required this.status,
     this.page = 1,
     this.pageSize = 20,
+    this.customerName,
   });
 
   @override
-  List<Object?> get props => [status, page, pageSize];
+  List<Object?> get props => [status, page, pageSize, customerName];
+}
+
+/// Sonsuz kaydırma için bir sonraki sayfayı mevcut listeye ekler.
+class LoadMoreSalesByStatus extends SaleEvent {
+  final String status;
+  final int nextPage;
+  final List<dynamic> existingSales;
+  final int pageSize;
+  final String? customerName;
+
+  const LoadMoreSalesByStatus({
+    required this.status,
+    required this.nextPage,
+    required this.existingSales,
+    this.pageSize = 20,
+    this.customerName,
+  });
+
+  @override
+  List<Object?> get props => [status, nextPage, existingSales, pageSize, customerName];
 }
 
 /// Satışa ait kargo detayını yükler.
@@ -84,4 +106,21 @@ class CreateSale extends SaleEvent {
   const CreateSale(this.request);
   @override
   List<Object?> get props => [request];
+}
+
+class ReturnSaleItem extends SaleEvent {
+  final int saleId;
+  final int saleItemId;
+  final String condition;
+  final String? conditionNotes;
+
+  const ReturnSaleItem({
+    required this.saleId,
+    required this.saleItemId,
+    required this.condition,
+    this.conditionNotes,
+  });
+
+  @override
+  List<Object?> get props => [saleId, saleItemId, condition, conditionNotes];
 }

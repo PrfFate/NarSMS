@@ -2,7 +2,6 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../repositories/device_repository.dart';
-import '../../data/models/bulk_create_device_request_model.dart';
 
 class BulkCreateDevicesUseCase {
   final DeviceRepository repository;

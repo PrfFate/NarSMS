@@ -15,15 +15,6 @@ class _ApprovalMechanismPageState extends State<ApprovalMechanismPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Onay Adımları',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
           Expanded(
             child: Card(
               color: Colors.white,

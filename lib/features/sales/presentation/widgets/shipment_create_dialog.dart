@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/shipment_create_request.dart';
 import '../../domain/entities/sale_entity.dart';
-import '../../domain/entities/sale_item_entity.dart';
 import '../../domain/entities/carrier_entity.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../bloc/sale_bloc.dart';
@@ -370,7 +369,7 @@ class _ShipmentCreateDialogState extends State<ShipmentCreateDialog> {
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final item = items[index];
-          final itemId = item.id ?? -1;
+          final itemId = item.id;
           final isShipped = shippedItemIds.contains(itemId);
           final isSelected = _selectedItemIds.contains(itemId);
 

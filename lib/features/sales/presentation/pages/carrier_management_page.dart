@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/routes/app_router.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
+import '../../../../core/widgets/custom_refresh_button.dart';
 import '../../../../core/widgets/generic_confirmation_dialog.dart';
 import '../bloc/carrier_bloc.dart';
 import '../bloc/carrier_event.dart';
 import '../bloc/carrier_state.dart';
 import '../../domain/entities/carrier_entity.dart';
+import '../../../../core/widgets/custom_action_menu_widget.dart';
 
 class CarrierManagementPage extends StatefulWidget {
   const CarrierManagementPage({super.key});
@@ -48,40 +49,23 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BlocBuilder<CarrierBloc, CarrierState>(
-                    builder: (context, state) {
-                      int count = 0;
-                      if (state is CarriersLoaded) {
-                        count = state.carriers.length;
-                      }
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[200]!),
-                        ),
-                        child: Text(
-                          '$count kayıt',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
-                      );
-                    },
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, AppRouter.carrierAdd).then((value) {
-                      if (value == true) {
-                        context.read<CarrierBloc>().add(LoadCarriers());
-                      }
-                    }),
-                    icon: const Icon(Icons.add, size: 20, color: Colors.white),
-                    label: const Text('Yeni Firma'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF57C00),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
+                  CustomRefreshButton(
+                      onPressed: () =>
+                          context.read<CarrierBloc>().add(LoadCarriers())),
+                  CustomActionMenuWidget(
+                    items: [
+                      CustomActionMenuItem(
+                        title: 'Yeni Firma',
+                        icon: Icons.add,
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRouter.carrierAdd).then((value) {
+                            if (value == true && context.mounted) {
+                              context.read<CarrierBloc>().add(LoadCarriers());
+                            }
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -114,7 +98,7 @@ class _CarrierManagementPageState extends State<CarrierManagementPage> {
                           return _CarrierCard(
                             carrier: carrier,
                             onEdit: () => Navigator.pushNamed(context, AppRouter.carrierAdd, arguments: carrier).then((value) {
-                              if (value == true) {
+                              if (value == true && context.mounted) {
                                 context.read<CarrierBloc>().add(LoadCarriers());
                               }
                             }),

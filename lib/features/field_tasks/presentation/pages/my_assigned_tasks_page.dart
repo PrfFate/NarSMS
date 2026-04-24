@@ -1,60 +1,19 @@
 import 'package:flutter/material.dart';
 
-class MyAssignedTasksPage extends StatefulWidget {
+import '../../../../core/constants/api_constants.dart';
+import '../../../field_management/presentation/pages/field_task_status_page.dart';
+
+class MyAssignedTasksPage extends StatelessWidget {
   const MyAssignedTasksPage({super.key});
 
   @override
-  State<MyAssignedTasksPage> createState() => _MyAssignedTasksPageState();
-}
-
-class _MyAssignedTasksPageState extends State<MyAssignedTasksPage> {
-  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Atanan Görevlerim',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Card(
-              color: Colors.white,
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.assignment,
-                      size: 64,
-                      color: Color(0xFFF57C00),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Bana atanan görevler listesi buraya gelecek',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return const FieldTaskStatusPage(
+      status: 'Pending',
+      emptyIcon: Icons.assignment_outlined,
+      emptyMessage: 'Atanan görev bulunamadı',
+      endpoint: ApiConstants.fieldTasksMyTasks,
+      enableAcceptActionInDetail: true,
     );
   }
 }

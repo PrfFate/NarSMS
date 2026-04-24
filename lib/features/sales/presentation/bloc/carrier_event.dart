@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/carrier_entity.dart';
 
 abstract class CarrierEvent extends Equatable {
   const CarrierEvent();

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/auth/role_access_policy.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class HomeSidebarWidget extends StatelessWidget {
   final String currentRoute;
@@ -34,9 +36,8 @@ class HomeSidebarWidget extends StatelessWidget {
   List<Widget> _getMenuItems(BuildContext context) {
     final items = <Widget>[];
 
-    // Rol kontrolü için normalize edilmiş rol
-    final normalizedRole = userRole.toLowerCase().trim();
-
+    final isFielder = RoleAccessPolicy.canSeeFieldTasks(userRole);
+    final isAdmin = RoleAccessPolicy.canSeeAdminModules(userRole);
     // Header/Logo
     items.add(
       Container(
@@ -47,13 +48,13 @@ class HomeSidebarWidget extends StatelessWidget {
             bottom: BorderSide(color: Colors.black12, width: 1),
           ),
         ),
-        child:Image.asset(
-              'assets/images/narposloginlogo.png',
-              height: 50,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.admin_panel_settings,
-                    size: 50, color: Color(0xFFF57C00));
-              },
+        child: Image.asset(
+          'assets/images/narposloginlogo.png',
+          height: 50,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(Icons.admin_panel_settings,
+                size: 50, color: Color(0xFFF57C00));
+          },
         ),
       ),
     );
@@ -69,39 +70,41 @@ class HomeSidebarWidget extends StatelessWidget {
     );
 
     // 📱 Cihazlar (devices)
-    items.add(
-      _buildExpandableMenuItem(
-        context: context,
-        icon: Icons.devices_other_outlined,
-        title: 'Cihazlar',
-        menuKey: 'devices',
-        routes: [
-          AppRouter.deviceList,
-          AppRouter.depotDevices,
-          AppRouter.depotBackupDevices,
-        ],
-        children: [
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.list,
-            title: 'Tüm Cihazlar',
-            route: AppRouter.deviceList,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.warehouse_outlined,
-            title: 'Depodaki Cihazlar',
-            route: AppRouter.depotDevices,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.backup_outlined,
-            title: 'Yedek Cihazlar',
-            route: AppRouter.depotBackupDevices,
-          ),
-        ],
-      ),
-    );
+    if (RoleAccessPolicy.canSeeDevices(userRole)) {
+      items.add(
+        _buildExpandableMenuItem(
+          context: context,
+          icon: Icons.devices_other_outlined,
+          title: 'Cihazlar',
+          menuKey: 'devices',
+          routes: [
+            AppRouter.deviceList,
+            AppRouter.depotDevices,
+            AppRouter.depotBackupDevices,
+          ],
+          children: [
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.list,
+              title: 'Tüm Cihazlar',
+              route: AppRouter.deviceList,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.warehouse_outlined,
+              title: 'Depodaki Cihazlar',
+              route: AppRouter.depotDevices,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.backup_outlined,
+              title: 'Yedek Cihazlar',
+              route: AppRouter.depotBackupDevices,
+            ),
+          ],
+        ),
+      );
+    }
 
     // 💰 Satışlar (sales)
     items.add(
@@ -150,7 +153,7 @@ class HomeSidebarWidget extends StatelessWidget {
             route: AppRouter.rejectedSales,
           ),
           // Sadece admin görebilir
-          if (normalizedRole == 'admin')
+          if (isAdmin)
             _buildSubMenuItem(
               context: context,
               icon: Icons.approval,
@@ -162,77 +165,81 @@ class HomeSidebarWidget extends StatelessWidget {
     );
 
     // 📦 Satış Kargolama (shipments)
-    items.add(
-      _buildExpandableMenuItem(
-        context: context,
-        icon: Icons.local_shipping_outlined,
-        title: 'Satış Kargolama',
-        menuKey: 'shipments',
-        routes: [
-          AppRouter.approvedSales,
-          AppRouter.partiallyShippedSales,
-        ],
-        children: [
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.pending_actions,
-            title: 'Kargolama Bekleyen Satışlar',
-            route: AppRouter.approvedSales,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.inventory,
-            title: 'Kısmi Kargolanan Satışlar',
-            route: AppRouter.partiallyShippedSales,
-          ),
-        ],
-      ),
-    );
+    if (RoleAccessPolicy.canSeeShipments(userRole)) {
+      items.add(
+        _buildExpandableMenuItem(
+          context: context,
+          icon: Icons.local_shipping_outlined,
+          title: 'Satış Kargolama',
+          menuKey: 'shipments',
+          routes: [
+            AppRouter.approvedSales,
+            AppRouter.partiallyShippedSales,
+          ],
+          children: [
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.pending_actions,
+              title: 'Kargolama Bekleyen Satışlar',
+              route: AppRouter.approvedSales,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.inventory,
+              title: 'Kısmi Kargolanan Satışlar',
+              route: AppRouter.partiallyShippedSales,
+            ),
+          ],
+        ),
+      );
+    }
 
     // 🔧 Teknik Servis Kaydı (technicalservice)
-    items.add(
-      _buildExpandableMenuItem(
-        context: context,
-        icon: Icons.build_outlined,
-        title: 'Teknik Servis Kaydı',
-        menuKey: 'technicalservice',
-        routes: [
-          AppRouter.servicePreRegistrations,
-          AppRouter.serviceOngoing,
-          AppRouter.serviceFinalChecks,
-          AppRouter.serviceCompleted,
-        ],
-        children: [
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.app_registration,
-            title: 'Servis Ön Kayıtları',
-            route: AppRouter.servicePreRegistrations,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.pending_actions,
-            title: 'Devam Eden İşlemler',
-            route: AppRouter.serviceOngoing,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.fact_check,
-            title: 'Son Kontroller',
-            route: AppRouter.serviceFinalChecks,
-          ),
-          _buildSubMenuItem(
-            context: context,
-            icon: Icons.check_circle,
-            title: 'Tamamlanan İşlemler',
-            route: AppRouter.serviceCompleted,
-          ),
-        ],
-      ),
-    );
+    if (RoleAccessPolicy.canSeeTechnicalService(userRole)) {
+      items.add(
+        _buildExpandableMenuItem(
+          context: context,
+          icon: Icons.build_outlined,
+          title: 'Teknik Servis Kaydı',
+          menuKey: 'technicalservice',
+          routes: [
+            AppRouter.servicePreRegistrations,
+            AppRouter.serviceOngoing,
+            AppRouter.serviceFinalChecks,
+            AppRouter.serviceCompleted,
+          ],
+          children: [
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.app_registration,
+              title: 'Servis Ön Kayıtları',
+              route: AppRouter.servicePreRegistrations,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.pending_actions,
+              title: 'Devam Eden İşlemler',
+              route: AppRouter.serviceOngoing,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.fact_check,
+              title: 'Son Kontroller',
+              route: AppRouter.serviceFinalChecks,
+            ),
+            _buildSubMenuItem(
+              context: context,
+              icon: Icons.check_circle,
+              title: 'Tamamlanan İşlemler',
+              route: AppRouter.serviceCompleted,
+            ),
+          ],
+        ),
+      );
+    }
 
     // 🗺️ Saha Yönetimi (fieldmanagement) - Sadece admin
-    if (normalizedRole == 'admin') {
+    if (isAdmin) {
       items.add(
         _buildExpandableMenuItem(
           context: context,
@@ -283,7 +290,7 @@ class HomeSidebarWidget extends StatelessWidget {
     }
 
     // 📋 Saha Görevleri (fieldtasks) - Sadece fielder rolü
-    if (normalizedRole == 'fielder') {
+    if (isFielder) {
       items.add(
         _buildExpandableMenuItem(
           context: context,
@@ -327,7 +334,7 @@ class HomeSidebarWidget extends StatelessWidget {
     }
 
     // 🏢 Müşteriler - Admin ve stock manager
-    if (normalizedRole == 'admin' || normalizedRole == 'stock_manager') {
+    if (RoleAccessPolicy.canSeeCustomers(userRole)) {
       items.add(
         _buildMenuItem(
           context: context,
@@ -338,20 +345,8 @@ class HomeSidebarWidget extends StatelessWidget {
       );
     }
 
-    // 📊 Raporlama - Sadece admin
-    if (normalizedRole == 'admin') {
-      items.add(
-        _buildMenuItem(
-          context: context,
-          icon: Icons.assessment_outlined,
-          title: 'Raporlama',
-          route: AppRouter.customerReports,
-        ),
-      );
-    }
-
     // 📝 Loglama - Sadece admin
-    if (normalizedRole == 'admin') {
+    if (isAdmin) {
       items.add(
         _buildMenuItem(
           context: context,
@@ -363,7 +358,7 @@ class HomeSidebarWidget extends StatelessWidget {
     }
 
     // 👤 Kullanıcılar - Sadece admin
-    if (normalizedRole == 'admin') {
+    if (isAdmin) {
       items.add(
         _buildMenuItem(
           context: context,
@@ -387,19 +382,19 @@ class HomeSidebarWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFF57C00).withValues(alpha: 0.1) : null,
+        color: isActive ? AppColors.primaryDark.withValues(alpha: 0.1) : null,
       ),
       child: ListTile(
         selected: isActive,
-        selectedTileColor: const Color(0xFFF57C00).withValues(alpha: 0.1),
+        selectedTileColor: AppColors.primaryDark.withValues(alpha: 0.1),
         leading: Icon(
           icon,
-          color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+          color: isActive ? AppColors.primaryDark : Colors.black87,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+            color: isActive ? AppColors.primaryDark : Colors.black87,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -428,23 +423,27 @@ class HomeSidebarWidget extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: isAnyChildActive ? const Color(0xFFF57C00).withValues(alpha: 0.1) : null,
+            color: isAnyChildActive
+                ? AppColors.primaryDark.withValues(alpha: 0.1)
+                : null,
           ),
           child: ListTile(
             leading: Icon(
               icon,
-              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
+              color: isAnyChildActive ? AppColors.primaryDark : Colors.black87,
             ),
             title: Text(
               title,
               style: TextStyle(
-                color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black87,
-                fontWeight: isAnyChildActive ? FontWeight.bold : FontWeight.normal,
+                color:
+                    isAnyChildActive ? AppColors.primaryDark : Colors.black87,
+                fontWeight:
+                    isAnyChildActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             trailing: Icon(
               isExpanded ? Icons.expand_more : Icons.chevron_right,
-              color: isAnyChildActive ? const Color(0xFFF57C00) : Colors.black54,
+              color: isAnyChildActive ? AppColors.primaryDark : Colors.black54,
             ),
             onTap: () {
               // Toggle menu expansion - DRAWER KAPANMAZ
@@ -472,12 +471,12 @@ class HomeSidebarWidget extends StatelessWidget {
         leading: Icon(
           icon,
           size: 20,
-          color: isActive ? const Color(0xFFF57C00) : Colors.black54,
+          color: isActive ? AppColors.primaryDark : Colors.black54,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isActive ? const Color(0xFFF57C00) : Colors.black87,
+            color: isActive ? AppColors.primaryDark : Colors.black87,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             fontSize: 14,
           ),

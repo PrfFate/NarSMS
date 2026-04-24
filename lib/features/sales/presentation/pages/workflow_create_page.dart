@@ -138,7 +138,7 @@ class _WorkflowCreatePageState extends State<WorkflowCreatePage> {
                   focusedBorder: OutlineInputBorder(
                       borderSide:
                           BorderSide(color: AppColors.primary, width: 2)),
-                  floatingLabelStyle: const TextStyle(color: AppColors.primary),
+                  floatingLabelStyle: TextStyle(color: AppColors.primary),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Gerekli' : null,
               ),
@@ -211,7 +211,7 @@ class _WorkflowCreatePageState extends State<WorkflowCreatePage> {
                       focusedBorder: UnderlineInputBorder(
                           borderSide:
                               BorderSide(color: AppColors.primary, width: 2)),
-                      floatingLabelStyle: const TextStyle(color: AppColors.primary),
+                      floatingLabelStyle: TextStyle(color: AppColors.primary),
                     ),
                     onChanged: (val) => _steps[index]['stepName'] = val,
                     validator: (v) => v == null || v.isEmpty ? 'Gerekli' : null,
@@ -231,7 +231,7 @@ class _WorkflowCreatePageState extends State<WorkflowCreatePage> {
                 border: UnderlineInputBorder(),
                 focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.primary, width: 2)),
-                floatingLabelStyle: const TextStyle(color: AppColors.primary),
+                floatingLabelStyle: TextStyle(color: AppColors.primary),
               ),
               value: _steps[index]['roleId'],
               items: _availableRoles.map((role) {

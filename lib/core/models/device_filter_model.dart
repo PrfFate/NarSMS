@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 /// Cihaz filtresi değer nesnesi.
 /// Tüm alanlar çoklu seçimi destekler.
-/// API formatı: &islemci=X&islemci=Y (Dio List<String> ile bunu otomatik yapar)
+/// API formatı: `&islemci=X&islemci=Y` (Dio `List<String>` ile bunu otomatik yapar)
 class DeviceFilterModel extends Equatable {
   final List<String> ram;
   final List<String> islemci;
@@ -77,7 +77,7 @@ class DeviceFilterModel extends Equatable {
     );
   }
 
-  /// Dio'ya List<String> verildiğinde aynı parametreyi tekrarlı gönderir:
+  /// Dio'ya `List<String>` verildiğinde aynı parametreyi tekrarlı gönderir:
   /// &islemci=X&islemci=Y
   Map<String, dynamic> toQueryParams() {
     final Map<String, dynamic> params = {};

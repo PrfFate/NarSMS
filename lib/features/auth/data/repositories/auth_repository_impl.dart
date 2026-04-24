@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/base/base_repository.dart';
@@ -106,8 +108,7 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
   @override
   Future<Either<Failure, String>> refreshToken(String refreshToken) {
     return runNetworkCall(() async {
-      final newAccessToken =
-          await remoteDataSource.refreshToken(refreshToken);
+      final newAccessToken = await remoteDataSource.refreshToken(refreshToken);
 
       await sharedPreferences.setString(
         StorageConstants.accessToken,
@@ -132,12 +133,15 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
           sharedPreferences.getString(StorageConstants.userEmail) ?? '';
       final username =
           sharedPreferences.getString(StorageConstants.userName) ?? '';
-      final role =
-          sharedPreferences.getString(StorageConstants.userRole) ?? '';
+      final role = sharedPreferences.getString(StorageConstants.userRole) ?? '';
       final phone = sharedPreferences.getString(StorageConstants.userPhone);
+      final userId = int.tryParse(
+        sharedPreferences.getString(StorageConstants.userId) ?? '',
+      );
 
       return Right(
         UserEntity(
+          id: userId,
           email: email,
           username: username,
           roleName: role,
@@ -166,6 +170,11 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
     await sharedPreferences.setString(
         StorageConstants.refreshToken, refreshToken);
     await sharedPreferences.setBool(StorageConstants.isLoggedIn, true);
+
+    final userId = _extractUserIdFromToken(accessToken);
+    if (userId != null) {
+      await sharedPreferences.setString(StorageConstants.userId, userId);
+    }
   }
 
   /// Kullanıcı bilgilerini yerel depolamaya kaydeder.
@@ -180,6 +189,25 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
     await sharedPreferences.setString(StorageConstants.userRole, role);
     if (phone != null) {
       await sharedPreferences.setString(StorageConstants.userPhone, phone);
+    }
+  }
+
+  String? _extractUserIdFromToken(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) return null;
+
+    try {
+      final normalized = base64Url.normalize(parts[1]);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final payload = jsonDecode(decoded) as Map<String, dynamic>;
+      final rawId = payload[
+              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
+          payload['nameid'] ??
+          payload['sub'] ??
+          payload['id'];
+      return rawId?.toString();
+    } catch (_) {
+      return null;
     }
   }
 }

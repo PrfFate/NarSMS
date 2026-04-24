@@ -156,9 +156,11 @@ class _DeviceListPageState extends State<DeviceListPage> {
       if (_activeFilter.isEmpty) {
         _loadDevices();
       } else {
-        context.read<DeviceBloc>().add(
-              FilterDevices(filter: _activeFilter, page: 1, pageSize: _pageSize),
-            );
+        if (mounted) {
+          context.read<DeviceBloc>().add(
+                FilterDevices(filter: _activeFilter, page: 1, pageSize: _pageSize),
+              );
+        }
       }
     }
   }
@@ -204,6 +206,7 @@ class _DeviceListPageState extends State<DeviceListPage> {
                     controller: _searchController,
                   ),
                 ),
+                const SizedBox(width: 8),
                 const SizedBox(width: 8),
                 _buildFilterButton(),
                 const SizedBox(width: 8),

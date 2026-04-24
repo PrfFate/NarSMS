@@ -18,6 +18,7 @@ abstract class SaleRepository {
     required String status,
     required int page,
     required int pageSize,
+    String? customerName,
   });
   
   Future<Either<Failure, void>> createSale(SaleCreateRequest request);
@@ -46,4 +47,12 @@ abstract class SaleRepository {
 
   /// Satışı reddeder.
   Future<Either<Failure, void>> rejectSale(int id, String? note);
+
+  /// Satılık cihazı iade alır.
+  Future<Either<Failure, void>> returnSaleItem({
+    required int saleId,
+    required int saleItemId,
+    required String condition,
+    String? conditionNotes,
+  });
 }

@@ -35,7 +35,7 @@ mixin ApiErrorHandler {
         final responseData = e.response?.data;
         
         if (responseData is Map<String, dynamic>) {
-          errorMessage = responseData['message'] ?? responseData['error'] ?? responseData['title'] ?? 'Geçersiz istek parametreleri';
+          errorMessage = responseData['message'] ?? responseData['error'] ?? responseData['title'] ?? responseData['detail'] ?? 'Geçersiz istek parametreleri';
           
           // Eğer ASP.NET Core Validation errors varsa
           if (responseData['errors'] != null && responseData['errors'] is Map) {
@@ -43,6 +43,8 @@ mixin ApiErrorHandler {
             final firstError = errors.values.first;
             if (firstError is List && firstError.isNotEmpty) {
               errorMessage = firstError.first.toString();
+            } else {
+              errorMessage = firstError.toString();
             }
           }
         } else if (responseData is String) {
@@ -69,44 +71,6 @@ mixin ApiErrorHandler {
         throw ServerException(
           message: 'Bu kayıt zaten mevcut',
           statusCode: 409,
-        );
-
-      case 400:
-        // C# Backend'den gelen Validation veya Bad Request mesajını çözümle
-        String errorMessage = 'Geçersiz İstek (400)';
-        print('--- 400 DETAIL ---');
-        print(e.response?.data);
-        print('------------------');
-        
-        if (e.response?.data is Map<String, dynamic>) {
-          final data = e.response!.data as Map<String, dynamic>;
-          // Model/Validation alan bazlı hatalar (errors)
-          if (data.containsKey('errors') && data['errors'] is Map) {
-            final errors = data['errors'] as Map<String, dynamic>;
-            if (errors.isNotEmpty) {
-              final firstErrorValue = errors.values.first;
-              if (firstErrorValue is List && firstErrorValue.isNotEmpty) {
-                errorMessage = firstErrorValue.first.toString();
-              } else {
-                errorMessage = firstErrorValue.toString();
-              }
-            }
-          } 
-          // Custom C# Detail veya Title mesajı
-          else if (data.containsKey('detail')) {
-            errorMessage = data['detail'].toString();
-          } else if (data.containsKey('title')) {
-            errorMessage = data['title'].toString();
-          } else if (data.containsKey('message')) {
-            errorMessage = data['message'].toString();
-          }
-        }  else if (e.response?.data is String) {
-          errorMessage = e.response?.data.toString() ?? errorMessage;
-        }
-
-        throw ServerException(
-          message: errorMessage,
-          statusCode: 400,
         );
 
       case 422:

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -27,7 +26,9 @@ class SplashPage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRouter.home);
+          Navigator.of(context).pushReplacementNamed(
+            AppRouter.initialRouteForRole(state.user.roleName),
+          );
         } else if (state is AuthUnauthenticated) {
           Navigator.of(context).pushReplacementNamed(AppRouter.login);
         }

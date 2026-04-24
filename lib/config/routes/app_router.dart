@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/auth/role_access_policy.dart';
 import '../../core/di/injection.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
@@ -15,7 +16,6 @@ import '../../features/roles/user/pages/user_dashboard_page.dart';
 import '../../features/roles/stock_manager/pages/stock_manager_dashboard_page.dart';
 import '../../features/roles/salesperson/pages/salesperson_dashboard_page.dart';
 import '../../features/roles/accounting/pages/accounting_dashboard_page.dart';
-import '../../features/roles/fielder/pages/fielder_dashboard_page.dart';
 
 // Field Management
 import '../../features/field_management/presentation/pages/pending_tasks_page.dart';
@@ -29,6 +29,11 @@ import '../../features/field_tasks/presentation/pages/my_assigned_tasks_page.dar
 import '../../features/field_tasks/presentation/pages/my_accepted_tasks_page.dart';
 import '../../features/field_tasks/presentation/pages/my_ongoing_tasks_page.dart';
 import '../../features/field_tasks/presentation/pages/my_completed_tasks_page.dart';
+import '../../features/field_tasks/presentation/pages/task_type_management_page.dart';
+import '../../features/field_tasks/presentation/pages/task_type_add_page.dart';
+import '../../features/field_tasks/presentation/pages/field_task_add_page.dart';
+import '../../features/field_tasks/presentation/bloc/task_type/task_type_bloc.dart';
+import '../../features/field_tasks/domain/entities/task_type_entity.dart';
 
 // Sales
 import '../../features/sales/presentation/pages/pending_sales_page.dart';
@@ -82,12 +87,6 @@ import '../../features/customers/presentation/pages/customer_edit_page.dart';
 import '../../features/customers/presentation/bloc/customer_bloc.dart';
 import '../../features/customers/domain/entities/customer_entity.dart';
 
-// Reporting
-import '../../features/reporting/presentation/pages/customer_reports_page.dart';
-import '../../features/reporting/presentation/pages/device_reports_page.dart';
-import '../../features/reporting/presentation/pages/sales_reports_page.dart';
-import '../../features/reporting/presentation/pages/user_reports_page.dart';
-
 // Helpers
 import '../../features/sales/presentation/pages/carrier_management_page.dart';
 import '../../features/supplier/presentation/pages/supplier_management_page.dart';
@@ -108,6 +107,7 @@ import '../../features/technical_service/presentation/pages/service_pre_registra
 import '../../features/admin/presentation/pages/approval_mechanism_page.dart';
 import '../../features/admin/presentation/pages/users_management_page.dart';
 import '../../features/admin/presentation/pages/logging_page.dart';
+import '../../features/admin/presentation/pages/user_role_assign_page.dart';
 
 class AppRouter {
   // Auth routes
@@ -139,6 +139,9 @@ class AppRouter {
   static const String myAcceptedTasks = '/field-tasks/my-accepted-tasks';
   static const String myOngoingTasks = '/field-tasks/my-ongoing-tasks';
   static const String myCompletedTasks = '/field-tasks/my-completed-tasks';
+  static const String taskTypeManagement = '/field-tasks/types';
+  static const String taskTypeAdd = '/field-tasks/types/add';
+  static const String taskAdd = '/field-tasks/add';
 
   // Sales routes
   static const String pendingSales = '/sales/pending';
@@ -178,12 +181,6 @@ class AppRouter {
   static const String customerDetail = '/customers/detail';
   static const String customerEdit = '/customers/edit';
 
-  // Reporting routes
-  static const String customerReports = '/reports/customers';
-  static const String deviceReports = '/reports/devices';
-  static const String salesReports = '/reports/sales';
-  static const String userReports = '/reports/users';
-
   // Helper routes
   static const String carrierManagement = '/carrier-management';
   static const String carrierAdd = '/carrier/add';
@@ -196,15 +193,22 @@ class AppRouter {
   static const String serviceOngoing = '/technical-service/ongoing';
   static const String serviceFinalChecks = '/technical-service/final-checks';
   static const String serviceCompleted = '/technical-service/completed';
-  static const String servicePreRegistrationAdd = '/technical-service/pre-registration/add';
-  static const String servicePreRegistrationDetail = '/technical-service/pre-registration/detail';
-  static const String serviceRequestShipment = '/technical-service/pre-registration/shipment';
-
+  static const String servicePreRegistrationAdd =
+      '/technical-service/pre-registration/add';
+  static const String servicePreRegistrationDetail =
+      '/technical-service/pre-registration/detail';
+  static const String serviceRequestShipment =
+      '/technical-service/pre-registration/shipment';
 
   // Admin routes
   static const String approvalMechanism = '/admin/approval-mechanism';
   static const String usersManagement = '/admin/users';
+  static const String userRoleAssign = '/admin/users/role-assign';
   static const String logging = '/admin/logging';
+
+  static String initialRouteForRole(String? roleName) {
+    return RoleAccessPolicy.initialRouteForRole(roleName);
+  }
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -252,7 +256,12 @@ class AppRouter {
             builder: (_) => const AccountingDashboardPage());
 
       case fielderDashboard:
-        return MaterialPageRoute(builder: (_) => const FielderDashboardPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<HomeBloc>()..add(const LoadUserInfo()),
+            child: const HomePage(),
+          ),
+        );
 
       // Field Management
       case pendingTasks:
@@ -283,6 +292,31 @@ class AppRouter {
       case myCompletedTasks:
         return MaterialPageRoute(builder: (_) => const MyCompletedTasksPage());
 
+      case taskTypeManagement:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TaskTypeBloc>(),
+            child: const TaskTypeManagementPage(),
+          ),
+        );
+
+      case taskTypeAdd:
+        final taskType = settings.arguments as TaskTypeEntity?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TaskTypeBloc>(),
+            child: TaskTypeAddPage(taskType: taskType),
+          ),
+        );
+
+      case taskAdd:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TaskTypeBloc>(),
+            child: const FieldTaskAddPage(),
+          ),
+        );
+
       // Sales
       case pendingSales:
         return MaterialPageRoute(
@@ -301,7 +335,12 @@ class AppRouter {
         );
 
       case rejectedSales:
-        return MaterialPageRoute(builder: (_) => const RejectedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const RejectedSalesPage(),
+          ),
+        );
 
       case partiallyShippedSales:
         return MaterialPageRoute(
@@ -320,7 +359,12 @@ class AppRouter {
         );
 
       case deliveredSales:
-        return MaterialPageRoute(builder: (_) => const DeliveredSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const DeliveredSalesPage(),
+          ),
+        );
 
       case saleAdd:
         final initialDevice = settings.arguments as DeviceEntity?;
@@ -332,7 +376,12 @@ class AppRouter {
         );
 
       case completedSales:
-        return MaterialPageRoute(builder: (_) => const CompletedSalesPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SaleBloc>(),
+            child: const CompletedSalesPage(),
+          ),
+        );
 
       case saleDetail:
         final sale = settings.arguments as SaleEntity;
@@ -510,19 +559,6 @@ class AppRouter {
           ),
         );
 
-      // Reporting
-      case customerReports:
-        return MaterialPageRoute(builder: (_) => const CustomerReportsPage());
-
-      case deviceReports:
-        return MaterialPageRoute(builder: (_) => const DeviceReportsPage());
-
-      case salesReports:
-        return MaterialPageRoute(builder: (_) => const SalesReportsPage());
-
-      case userReports:
-        return MaterialPageRoute(builder: (_) => const UserReportsPage());
-
       // Helpers
       case carrierManagement:
         return MaterialPageRoute(
@@ -568,6 +604,12 @@ class AppRouter {
 
       case usersManagement:
         return MaterialPageRoute(builder: (_) => const UsersManagementPage());
+
+      case userRoleAssign:
+        final args = settings.arguments as UserRoleAssignArgs;
+        return MaterialPageRoute(
+          builder: (_) => UserRoleAssignPage(args: args),
+        );
 
       case logging:
         return MaterialPageRoute(builder: (_) => const LoggingPage());

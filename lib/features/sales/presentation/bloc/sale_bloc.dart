@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tasarim_app/features/customers/domain/entities/paginated_result.dart';
+import 'package:tasarim_app/features/sales/domain/entities/sale_entity.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/get_sales_by_status_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/get_shipment_by_sale_id_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/create_shipment_usecase.dart';
@@ -7,6 +9,7 @@ import 'package:tasarim_app/features/sales/domain/usecases/get_fielders_usecase.
 import 'package:tasarim_app/features/sales/domain/usecases/mark_shipment_delivered_usecase.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/sale_approval_usecases.dart';
 import 'package:tasarim_app/features/sales/domain/usecases/create_sale_usecase.dart';
+import 'package:tasarim_app/features/sales/domain/usecases/return_sale_item_use_case.dart';
 import 'sale_event.dart';
 import 'sale_state.dart';
 
@@ -21,6 +24,7 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
   final ApproveSaleUseCase approveSaleUseCase;
   final RejectSaleUseCase rejectSaleUseCase;
   final CreateSaleUseCase createSaleUseCase;
+  final ReturnSaleItemUseCase returnSaleItemUseCase;
 
   SaleBloc({
     required this.getSalesByStatus,
@@ -32,8 +36,10 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     required this.approveSaleUseCase,
     required this.rejectSaleUseCase,
     required this.createSaleUseCase,
+    required this.returnSaleItemUseCase,
   }) : super(const SaleInitial()) {
     on<LoadSalesByStatus>(_onLoadSalesByStatus);
+    on<LoadMoreSalesByStatus>(_onLoadMoreSalesByStatus);
     on<LoadShipmentDetail>(_onLoadShipmentDetail);
     on<LoadShipmentOptions>(_onLoadShipmentOptions);
     on<CreateShipment>(_onCreateShipment);
@@ -41,6 +47,7 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     on<ApproveSale>(_onApproveSale);
     on<RejectSale>(_onRejectSale);
     on<CreateSale>(_onCreateSale);
+    on<ReturnSaleItem>(_onReturnSaleItem);
   }
 
   Future<void> _onLoadSalesByStatus(
@@ -53,11 +60,55 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
       status: event.status,
       page: event.page,
       pageSize: event.pageSize,
+      customerName: event.customerName,
     );
 
     result.fold(
       (failure) => emit(SaleError(failure.message)),
-      (paginated) => emit(SalesLoaded(paginated)),
+      (paginated) => emit(SalesLoaded(
+        paginated,
+        hasMore: paginated.page < paginated.totalPages,
+      )),
+    );
+  }
+
+  Future<void> _onLoadMoreSalesByStatus(
+    LoadMoreSalesByStatus event,
+    Emitter<SaleState> emit,
+  ) async {
+    // Loading more göstergesi için geçici bir state emit et
+    final currentState = state;
+    if (currentState is SalesLoaded) {
+      emit(SalesLoaded(currentState.result, hasMore: currentState.hasMore, isLoadingMore: true));
+    }
+
+    final result = await getSalesByStatus(
+      status: event.status,
+      page: event.nextPage,
+      pageSize: event.pageSize,
+      customerName: event.customerName,
+    );
+
+    result.fold(
+      (failure) => emit(SaleError(failure.message)),
+      (paginated) {
+        final allSales = [
+          ...event.existingSales.cast<SaleEntity>(),
+          ...paginated.items,
+        ];
+        final merged = PaginatedResult<SaleEntity>(
+          items: allSales,
+          page: paginated.page,
+          pageSize: paginated.pageSize,
+          totalCount: paginated.totalCount,
+          totalPages: paginated.totalPages,
+        );
+        emit(SalesLoaded(
+          merged,
+          hasMore: paginated.page < paginated.totalPages,
+          isLoadingMore: false,
+        ));
+      },
     );
   }
 
@@ -179,6 +230,25 @@ class SaleBloc extends Bloc<SaleEvent, SaleState> {
     result.fold(
       (failure) => emit(SaleError(failure.message)),
       (_) => emit(const SaleCreated()),
+    );
+  }
+
+  Future<void> _onReturnSaleItem(
+    ReturnSaleItem event,
+    Emitter<SaleState> emit,
+  ) async {
+    emit(const SaleLoading());
+
+    final result = await returnSaleItemUseCase(ReturnSaleItemParams(
+      saleId: event.saleId,
+      saleItemId: event.saleItemId,
+      condition: event.condition,
+      conditionNotes: event.conditionNotes,
+    ));
+
+    result.fold(
+      (failure) => emit(SaleError(failure.message)),
+      (_) => emit(const SaleItemReturned()),
     );
   }
 }

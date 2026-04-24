@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # iOS style icons
   cupertino_icons: ^1.0.8
@@ -27,7 +29,7 @@ dependencies:
   http: ^1.2.0
 
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   dartz: ^0.10.1
 
   # Local Storage
@@ -36,6 +38,7 @@ dependencies:
   # Barcode Scanner
   mobile_scanner: ^5.2.3
   flutter_dotenv: ^6.0.0
+  signalr_netcore: ^1.4.4
 
 dev_dependencies:
   flutter_test:

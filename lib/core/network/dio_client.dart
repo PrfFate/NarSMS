@@ -11,11 +11,22 @@ class DioClient {
         connectTimeout: const Duration(milliseconds: 30000),
         receiveTimeout: const Duration(milliseconds: 30000),
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json; charset=utf-8',
         },
       ),
     );
+
+    // Tüm isteklerde charset=utf-8 olmasını garanti eden interceptor
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final ct = options.headers['Content-Type']?.toString() ?? '';
+        if (ct.contains('application/json') && !ct.contains('charset')) {
+          options.headers['Content-Type'] = 'application/json; charset=utf-8';
+        }
+        return handler.next(options);
+      },
+    ));
   }
 
   Dio get dio => _dio;

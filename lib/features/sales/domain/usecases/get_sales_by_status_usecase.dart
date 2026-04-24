@@ -19,11 +19,13 @@ class GetSalesByStatusUseCase {
     required String status,
     required int page,
     required int pageSize,
+    String? customerName,
   }) {
     return repository.getSalesByStatus(
       status: status,
       page: page,
       pageSize: pageSize,
+      customerName: customerName,
     );
   }
 }

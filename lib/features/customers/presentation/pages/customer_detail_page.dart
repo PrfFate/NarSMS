@@ -7,6 +7,8 @@ import '../bloc/customer_state.dart';
 import '../../../../config/routes/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/delete_confirmation_dialog.dart';
+import '../../../../core/widgets/detail_info_row.dart';
+import '../../../../core/widgets/detail_section_card.dart';
 
 /// Page displaying detailed information about a single customer.
 /// Receives the customer ID via route arguments and fetches the detail.
@@ -69,7 +71,8 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: AppColors.navy),
+                      icon: const Icon(Icons.edit_outlined,
+                          color: AppColors.navy),
                       onPressed: () async {
                         final result = await Navigator.pushNamed(
                           context,
@@ -114,8 +117,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: Colors.red),
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(state.message,
                       style: const TextStyle(color: Colors.grey)),
@@ -148,7 +150,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Profil Kartı
-          _buildCard(
+          DetailSectionCard(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -161,7 +163,9 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   ),
                   child: Center(
                     child: Text(
-                      customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?',
+                      customer.name.isNotEmpty
+                          ? customer.name[0].toUpperCase()
+                          : '?',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -220,7 +224,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
           const SizedBox(height: 16),
 
           // İletişim Bilgileri Kartı
-          _buildCard(
+          DetailSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -233,13 +237,13 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildInfoRow(
+                DetailInfoRow(
                   icon: Icons.phone_outlined,
                   title: 'Telefon',
                   value: customer.phone ?? '-',
                 ),
                 const SizedBox(height: 16),
-                _buildInfoRow(
+                DetailInfoRow(
                   icon: Icons.mail_outline,
                   title: 'E-posta',
                   value: customer.email ?? '-',
@@ -250,7 +254,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
           const SizedBox(height: 16),
 
           // Adres Bilgisi Kartı
-          _buildCard(
+          DetailSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -263,11 +267,10 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildInfoRow(
+                DetailInfoRow(
                   icon: Icons.location_on_outlined,
-                  title: '',
+                  title: 'Adres',
                   value: customer.address ?? '-',
-                  hideTitle: true,
                 ),
               ],
             ),
@@ -289,81 +292,13 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
       if (firstLine.contains(',')) {
         return firstLine;
       }
-      
+
       // Virgül yoksa ama adres çok uzun değilse ilk 30 karakterini göster
       if (firstLine.length < 30) {
         return firstLine;
       }
     }
-    
+
     return 'Adres Kayıtlı';
-  }
-
-  Widget _buildCard({required Widget child}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20.0),
-      child: child,
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    bool hideTitle = false,
-  }) {
-    return Row(
-      crossAxisAlignment: hideTitle ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF57C00).withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 20, color: const Color(0xFFF57C00)),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!hideTitle) ...[
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[500],
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.navy,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }

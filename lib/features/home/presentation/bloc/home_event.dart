@@ -41,3 +41,12 @@ class SelectPage extends HomeEvent {
 class LogoutRequested extends HomeEvent {
   const LogoutRequested();
 }
+
+class RoleChangedReceived extends HomeEvent {
+  final String roleName;
+
+  const RoleChangedReceived(this.roleName);
+
+  @override
+  List<Object?> get props => [roleName];
+}

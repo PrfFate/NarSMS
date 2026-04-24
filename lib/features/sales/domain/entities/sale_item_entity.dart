@@ -8,6 +8,7 @@ class SaleItemEntity extends Equatable {
   final String? modelName;
   final double price;
   final String? imageUrl;
+  final bool isReturned;
 
   const SaleItemEntity({
     required this.id,
@@ -17,6 +18,7 @@ class SaleItemEntity extends Equatable {
     this.modelName,
     required this.price,
     this.imageUrl,
+    this.isReturned = false,
   });
 
   @override
@@ -28,5 +30,6 @@ class SaleItemEntity extends Equatable {
         modelName,
         price,
         imageUrl,
+        isReturned,
       ];
 }

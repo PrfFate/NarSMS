@@ -36,6 +36,16 @@ abstract class BaseRepository {
     Future<T> Function() call,
   ) async {
     try {
+      final hasConnection = await networkInfo.isConnected;
+      if (!hasConnection) {
+        return Left(
+          NetworkFailure(
+            'İnternet bağlantısı bulunamadı',
+            code: AppFailureCode.noInternet,
+          ),
+        );
+      }
+
       final result = await call();
       return Right(result);
     } on UnauthorizedException catch (e) {

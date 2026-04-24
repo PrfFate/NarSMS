@@ -17,7 +17,6 @@ import '../domain/usecases/get_suppliers_usecase.dart';
 import '../domain/usecases/get_device_movements_usecase.dart';
 import '../domain/usecases/get_device_types_paged_usecase.dart';
 import '../domain/usecases/create_device_type_usecase.dart';
-import '../domain/usecases/create_device_type_usecase.dart';
 import '../domain/usecases/update_device_type_usecase.dart';
 import '../domain/usecases/delete_device_type_usecase.dart';
 import '../domain/usecases/get_suppliers_detailed_usecase.dart';

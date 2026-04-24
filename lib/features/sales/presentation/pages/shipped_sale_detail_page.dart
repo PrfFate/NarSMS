@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tasarim_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:tasarim_app/features/auth/presentation/bloc/auth_state.dart';
+import '../../../../core/auth/role_access_policy.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../config/routes/app_router.dart';
 import '../../../../core/widgets/custom_form_scaffold.dart';
@@ -71,11 +74,8 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   }
 
   void _openShipmentDialog(BuildContext context) async {
-    final result = await Navigator.pushNamed(
-      context, 
-      AppRouter.saleShip, 
-      arguments: widget.sale
-    );
+    final result = await Navigator.pushNamed(context, AppRouter.saleShip,
+        arguments: widget.sale);
 
     if (result == true) {
       // Yenile
@@ -92,6 +92,79 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
       confirmLabel: 'Evet, Onayla',
       onConfirm: () {
         context.read<SaleBloc>().add(MarkShipmentDelivered(shipment.id));
+      },
+    );
+  }
+
+  void _showReturnDialog(int saleItemId) {
+    String selectedCondition = 'Sealed';
+    final notesController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cihaz İade Al'),
+          content: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedCondition,
+                    decoration: const InputDecoration(
+                      labelText: 'Durumu',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'Sealed', child: Text('Sealed (Kapalı)')),
+                      DropdownMenuItem(
+                          value: 'Opened', child: Text('Opened (Açık)')),
+                      DropdownMenuItem(
+                          value: 'Damaged', child: Text('Damaged (Hasarlı)')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() => selectedCondition = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notlar (İsteğe Bağlı)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+                context.read<SaleBloc>().add(ReturnSaleItem(
+                      saleId: widget.sale.id,
+                      saleItemId: saleItemId,
+                      condition: selectedCondition,
+                      conditionNotes: notesController.text,
+                    ));
+              },
+              child: const Text('İadeyi Onayla'),
+            ),
+          ],
+        );
       },
     );
   }
@@ -219,7 +292,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
     );
   }
 
-  Widget _buildSaleItemsList() {
+  Widget _buildSaleItemsList({required bool canManageReturns}) {
     final items = widget.sale.items ?? [];
     if (items.isEmpty) {
       return const Text('Kayıtlı satış kalemi bulunamadı.',
@@ -285,12 +358,72 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
                   ],
                 ),
               ),
-              Text(
-                '${item.price.toStringAsFixed(2)} \$',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.navy),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${item.price.toStringAsFixed(2)} \$',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.navy),
+                  ),
+                  const SizedBox(height: 8),
+                  if (canManageReturns &&
+                      (widget.sale.approvalStatus == 'Delivered' ||
+                          widget.sale.approvalStatus == 'Completed' ||
+                          widget.sale.approvalStatus == 'Shipped' ||
+                          widget.sale.approvalStatus == 'PartiallyShipped'))
+                    if (item.isReturned)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.green),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_outline,
+                                size: 14, color: Colors.green),
+                            SizedBox(width: 4),
+                            Text('İade Edildi',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      )
+                    else
+                      InkWell(
+                        onTap: () => _showReturnDialog(item.id),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.primary),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.keyboard_return_outlined,
+                                  size: 14, color: AppColors.primary),
+                              SizedBox(width: 4),
+                              Text('İade Al',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                ],
               ),
             ],
           ),
@@ -302,8 +435,9 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   Color _getStatusColor(String? status) {
     if (status == null) return Colors.grey;
     final lower = status.toLowerCase();
-    if (lower.contains('onaylandı') || lower.contains('approved'))
+    if (lower.contains('onaylandı') || lower.contains('approved')) {
       return Colors.green;
+    }
     if (lower.contains('red') || lower.contains('rejected')) return Colors.red;
     return AppColors.primary; // Bekliyor / Pending
   }
@@ -399,6 +533,15 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final userRoleName =
+        authState is AuthAuthenticated ? authState.user.roleName : null;
+    final canShipForRole = RoleAccessPolicy.canShipSale(userRoleName);
+    final canConfirmDeliveryForRole =
+        RoleAccessPolicy.canConfirmShipmentDelivery(userRoleName);
+    final canManageReturns =
+        RoleAccessPolicy.canManageSaleReturns(userRoleName);
+
     if (_isLoading) {
       return const CustomFormScaffold(
         title: 'Kargo Detayı',
@@ -407,13 +550,14 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
       );
     }
 
-    final bool canShip =
-        widget.sale.approvalStatus?.toLowerCase() == 'approved' ||
-            widget.sale.approvalStatus?.toLowerCase() == 'partiallyshipped';
+    final bool canShip = canShipForRole &&
+        (widget.sale.approvalStatus?.toLowerCase() == 'approved' ||
+            widget.sale.approvalStatus?.toLowerCase() == 'partiallyshipped');
 
-    final bool canConfirmDelivery = _shipments.any((s) =>
-        s.statusText?.toLowerCase() != 'delivered' &&
-        s.statusText?.toLowerCase() != 'teslim edildi');
+    final bool canConfirmDelivery = canConfirmDeliveryForRole &&
+        _shipments.any((s) =>
+            s.statusText?.toLowerCase() != 'delivered' &&
+            s.statusText?.toLowerCase() != 'teslim edildi');
 
     final undeliveredShipment = _shipments
         .where((s) =>
@@ -443,6 +587,13 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
+        } else if (state is SaleItemReturned) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Cihaz başarıyla iade alındı.'),
+                backgroundColor: Colors.green),
+          );
+          Navigator.pop(context, true); // Ekranı kapat ve listeyi yenile
         }
       },
       child: CustomFormScaffold(
@@ -466,7 +617,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildCardTitle('Satış Kalemleri'),
-                    _buildSaleItemsList(),
+                    _buildSaleItemsList(canManageReturns: canManageReturns),
                   ],
                 ),
               ),

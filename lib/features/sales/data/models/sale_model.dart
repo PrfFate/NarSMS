@@ -36,10 +36,10 @@ class SaleModel {
       approvalStatus: json['status'] as String?, // status
       approvalDate: json['actualSaleDate'] as String?, // actualSaleDate
       approvedByName: json['createdByUserName'] as String?, // createdByUserName
-      items: json['items'] != null
+      items: json['items'] is List
           ? (json['items'] as List).map((i) => SaleItemModel.fromJson(i as Map<String, dynamic>)).toList()
           : null,
-      approvalHistory: json['approvals'] != null
+      approvalHistory: json['approvals'] is List
           ? (json['approvals'] as List).map((i) => ApprovalStepModel.fromJson(i as Map<String, dynamic>)).toList()
           : null,
     );

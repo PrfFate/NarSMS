@@ -9,6 +9,7 @@ class SaleItemModel extends SaleItemEntity {
     super.modelName,
     required super.price,
     super.imageUrl,
+    super.isReturned = false,
   });
 
   factory SaleItemModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,7 @@ class SaleItemModel extends SaleItemEntity {
       modelName: deviceObj?['deviceTypeName'] as String?,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       imageUrl: null, // Json'da imaj url yok
+      isReturned: json['isReturned'] as bool? ?? false,
     );
   }
 
@@ -32,5 +34,6 @@ class SaleItemModel extends SaleItemEntity {
         modelName: modelName,
         price: price,
         imageUrl: imageUrl,
+        isReturned: isReturned,
       );
 }

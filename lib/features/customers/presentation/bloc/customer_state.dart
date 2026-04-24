@@ -27,14 +27,18 @@ class CustomerLoading extends CustomerState {
 class CustomerLoaded extends CustomerState {
   final PaginatedResult<CustomerEntity> result;
   final String? searchQuery;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   const CustomerLoaded({
     required this.result,
     this.searchQuery,
+    this.hasMore = true,
+    this.isLoadingMore = false,
   });
 
   @override
-  List<Object?> get props => [result, searchQuery];
+  List<Object?> get props => [result, searchQuery, hasMore, isLoadingMore];
 
   @override
   String toString() =>

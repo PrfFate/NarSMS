@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
+import 'package:tasarim_app/core/auth/role_utils.dart';
 import 'package:tasarim_app/core/utils/page_title_notifier.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_event.dart';
@@ -19,7 +20,6 @@ import '../../../sales/presentation/pages/shipped_sales_page.dart';
 import '../../../sales/presentation/pages/delivered_sales_page.dart';
 import '../../../sales/presentation/pages/completed_sales_page.dart';
 import '../../../sales/presentation/pages/rejected_sales_page.dart';
-import '../../../sales/presentation/pages/approval_mechanism_page.dart';
 import '../../../sales/presentation/pages/approved_sales_page.dart';
 import '../../../sales/presentation/pages/partially_shipped_sales_page.dart';
 import '../../../technical_service/presentation/pages/service_pre_registrations_page.dart';
@@ -39,12 +39,11 @@ import '../../../field_tasks/presentation/pages/my_completed_tasks_page.dart';
 import '../../../customers/presentation/pages/customer_list_page.dart';
 import '../../../customers/presentation/bloc/customer_bloc.dart';
 import '../../../../core/di/injection.dart';
-import '../../../reporting/presentation/pages/customer_reports_page.dart';
 import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
+import 'dashboard_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
-import 'package:tasarim_app/features/admin/presentation/pages/approval_mechanism_page.dart';
 import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
 
 /// Route → Sayfa başlığı eşleştirmesi
@@ -82,10 +81,8 @@ const Map<String, String> _routeTitles = {
   AppRouter.myCompletedTasks: 'Tamamladığım Görevlerim',
   // Müşteriler
   AppRouter.customerList: 'Müşteriler',
-  // Raporlama
-  AppRouter.customerReports: 'Müşteri Raporları',
   // Admin
-  AppRouter.logging: 'Sistem Logları',
+  AppRouter.logging: 'Loglama',
   AppRouter.usersManagement: 'Kullanıcı Yönetimi',
 };
 
@@ -159,7 +156,10 @@ class HomePage extends StatelessWidget {
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
     // Route değişince başlığı güncelle
-    final title = _routeTitles[state.selectedPageRoute] ?? 'Admin Paneli';
+    final title = state.selectedPageRoute == AppRouter.home &&
+            isFielderRole(state.userRole)
+        ? 'Sahacı Paneli'
+        : (_routeTitles[state.selectedPageRoute] ?? 'Admin Paneli');
     PageTitleNotifier.instance.value = title;
 
     return Scaffold(
@@ -167,7 +167,10 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shadowColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         shape: const Border(
           bottom: BorderSide(color: Colors.black12, width: 1),
         ),
@@ -263,11 +266,20 @@ class HomePage extends StatelessWidget {
           child: const ShippedSalesPage(),
         );
       case AppRouter.deliveredSales:
-        return const DeliveredSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const DeliveredSalesPage(),
+        );
       case AppRouter.completedSales:
-        return const CompletedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const CompletedSalesPage(),
+        );
       case AppRouter.rejectedSales:
-        return const RejectedSalesPage();
+        return BlocProvider(
+          create: (_) => getIt<SaleBloc>(),
+          child: const RejectedSalesPage(),
+        );
       case AppRouter.approvalWorkflows:
         return BlocProvider(
           create: (_) => getIt<ApprovalBloc>(),
@@ -328,10 +340,6 @@ class HomePage extends StatelessWidget {
           child: const CustomerListPage(),
         );
 
-      // Raporlama
-      case AppRouter.customerReports:
-        return const CustomerReportsPage();
-
       // Loglama
       case AppRouter.logging:
         return const LoggingPage();
@@ -343,38 +351,7 @@ class HomePage extends StatelessWidget {
       // Dashboard (Home)
       case AppRouter.home:
       default:
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Dashboard',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Hoş geldiniz! Lütfen sol menüden bir seçim yapın.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return const DashboardPage();
     }
   }
 }

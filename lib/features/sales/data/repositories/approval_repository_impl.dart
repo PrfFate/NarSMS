@@ -4,7 +4,6 @@ import '../../../../core/errors/failures.dart';
 import '../datasources/approval_remote_datasource.dart';
 import '../../domain/entities/approval_workflow_entity.dart';
 import '../../domain/repositories/approval_repository.dart';
-import '../models/approval_workflow_model.dart';
 
 class ApprovalRepositoryImpl extends BaseRepository
     implements ApprovalRepository {

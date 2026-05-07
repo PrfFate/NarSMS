@@ -253,9 +253,6 @@ class _DeviceBulkAddPageState extends State<DeviceBulkAddPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle('Temel Bilgiler'),
-                      const SizedBox(height: 12),
-
                       // CİHAZ MODELLERİ (DeviceType)
                       DropdownButtonFormField<String>(
                         value: _selectedDeviceType,

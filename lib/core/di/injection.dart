@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
+import '../network/auth_interceptor.dart';
 import '../realtime/role_change_hub_service.dart';
 
 // Feature modülleri
@@ -38,6 +39,15 @@ Future<void> initializeDependencies() async {
 
   // ===== CORE DEPENDENCIES =====
   getIt.registerLazySingleton(() => DioClient());
+
+  // 401 interceptor — token bitince refresh dener, başarısızsa login'e yönlendirir
+  getIt<DioClient>().addInterceptor(
+    AuthInterceptor(
+      sharedPreferences: getIt<SharedPreferences>(),
+      dio: getIt<DioClient>().dio,
+    ),
+  );
+
   getIt.registerLazySingleton(
     () => RoleChangeHubService(
       dioClient: getIt<DioClient>(),

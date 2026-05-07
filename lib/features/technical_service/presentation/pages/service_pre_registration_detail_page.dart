@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:get_it/get_it.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/routes/app_router.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/constants/storage_constants.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/widgets/device_image_widget.dart';
 import '../../domain/entities/service_request_entity.dart';
 import '../bloc/technical_service_bloc.dart';
@@ -19,6 +25,80 @@ class ServicePreRegistrationDetailPage extends StatefulWidget {
 
 class _ServicePreRegistrationDetailPageState
     extends State<ServicePreRegistrationDetailPage> {
+  // Shipment detail data
+  Map<String, dynamic>? _shipmentData;
+  bool _isLoadingShipment = false;
+  String? _shipmentError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShipmentDetail();
+  }
+
+  Future<void> _loadShipmentDetail() async {
+    final shipmentId = widget.request.shipmentId;
+    if (shipmentId == null) return;
+
+    setState(() {
+      _isLoadingShipment = true;
+      _shipmentError = null;
+    });
+
+    try {
+      final dioClient = GetIt.instance<DioClient>();
+      final prefs = GetIt.instance<SharedPreferences>();
+      final token = prefs.getString(StorageConstants.accessToken);
+
+      final response = await dioClient.dio.get(
+        ApiConstants.shipmentById(shipmentId),
+        options: Options(
+          headers: {
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        Map<String, dynamic>? shipment;
+
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('value') && data['value'] is Map) {
+            shipment = data['value'] as Map<String, dynamic>;
+          } else if (data.containsKey('id')) {
+            shipment = data;
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _shipmentData = shipment;
+            _isLoadingShipment = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingShipment = false);
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingShipment = false;
+          if (e.response?.statusCode != 404) {
+            _shipmentError = 'Kargo bilgisi yüklenemedi';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingShipment = false;
+          _shipmentError = 'Kargo bilgisi yüklenemedi';
+        });
+      }
+    }
+  }
+
   void _onShipToSupplier() async {
     final result = await Navigator.pushNamed(
       context,
@@ -44,15 +124,8 @@ class _ServicePreRegistrationDetailPageState
     );
   }
 
-  bool get _isPending =>
-      widget.request.status?.toLowerCase() == 'pending';
-
-  bool get _hasShipment => widget.request.shipmentId != null;
-
-  bool get _isInTransit {
-    final status = widget.request.shipmentStatus?.toLowerCase() ?? '';
-    return status.replaceAll(' ', '').replaceAll('-', '') == 'intransit';
-  }
+  bool get _isInTransit =>
+      widget.request.shipmentStatus?.toLowerCase() == 'intransit';
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +172,8 @@ class _ServicePreRegistrationDetailPageState
               _buildHeaderCard(),
               const SizedBox(height: 16),
               _buildDetailsCard(),
+              const SizedBox(height: 16),
+              _buildShipmentCard(),
               const SizedBox(height: 24),
               _buildActionButtons(context),
             ],
@@ -260,6 +335,181 @@ class _ServicePreRegistrationDetailPageState
     );
   }
 
+  // ── Kargo Bilgisi Kartı ──
+  Widget _buildShipmentCard() {
+    if (_isLoadingShipment) {
+      return _buildCard(
+        child: const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: Color(0xFFF57C00)),
+          ),
+        ),
+      );
+    }
+
+    if (_shipmentError != null) {
+      return _buildCard(
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red[300], size: 32),
+              const SizedBox(height: 8),
+              Text(_shipmentError!,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _loadShipmentDetail,
+                child: const Text('Tekrar Dene',
+                    style: TextStyle(color: Color(0xFFF57C00))),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_shipmentData == null) {
+      return _buildCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.local_shipping_outlined,
+                      color: Colors.grey, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Text('Kargo Bilgisi',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F172A))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                'Henüz kargo kaydı oluşturulmamış.',
+                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final d = _shipmentData!;
+    final carrierName = d['carrierName'] as String? ?? '-';
+    final trackingNumber = d['trackingNumber'] as String? ?? '-';
+    final statusText = d['statusText'] as String? ?? d['typeText'] as String? ?? '-';
+    final createdByUserName = d['createdByUserName'] as String? ?? '-';
+
+    String shipmentDateStr = '-';
+    if (d['shipmentDate'] != null) {
+      try {
+        final date = DateTime.parse(d['shipmentDate']).toLocal();
+        shipmentDateStr = DateFormat('dd.MM.yyyy').format(date);
+      } catch (_) {
+        shipmentDateStr = d['shipmentDate'].toString();
+      }
+    }
+
+    return _buildCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.local_shipping,
+                    color: Colors.deepPurple, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Text('Kargo Bilgisi',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF0F172A))),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildShipmentInfoRow(
+            icon: Icons.business_outlined,
+            title: 'Kargo Firması',
+            value: carrierName,
+          ),
+          const SizedBox(height: 14),
+          _buildShipmentInfoRow(
+            icon: Icons.tag,
+            title: 'Takip Numarası',
+            value: trackingNumber,
+          ),
+          const SizedBox(height: 14),
+          _buildShipmentInfoRow(
+            icon: Icons.calendar_month_outlined,
+            title: 'Kargo Tarihi',
+            value: shipmentDateStr,
+          ),
+          const SizedBox(height: 14),
+          _buildShipmentInfoRow(
+            icon: Icons.info_outline,
+            title: 'Durum',
+            value: statusText,
+          ),
+          const SizedBox(height: 14),
+          _buildShipmentInfoRow(
+            icon: Icons.person_outline,
+            title: 'Kargolayan',
+            value: createdByUserName,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShipmentInfoRow({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.deepPurple.withAlpha(180)),
+        const SizedBox(width: 12),
+        Text(title,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[500])),
+        const Spacer(),
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0F172A)),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionButtons(BuildContext context) {
     // shipmentStatus = InTransit → Sadece "Teslimatı Onayla" göster
     if (_isInTransit) {
@@ -282,50 +532,20 @@ class _ServicePreRegistrationDetailPageState
       );
     }
 
-    // Eğer bir kargo girişi yapılmışsa ama henüz InTransit değilse veya başka bir durumdaysa 
-    // "Gönder" butonlarını göstermeyelim.
-    if (_hasShipment) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.blue.shade700),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                'Bu cihaz için kargo kaydı zaten oluşturulmuş.',
-                style: TextStyle(fontSize: 14, color: Colors.blue),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // shipmentStatus = null/yok ve status = Pending → Gönder butonları
-    final bool canSend = _isPending;
-
+    // shipmentStatus null → Gönder butonları
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           height: 54,
           child: ElevatedButton.icon(
-            // disabled if not Pending
-            onPressed: canSend ? _onShipToSupplier : null,
+            onPressed: _onShipToSupplier,
             icon: const Icon(Icons.local_shipping_outlined),
             label: const Text('Servise Gönder',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF57C00),
               foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey[300],
-              disabledForegroundColor: Colors.grey[500],
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               elevation: 2,
@@ -337,44 +557,20 @@ class _ServicePreRegistrationDetailPageState
           width: double.infinity,
           height: 54,
           child: OutlinedButton.icon(
-            onPressed: canSend ? _onShipToCustomer : null,
+            onPressed: _onShipToCustomer,
             icon: const Icon(Icons.person_pin_circle_outlined),
             label: const Text('Müşteriye Gönder',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFF57C00),
-              disabledForegroundColor: Colors.grey[400],
-              side: BorderSide(
-                  color: canSend ? const Color(0xFFF57C00) : Colors.grey[300]!,
+              side: const BorderSide(
+                  color: Color(0xFFF57C00),
                   width: 1.5),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ),
-        if (!canSend) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Kargo işlemi sadece "Beklemede" statüsündeki kayıtlar için yapılabilir.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }

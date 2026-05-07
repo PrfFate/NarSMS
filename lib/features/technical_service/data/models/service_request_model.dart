@@ -24,7 +24,9 @@ class ServiceRequestModel extends ServiceRequestEntity {
       deviceTypeName: json['deviceTypeName'],
       customerId: json['customerId'],
       customerName: json['customerName'],
-      requestDate: json['requestDate'] != null ? DateTime.parse(json['requestDate']) : null,
+      requestDate: json['requestDate'] != null
+          ? DateTime.parse(json['requestDate'])
+          : null,
       status: json['status'],
       faultDescription: json['faultDescription'],
       supplierId: json['supplierId'],

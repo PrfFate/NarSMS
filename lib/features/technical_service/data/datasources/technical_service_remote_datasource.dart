@@ -104,14 +104,17 @@ class TechnicalServiceRemoteDataSourceImpl implements TechnicalServiceRemoteData
     String? trackingNumber,
   }) async {
     try {
-      final data = {
+      final data = <String, dynamic>{
         'serviceRequestId': id,
-        'carrierId': carrierId,
-        'fieldTeamUserId': fieldTeamUserId,
-        'trackingNumber': trackingNumber,
         'shipmentDate': DateTime.now().toUtc().toIso8601String(),
         'type': shipmentType,
       };
+
+      if (carrierId != null) data['carrierId'] = carrierId;
+      if (fieldTeamUserId != null) data['fieldTeamUserId'] = fieldTeamUserId;
+      if (trackingNumber != null && trackingNumber.isNotEmpty) {
+        data['trackingNumber'] = trackingNumber;
+      }
 
       final response = await dio.post(
         ApiConstants.serviceRequestShipment,

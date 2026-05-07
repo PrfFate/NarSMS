@@ -47,6 +47,7 @@ class ApiConstants {
   static const String deviceTypes = '$apiVersion/devicetype';
   static const String suppliers = '$apiVersion/Supplier';
   static String deviceMovements(int id) => '$apiVersion/Device/$id/movements';
+
   // Sale endpoints
   static const String saleCreate = '$apiVersion/Sale';
   static const String saleSearch = '$apiVersion/sale/search';
@@ -58,9 +59,12 @@ class ApiConstants {
       '$apiVersion/Return/create-and-complete';
 
   // Shipment endpoints
+  static String shipmentById(int id) => '$apiVersion/Shipment/$id';
   static String shipmentBySaleId(int saleId) =>
       '$apiVersion/shipment/sale/$saleId';
   static const String shipmentCreate = '$apiVersion/Shipment/sale';
+  static const String serviceRequestShipment =
+      '$apiVersion/Shipment/service-request';
 
   // Carrier endpoints
   static const String carrierAll = '$apiVersion/Carrier';
@@ -98,8 +102,6 @@ class ApiConstants {
   // Service Request endpoints
   static const String serviceRequestPaged = '$apiVersion/ServiceRequest/paged';
   static const String serviceRequestCreate = '$apiVersion/ServiceRequest';
-  static const String serviceRequestShipment =
-      '$apiVersion/Shipment/service-request';
 
   // Task Type endpoints
   static const String taskTypes = '$apiVersion/task-types';

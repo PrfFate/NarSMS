@@ -305,11 +305,20 @@ class HomePage extends StatelessWidget {
           child: const ServicePreRegistrationsPage(),
         );
       case AppRouter.serviceOngoing:
-        return const ServiceOngoingPage();
+        return BlocProvider(
+          create: (_) => getIt<TechnicalServiceBloc>(),
+          child: const ServiceOngoingPage(),
+        );
       case AppRouter.serviceFinalChecks:
-        return const ServiceFinalChecksPage();
+        return BlocProvider(
+          create: (_) => getIt<TechnicalServiceBloc>(),
+          child: const ServiceFinalChecksPage(),
+        );
       case AppRouter.serviceCompleted:
-        return const ServiceCompletedPage();
+        return BlocProvider(
+          create: (_) => getIt<TechnicalServiceBloc>(),
+          child: const ServiceCompletedPage(),
+        );
 
       // Saha Yönetimi
       case AppRouter.pendingTasks:

@@ -65,6 +65,8 @@ class ApiConstants {
   static const String shipmentCreate = '$apiVersion/Shipment/sale';
   static const String serviceRequestShipment =
       '$apiVersion/Shipment/service-request';
+  static String shipmentMarkDelivered(int id) =>
+      '$apiVersion/Shipment/$id/mark-delivered';
 
   // Carrier endpoints
   static const String carrierAll = '$apiVersion/Carrier';
@@ -77,8 +79,6 @@ class ApiConstants {
   static const String userPaged = '$apiVersion/User/paged';
   static const String userSearch = '$apiVersion/User/search';
   static String userById(int id) => '$apiVersion/User/$id';
-  static String shipmentMarkDelivered(int id) =>
-      '$apiVersion/Shipment/$id/mark-delivered';
 
   static String usersByRole(String role) =>
       '$apiVersion/User/byrolename/${Uri.encodeComponent(role)}';
@@ -102,6 +102,11 @@ class ApiConstants {
   // Service Request endpoints
   static const String serviceRequestPaged = '$apiVersion/ServiceRequest/paged';
   static const String serviceRequestCreate = '$apiVersion/ServiceRequest';
+  static String serviceRequestReturnToBackup(int id) =>
+      '$apiVersion/ServiceRequest/$id/return-to-backup-pool';
+
+  // Service Operation endpoints
+  static const String serviceOperation = '$apiVersion/ServiceOperation';
 
   // Task Type endpoints
   static const String taskTypes = '$apiVersion/task-types';

@@ -104,6 +104,7 @@ import '../../features/technical_service/presentation/pages/service_pre_registra
 import '../../features/technical_service/presentation/pages/service_pre_registration_detail_page.dart';
 import '../../features/technical_service/presentation/pages/service_ongoing_detail_page.dart';
 import '../../features/technical_service/presentation/pages/service_final_check_detail_page.dart';
+import '../../features/technical_service/presentation/pages/service_completed_detail_page.dart';
 
 // Admin
 import '../../features/admin/presentation/pages/approval_mechanism_page.dart';
@@ -205,6 +206,8 @@ class AppRouter {
       '/technical-service/ongoing/detail';
   static const String serviceFinalCheckDetail =
       '/technical-service/final-checks/detail';
+  static const String serviceCompletedDetail =
+      '/technical-service/completed/detail';
 
   // Admin routes
   static const String approvalMechanism = '/admin/approval-mechanism';
@@ -619,6 +622,14 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (_) => getIt<TechnicalServiceBloc>(),
             child: const ServiceCompletedPage(),
+          ),
+        );
+      case serviceCompletedDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: getIt<TechnicalServiceBloc>(),
+            child: ServiceCompletedDetailPage(request: request),
           ),
         );
 

@@ -68,3 +68,12 @@ class SendToShipment extends TechnicalServiceEvent {
 }
 
 class LoadShipmentOptions extends TechnicalServiceEvent {}
+
+class ConfirmDelivery extends TechnicalServiceEvent {
+  final int shipmentId;
+
+  const ConfirmDelivery({required this.shipmentId});
+
+  @override
+  List<Object?> get props => [shipmentId];
+}

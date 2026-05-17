@@ -17,6 +17,7 @@ abstract class TechnicalServiceRemoteDataSource {
   Future<void> sendToShipment(int id, int shipmentType, {int? carrierId, int? fieldTeamUserId, String? trackingNumber});
   Future<List<Map<String, dynamic>>> getCarriers();
   Future<List<Map<String, dynamic>>> getFielders();
+  Future<void> confirmDelivery(int shipmentId);
 }
 
 class TechnicalServiceRemoteDataSourceImpl implements TechnicalServiceRemoteDataSource {
@@ -163,6 +164,22 @@ class TechnicalServiceRemoteDataSourceImpl implements TechnicalServiceRemoteData
       return [];
     } catch (e) {
       throw ServerException(message: 'Saha ekipleri yüklenemedi');
+    }
+  }
+
+  @override
+  Future<void> confirmDelivery(int shipmentId) async {
+    try {
+      final response = await dio.patch(
+        ApiConstants.shipmentMarkDelivered(shipmentId),
+        options: _authOptions(),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException(message: 'Teslimat onaylanamadı');
+      }
+    } on DioException catch (e) {
+      throw ServerException(message: e.message ?? 'Sunucu bağlantı hatası');
     }
   }
 }

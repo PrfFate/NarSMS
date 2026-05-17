@@ -3,6 +3,7 @@ import '../../domain/usecases/get_service_requests_usecase.dart';
 import '../../domain/usecases/create_service_request_usecase.dart';
 import '../../domain/usecases/send_to_shipment_usecase.dart';
 import '../../domain/usecases/get_shipment_options_usecase.dart';
+import '../../domain/usecases/confirm_delivery_usecase.dart';
 import 'technical_service_event.dart';
 import 'technical_service_state.dart';
 import '../../domain/entities/service_request_entity.dart';
@@ -12,18 +13,21 @@ class TechnicalServiceBloc extends Bloc<TechnicalServiceEvent, TechnicalServiceS
   final CreateServiceRequestUseCase createServiceRequestUseCase;
   final SendToShipmentUseCase sendToShipmentUseCase;
   final GetShipmentOptionsUseCase getShipmentOptionsUseCase;
+  final ConfirmDeliveryUseCase confirmDeliveryUseCase;
 
   TechnicalServiceBloc({
     required this.getServiceRequestsUseCase,
     required this.createServiceRequestUseCase,
     required this.sendToShipmentUseCase,
     required this.getShipmentOptionsUseCase,
+    required this.confirmDeliveryUseCase,
   }) : super(TechnicalServiceInitial()) {
     on<LoadServiceRequests>(_onLoadServiceRequests);
     on<LoadMoreServiceRequests>(_onLoadMoreServiceRequests);
     on<CreateServiceRequest>(_onCreateServiceRequest);
     on<SendToShipment>(_onSendToShipment);
     on<LoadShipmentOptions>(_onLoadShipmentOptions);
+    on<ConfirmDelivery>(_onConfirmDelivery);
   }
 
   Future<void> _onLoadShipmentOptions(
@@ -58,6 +62,20 @@ class TechnicalServiceBloc extends Bloc<TechnicalServiceEvent, TechnicalServiceS
     result.fold(
       (failure) => emit(TechnicalServiceError(failure.message)),
       (_) => emit(TechnicalServiceShipmentSuccess()),
+    );
+  }
+
+  Future<void> _onConfirmDelivery(
+    ConfirmDelivery event,
+    Emitter<TechnicalServiceState> emit,
+  ) async {
+    emit(TechnicalServiceLoading());
+
+    final result = await confirmDeliveryUseCase(event.shipmentId);
+
+    result.fold(
+      (failure) => emit(TechnicalServiceError(failure.message)),
+      (_) => emit(TechnicalServiceDeliveryConfirmSuccess()),
     );
   }
 

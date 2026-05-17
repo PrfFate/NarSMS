@@ -11,6 +11,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/widgets/device_image_widget.dart';
 import '../../domain/entities/service_request_entity.dart';
 import '../bloc/technical_service_bloc.dart';
+import '../bloc/technical_service_event.dart';
 import '../bloc/technical_service_state.dart';
 
 class ServicePreRegistrationDetailPage extends StatefulWidget {
@@ -118,10 +119,15 @@ class _ServicePreRegistrationDetailPageState
   }
 
   void _onConfirmDelivery() {
-    // TODO: Teslimatı onayla işlemi
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Teslimat onayı yakında eklenecek.')),
-    );
+    if (widget.request.shipmentId != null) {
+      context.read<TechnicalServiceBloc>().add(
+        ConfirmDelivery(shipmentId: widget.request.shipmentId!),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kargo bilgisi bulunamadı.')),
+      );
+    }
   }
 
   bool get _isPending => widget.request.status?.toLowerCase() == 'pending';
@@ -140,6 +146,14 @@ class _ServicePreRegistrationDetailPageState
               backgroundColor: Colors.green,
             ),
           );
+        } else if (state is TechnicalServiceDeliveryConfirmSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Teslimat başarıyla onaylandı'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
         } else if (state is TechnicalServiceError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),

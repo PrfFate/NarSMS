@@ -90,4 +90,16 @@ class TechnicalServiceRepositoryImpl implements TechnicalServiceRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> confirmDelivery(int shipmentId) async {
+    try {
+      await remoteDataSource.confirmDelivery(shipmentId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

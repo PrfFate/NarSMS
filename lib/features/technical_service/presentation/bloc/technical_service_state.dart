@@ -69,6 +69,8 @@ class TechnicalServiceCreateSuccess extends TechnicalServiceState {}
 
 class TechnicalServiceShipmentSuccess extends TechnicalServiceState {}
 
+class TechnicalServiceDeliveryConfirmSuccess extends TechnicalServiceState {}
+
 class ShipmentOptionsLoaded extends TechnicalServiceState {
   final List<Map<String, dynamic>> carriers;
   final List<Map<String, dynamic>> fielders;

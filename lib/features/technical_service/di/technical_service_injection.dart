@@ -8,6 +8,7 @@ import '../domain/usecases/get_service_requests_usecase.dart';
 import '../domain/usecases/create_service_request_usecase.dart';
 import '../domain/usecases/send_to_shipment_usecase.dart';
 import '../domain/usecases/get_shipment_options_usecase.dart';
+import '../domain/usecases/confirm_delivery_usecase.dart';
 import '../presentation/bloc/technical_service_bloc.dart';
 
 final getIt = GetIt.instance;
@@ -20,6 +21,7 @@ Future<void> initTechnicalServiceModule() async {
       createServiceRequestUseCase: getIt(),
       sendToShipmentUseCase: getIt(),
       getShipmentOptionsUseCase: getIt(),
+      confirmDeliveryUseCase: getIt(),
     ),
   );
 
@@ -28,6 +30,7 @@ Future<void> initTechnicalServiceModule() async {
   getIt.registerLazySingleton(() => CreateServiceRequestUseCase(getIt()));
   getIt.registerLazySingleton(() => SendToShipmentUseCase(getIt()));
   getIt.registerLazySingleton(() => GetShipmentOptionsUseCase(getIt()));
+  getIt.registerLazySingleton(() => ConfirmDeliveryUseCase(getIt()));
 
   // Repositories
   getIt.registerLazySingleton<TechnicalServiceRepository>(

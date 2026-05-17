@@ -14,4 +14,5 @@ abstract class TechnicalServiceRepository {
   Future<Either<Failure, void>> sendToShipment(int id, int shipmentType, {int? carrierId, int? fieldTeamUserId, String? trackingNumber});
   Future<Either<Failure, List<Map<String, dynamic>>>> getCarriers();
   Future<Either<Failure, List<Map<String, dynamic>>>> getFielders();
+  Future<Either<Failure, void>> confirmDelivery(int shipmentId);
 }

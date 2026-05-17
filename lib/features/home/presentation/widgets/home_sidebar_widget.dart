@@ -65,7 +65,7 @@ class HomeSidebarWidget extends StatelessWidget {
         context: context,
         icon: Icons.dashboard_outlined,
         title: 'Dashboard',
-        route: AppRouter.home,
+        route: RoleAccessPolicy.initialRouteForRole(userRole),
       ),
     );
 

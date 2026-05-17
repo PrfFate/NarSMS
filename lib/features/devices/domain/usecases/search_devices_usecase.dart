@@ -21,14 +21,11 @@ class SearchDevicesUseCase {
     final hasTechnical = filter != null && filter.hasTechnicalFilters;
 
     if (hasTechnical) {
-      // Teknik filtreler varsa mecburen 'search-by-multiple-features' kullanılır.
-      // Kullanıcı uyarısı: 'status' değeri bu endpoint ile atılmıyor.
-      // Bu yüzden varsa filter içindeki status'u siliyoruz.
-      final cleanFilter = filter.copyWith(status: null);
-
+      // Teknik filtreler varsa 'search-by-multiple-features' kullanılır.
+      // Bu endpoint RAM/İşlemci/Ekran/Hafıza/Cihaz Tipi ile birlikte status'u da destekler.
       return repository.searchDevicesWithFilters(
         serialNumber: serialNumber,
-        filter: cleanFilter,
+        filter: filter,
         page: page,
         pageSize: pageSize,
       );

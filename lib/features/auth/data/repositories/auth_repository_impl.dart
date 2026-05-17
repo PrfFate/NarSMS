@@ -155,7 +155,9 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
 
   @override
   Future<bool> isLoggedIn() async {
-    return sharedPreferences.getBool(StorageConstants.isLoggedIn) ?? false;
+    final token = sharedPreferences.getString(StorageConstants.accessToken);
+    if (token == null || token.trim().isEmpty) return false;
+    return sharedPreferences.getBool(StorageConstants.isLoggedIn) ?? true;
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────

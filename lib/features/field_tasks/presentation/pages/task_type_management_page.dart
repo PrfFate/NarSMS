@@ -21,7 +21,6 @@ class TaskTypeManagementPage extends StatefulWidget {
 }
 
 class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
-
   @override
   void initState() {
     super.initState();
@@ -38,7 +37,8 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
       listener: (context, state) {
         if (state is TaskTypeActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+            SnackBar(
+                content: Text(state.message), backgroundColor: Colors.green),
           );
           _loadTaskTypes();
         } else if (state is TaskTypeError) {
@@ -52,7 +52,8 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
         appBar: AppBar(
           title: const Text(
             'Görev Tipi Yönetimi',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+            style:
+                TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
           elevation: 0,
@@ -92,8 +93,10 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
                         title: 'Yeni Tip Ekle',
                         icon: Icons.add_circle_outline,
                         onTap: () async {
-                          final result = await Navigator.pushNamed(context, AppRouter.taskTypeAdd);
-                          if (result == true && context.mounted) _loadTaskTypes();
+                          final result = await Navigator.pushNamed(
+                              context, AppRouter.taskTypeAdd);
+                          if (result == true && context.mounted)
+                            _loadTaskTypes();
                         },
                       ),
                     ],
@@ -104,7 +107,8 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
               Expanded(
                 child: BlocBuilder<TaskTypeBloc, TaskTypeState>(
                   builder: (context, state) {
-                    if (state is TaskTypeLoading) return const LoadingIndicator();
+                    if (state is TaskTypeLoading)
+                      return const LoadingIndicator();
                     if (state is TaskTypesLoaded) {
                       if (state.taskTypes.isEmpty) return _buildEmptyState();
                       return _buildList(state.taskTypes);
@@ -163,18 +167,17 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
               children: [
                 IconButton(
                   icon: Icon(
-                    item.isActive
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: item.isActive ? const Color(0xFFF57C00) : Colors.grey,
+                    item.isActive ? Icons.visibility : Icons.visibility_off,
+                    color:
+                        item.isActive ? const Color(0xFFF57C00) : Colors.grey,
                   ),
                   onPressed: () {
-                    context.read<TaskTypeBloc>().add(UpdateTaskType(
-                        item.id!, {'isActive': !item.isActive}));
+                    context.read<TaskTypeBloc>().add(
+                        UpdateTaskType(item.id!, {'isActive': !item.isActive}));
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  icon: const Icon(Icons.edit, color: Colors.black87),
                   onPressed: () async {
                     final result = await Navigator.pushNamed(
                       context,
@@ -205,7 +208,8 @@ class _TaskTypeManagementPageState extends State<TaskTypeManagementPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.assignment_outlined, size: 64, color: Color(0xFFF57C00)),
+            const Icon(Icons.assignment_outlined,
+                size: 64, color: Color(0xFFF57C00)),
             const SizedBox(height: 16),
             const Text(
               'Görev tipi bulunamadı',

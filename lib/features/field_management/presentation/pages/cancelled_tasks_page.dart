@@ -8,9 +8,10 @@ class CancelledTasksPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const FieldTaskStatusPage(
-      status: 'Cancelled',
+      status: 'Rejected',
       emptyIcon: Icons.cancel,
-      emptyMessage: 'İptal edilen görev bulunamadı',
+      emptyMessage: 'Reddedilen görev bulunamadı',
+      enableReassignActionInDetail: true,
     );
   }
 }

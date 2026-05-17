@@ -57,8 +57,8 @@ class _DeviceFilterBottomSheetState extends State<DeviceFilterBottomSheet> {
     'i-7 (4.Nesil)',
   ];
 
-  static const List<String> _hafizaOptions = ['128GB', '256GB'];
-  static const List<String> _ekranBoyutuOptions = ['15.6"', '18.5"'];
+  static const List<String> _hafizaOptions = ['128GB', '256GB', '512GB'];
+  static const List<String> _ekranBoyutuOptions = ['15.6', '18.5'];
 
   @override
   void initState() {

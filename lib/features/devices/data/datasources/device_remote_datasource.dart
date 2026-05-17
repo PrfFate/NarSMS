@@ -19,7 +19,8 @@ abstract class DeviceRemoteDataSource {
     int pageSize = 15,
   });
 
-  Future<void> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData);
+  Future<void> assignBackupAssignment(
+      int deviceId, Map<String, dynamic> requestData);
 
   Future<void> returnBackupAssignment(int assignmentId, String? reason);
 
@@ -42,7 +43,8 @@ abstract class DeviceRemoteDataSource {
   Future<void> updateDevice(int id, Map<String, dynamic> requestData);
   Future<void> deleteDevice(int id);
   Future<List<String>> getDeviceTypes();
-  Future<Map<String, dynamic>> getDeviceTypesPaged({int page = 1, int pageSize = 15});
+  Future<Map<String, dynamic>> getDeviceTypesPaged(
+      {int page = 1, int pageSize = 15});
   Future<void> createDeviceTypeEntity(String name);
   Future<void> updateDeviceTypeEntity(int id, String name);
   Future<void> deleteDeviceTypeEntity(int id);
@@ -75,6 +77,35 @@ class DeviceRemoteDataSourceImpl
     );
   }
 
+  String _buildRepeatedQueryPath(
+    String endpoint,
+    Map<String, dynamic> params,
+  ) {
+    final parts = <String>[];
+    params.forEach((key, value) {
+      if (value == null) return;
+      if (value is Iterable) {
+        for (final item in value) {
+          if (item == null) continue;
+          parts.add(
+            '$key=${_encodeFilterQueryValue(item.toString())}',
+          );
+        }
+      } else {
+        parts.add(
+          '$key=${_encodeFilterQueryValue(value.toString())}',
+        );
+      }
+    });
+
+    if (parts.isEmpty) return endpoint;
+    return '$endpoint?${parts.join('&')}';
+  }
+
+  String _encodeFilterQueryValue(String value) {
+    return value.trim().replaceAll(' ', '%20');
+  }
+
   @override
   Future<Map<String, dynamic>> searchDevicesWithFilters({
     String? serialNumber,
@@ -101,11 +132,16 @@ class DeviceRemoteDataSourceImpl
         queryParams.addAll(filter.toQueryParams());
       }
 
-      final response = await dioClient.get(
-        endpoint,
-        queryParameters: queryParams,
-        options: _authOptions(),
-      );
+      final response = hasFilters
+          ? await dioClient.get(
+              _buildRepeatedQueryPath(endpoint, queryParams),
+              options: _authOptions(),
+            )
+          : await dioClient.get(
+              endpoint,
+              queryParameters: queryParams,
+              options: _authOptions(),
+            );
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -213,7 +249,8 @@ class DeviceRemoteDataSourceImpl
   }
 
   @override
-  Future<void> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData) async {
+  Future<void> assignBackupAssignment(
+      int deviceId, Map<String, dynamic> requestData) async {
     try {
       final response = await dioClient.post(
         '${ApiConstants.apiVersion}/BackupAssignment/assign/$deviceId',
@@ -238,8 +275,8 @@ class DeviceRemoteDataSourceImpl
   @override
   Future<void> returnBackupAssignment(int assignmentId, String? reason) async {
     try {
-      final String requestBody = reason != null && reason.trim().isNotEmpty 
-          ? '"${reason.trim()}"' 
+      final String requestBody = reason != null && reason.trim().isNotEmpty
+          ? '"${reason.trim()}"'
           : '""';
 
       final token = sharedPreferences.getString(StorageConstants.accessToken);
@@ -381,7 +418,8 @@ class DeviceRemoteDataSourceImpl
   }
 
   @override
-  Future<Map<String, dynamic>> getDeviceTypesPaged({int page = 1, int pageSize = 15}) async {
+  Future<Map<String, dynamic>> getDeviceTypesPaged(
+      {int page = 1, int pageSize = 15}) async {
     try {
       final response = await dioClient.get(
         ApiConstants.deviceTypes,
@@ -479,9 +517,11 @@ class DeviceRemoteDataSourceImpl
         // Response bir liste (ya da items içeren obje) olabilir, eğer direkt listeyse:
         final data = response.data;
         if (data is List) {
-           return data.map((e) => e['name'] as String).toList();
+          return data.map((e) => e['name'] as String).toList();
         } else if (data['items'] != null) {
-           return (data['items'] as List).map((e) => e['name'] as String).toList();
+          return (data['items'] as List)
+              .map((e) => e['name'] as String)
+              .toList();
         }
         return [];
       }
@@ -506,9 +546,11 @@ class DeviceRemoteDataSourceImpl
       if (response.statusCode == 200) {
         final data = response.data;
         if (data is List) {
-           return data.map((e) => SupplierModel.fromJson(e)).toList();
+          return data.map((e) => SupplierModel.fromJson(e)).toList();
         } else if (data['items'] != null) {
-           return (data['items'] as List).map((e) => SupplierModel.fromJson(e)).toList();
+          return (data['items'] as List)
+              .map((e) => SupplierModel.fromJson(e))
+              .toList();
         }
         return [];
       }
@@ -599,11 +641,15 @@ class DeviceRemoteDataSourceImpl
         final data = response.data;
         Map<int, String> map = {};
         if (data is List) {
-           for (var e in data) { map[e['id'] as int] = e['name'] as String; }
-           return map;
+          for (var e in data) {
+            map[e['id'] as int] = e['name'] as String;
+          }
+          return map;
         } else if (data['items'] != null) {
-           for (var e in data['items']) { map[e['id'] as int] = e['name'] as String; }
-           return map;
+          for (var e in data['items']) {
+            map[e['id'] as int] = e['name'] as String;
+          }
+          return map;
         }
         return {};
       }
@@ -628,10 +674,14 @@ class DeviceRemoteDataSourceImpl
       if (response.statusCode == 200) {
         final data = response.data;
         if (data is List) {
-          return data.map((e) => DeviceMovementModel.fromJson(e as Map<String, dynamic>)).toList();
+          return data
+              .map((e) =>
+                  DeviceMovementModel.fromJson(e as Map<String, dynamic>))
+              .toList();
         } else if (data['items'] != null) {
           return (data['items'] as List)
-              .map((e) => DeviceMovementModel.fromJson(e as Map<String, dynamic>))
+              .map((e) =>
+                  DeviceMovementModel.fromJson(e as Map<String, dynamic>))
               .toList();
         }
         return [];

@@ -19,12 +19,22 @@ class LogDetailPage extends StatelessWidget {
   }
 
   static const Map<String, String> _movementTypeLabels = {
-    'Sale': 'Satış',
-    'Shipment': 'Sevkiyat',
-    'Return': 'İade',
     'Purchase': 'Satın Alma',
-    'BackupReturn': 'Yedek İade',
+    'Sale': 'Satış',
+    'SalePending': 'Satış (Onay Bekliyor)',
+    'SaleCancelled': 'Satış (İptal)',
+    'Return': 'İade',
+    'Shipment': 'Sevkiyat',
+    'Delivery': 'Teslimat',
+    'BackupAssignment': 'Yedek Atama',
     'BackupAssign': 'Yedek Atama',
+    'BackupReturn': 'Yedek İade',
+    'ReturnToBackupPool': 'Yedek Havuzuna İade',
+    'Service': 'Servise Gönderim',
+    'ServiceReturn': 'Servisten Dönüş',
+    'ServiceDispatch': 'Servis Sevkiyatı',
+    'ReturnToCustomer': 'Müşteriye İade',
+    'BackupRegistration': 'Yedek Kayıt',
   };
 
   @override

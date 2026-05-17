@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/storage_constants.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_response_utils.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -23,6 +24,8 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = true;
   String? _error;
   InventoryDashboardData? _data;
+  /// Depodaki Cihazlar sayfasıyla aynı kaynak: canlı InStock araması.
+  int? _liveInStockCount;
 
   Dio get _dio => getIt<DioClient>().dio;
   SharedPreferences get _prefs => getIt<SharedPreferences>();
@@ -47,17 +50,44 @@ class _DashboardPageState extends State<DashboardPage> {
 
     try {
       final token = _prefs.getString(StorageConstants.accessToken);
-      final response = await _dio.get(
-        ApiConstants.dashboardInventory,
-        options: Options(
-          headers: {if (token != null) 'Authorization': 'Bearer $token'},
+      final headers = {if (token != null) 'Authorization': 'Bearer $token'};
+
+      final results = await Future.wait([
+        _dio.get(
+          ApiConstants.dashboardInventory,
+          queryParameters: const {'refresh': true},
+          options: Options(headers: headers),
         ),
-      );
+        _dio.get(
+          ApiConstants.deviceSearch,
+          queryParameters: const {
+            'status': 'InStock',
+            'page': 1,
+            'pageSize': 1,
+          },
+          options: Options(headers: headers),
+        ),
+      ]);
+
       if (!mounted) return;
+
+      final inventoryMap = ApiResponseUtils.asMap(results[0].data);
+      final searchMap = ApiResponseUtils.asMap(results[1].data);
+
+      int? liveInStock;
+      if (searchMap != null) {
+        final payload = ApiResponseUtils.unwrapPayload(searchMap);
+        liveInStock = (payload['totalCount'] as num?)?.toInt();
+      }
+
       setState(() {
-        _data = InventoryDashboardData.fromJson(
-          Map<String, dynamic>.from(response.data as Map),
-        );
+        _liveInStockCount = liveInStock;
+        if (inventoryMap != null) {
+          _data = InventoryDashboardData.fromJson(
+            ApiResponseUtils.unwrapPayload(inventoryMap),
+            inStockOverride: liveInStock,
+          );
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -66,6 +96,9 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  int _inStockCount(InventoryDashboardData data) =>
+      _liveInStockCount ?? data.inStockDevices;
 
   void _selectPage(int index) {
     setState(() => _selectedPage = index);
@@ -132,52 +165,67 @@ class _DashboardPageState extends State<DashboardPage> {
       );
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 560,
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) => setState(() => _selectedPage = index),
-              children: [
-                _DashboardPieCard(
-                  title: 'Cihaz Durumu Dağılımı',
-                  items: data.statusBreakdown
-                      .map(
-                        (item) => _PieItem(
-                          label: item.status,
-                          value: item.count.toDouble(),
-                          displayValue:
-                              '${item.count} (${item.percentage.toStringAsFixed(1)}%)',
-                          color: item.color,
-                        ),
-                      )
-                      .toList(),
-                ),
-                _DashboardPieCard(
-                  title: 'Stokta Bulunan Cihaz Türleri (Top 10)',
-                  items: data.stockByType.take(10).map((item) {
-                    return _PieItem(
-                      label: item.deviceType,
-                      value: item.total.toDouble(),
-                      displayValue: '${item.total} adet',
-                      color: _typeColors[
-                          data.stockByType.indexOf(item) % _typeColors.length],
-                    );
-                  }).toList(),
-                ),
-              ],
+    final inStockCount = _inStockCount(data);
+
+    return RefreshIndicator(
+      onRefresh: _loadInventory,
+      color: AppColors.accentDark,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 560,
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) => setState(() => _selectedPage = index),
+                children: [
+                  _DashboardPieCard(
+                    title: 'Cihaz Durumu Dağılımı',
+                    items: data.statusBreakdown
+                        .map(
+                          (item) => _PieItem(
+                            label: item.status,
+                            value: (item.status.toLowerCase().contains('stok')
+                                    ? inStockCount
+                                    : item.count)
+                                .toDouble(),
+                            displayValue: item.status
+                                    .toLowerCase()
+                                    .contains('stok')
+                                ? '$inStockCount (${data.totalDevices > 0 ? (inStockCount / data.totalDevices * 100).toStringAsFixed(1) : '0.0'}%)'
+                                : '${item.count} (${item.percentage.toStringAsFixed(1)}%)',
+                            color: item.color,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  _DashboardPieCard(
+                    title: 'Stokta Bulunan Cihaz Türleri (Top 10)',
+                    items: data.stockByType
+                        .where((item) => item.inStock > 0)
+                        .take(10)
+                        .map((item) {
+                      return _PieItem(
+                        label: item.deviceType,
+                        value: item.inStock.toDouble(),
+                        displayValue: '${item.inStock} adet',
+                        color: _typeColors[data.stockByType.indexOf(item) %
+                            _typeColors.length],
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _DashboardMetricCard(
-            value: _selectedPage == 0
-                ? '${data.totalDevices}'
-                : '${data.inStockDevices}',
-            label: _selectedPage == 0 ? 'TOPLAM CİHAZ' : 'STOKTA OLAN CİHAZ',
-            compact: true,
-          ),
+            const SizedBox(height: 16),
+            _DashboardMetricCard(
+              value: _selectedPage == 0
+                  ? '${data.totalDevices}'
+                  : '$inStockCount',
+              label: _selectedPage == 0 ? 'TOPLAM CİHAZ' : 'STOKTA OLAN CİHAZ',
+              compact: true,
+            ),
           const SizedBox(height: 16),
           _DashboardMetricCard(
             value: '${data.lowStockAlerts} Kalemde',
@@ -201,6 +249,7 @@ class _DashboardPageState extends State<DashboardPage> {
             compact: true,
           ),
         ],
+      ),
       ),
     );
   }
@@ -690,20 +739,44 @@ class InventoryDashboardData {
     required this.lowStockItems,
   });
 
-  factory InventoryDashboardData.fromJson(Map<String, dynamic> json) {
+  factory InventoryDashboardData.fromJson(
+    Map<String, dynamic> json, {
+    int? inStockOverride,
+  }) {
+    final totalDevices = (json['totalDevices'] as num?)?.toInt() ?? 0;
+    final inStockDevices =
+        inStockOverride ?? (json['inStockDevices'] as num?)?.toInt() ?? 0;
+
+    var statusBreakdown = (json['statusBreakdown'] as List? ?? const [])
+        .map((e) =>
+            StatusBreakdownItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+
+    if (inStockOverride != null && totalDevices > 0) {
+      statusBreakdown = statusBreakdown
+          .map(
+            (item) => item.status.toLowerCase().contains('stok')
+                ? StatusBreakdownItem(
+                    status: item.status,
+                    count: inStockOverride,
+                    percentage: inStockOverride / totalDevices * 100,
+                    color: item.color,
+                  )
+                : item,
+          )
+          .toList();
+    }
+
     return InventoryDashboardData(
-      totalDevices: (json['totalDevices'] as num?)?.toInt() ?? 0,
-      inStockDevices: (json['inStockDevices'] as num?)?.toInt() ?? 0,
+      totalDevices: totalDevices,
+      inStockDevices: inStockDevices,
       lowStockAlerts: (json['lowStockAlerts'] as num?)?.toInt() ?? 0,
       inventoryValue: (json['inventoryValue'] as num?)?.toDouble() ?? 0,
       stockByType: (json['stockByType'] as List? ?? const [])
           .map((e) =>
               StockByTypeItem.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
-      statusBreakdown: (json['statusBreakdown'] as List? ?? const [])
-          .map((e) =>
-              StatusBreakdownItem.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList(),
+      statusBreakdown: statusBreakdown,
       lowStockItems: (json['lowStockItems'] as List? ?? const [])
           .map(
               (e) => LowStockItem.fromJson(Map<String, dynamic>.from(e as Map)))
@@ -737,16 +810,19 @@ class LowStockItem {
 
 class StockByTypeItem {
   final String deviceType;
+  final int inStock;
   final int total;
 
   const StockByTypeItem({
     required this.deviceType,
+    required this.inStock,
     required this.total,
   });
 
   factory StockByTypeItem.fromJson(Map<String, dynamic> json) {
     return StockByTypeItem(
       deviceType: json['deviceType'] as String? ?? '-',
+      inStock: (json['inStock'] as num?)?.toInt() ?? 0,
       total: (json['total'] as num?)?.toInt() ?? 0,
     );
   }

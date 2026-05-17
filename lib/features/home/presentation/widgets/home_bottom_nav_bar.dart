@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../pages/profile_page.dart';
-import '../bloc/home_bloc.dart';
 
-/// Alt navigasyon çubuğu widget'ı.
-///
-/// Renk ve stil değerleri hardcoded yerine [AppColors] üzerinden alınır;
-/// tek bir tema değişikliği ile tüm uygulamayı günceller.
+import '../../../../config/routes/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../bloc/home_bloc.dart';
+import '../bloc/home_event.dart';
+import '../pages/profile_page.dart';
+
+class _BottomNavDestination {
+  final IconData icon;
+  final String label;
+  final String? route;
+  final bool opensProfile;
+  final String? comingSoonMessage;
+
+  const _BottomNavDestination({
+    required this.icon,
+    required this.label,
+    this.route,
+    this.opensProfile = false,
+    this.comingSoonMessage,
+  });
+}
+
 class HomeBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onIndexChanged;
@@ -24,6 +39,33 @@ class HomeBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const destinations = [
+      _BottomNavDestination(
+        icon: Icons.home_outlined,
+        label: 'Ana Sayfa',
+        route: AppRouter.home,
+      ),
+      _BottomNavDestination(
+        icon: Icons.search_outlined,
+        label: 'Arama',
+        comingSoonMessage: 'Arama özelliği yakında eklenecek',
+      ),
+      _BottomNavDestination(
+        icon: Icons.notifications_outlined,
+        label: 'Bildirimler',
+        comingSoonMessage: 'Bildirimler yakında eklenecek',
+      ),
+      _BottomNavDestination(
+        icon: Icons.person_outline,
+        label: 'Profil',
+        opensProfile: true,
+      ),
+    ];
+    final effectiveSelectedIndex =
+        selectedIndex == 3 || selectedIndex >= destinations.length
+            ? 0
+            : selectedIndex;
+
     return Container(
       height: 70,
       decoration: BoxDecoration(
@@ -38,11 +80,13 @@ class HomeBottomNavBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _buildNavItem(context, Icons.home_outlined, 'Ana Sayfa', 0),
-          _buildNavItem(context, Icons.search_outlined, 'Arama', 1),
-          _buildNavItem(
-              context, Icons.notifications_outlined, 'Bildirimler', 3),
-          _buildNavItem(context, Icons.person_outline, 'Profil', 4),
+          for (var index = 0; index < destinations.length; index++)
+            _buildNavItem(
+              context,
+              destinations[index],
+              index,
+              effectiveSelectedIndex,
+            ),
         ],
       ),
     );
@@ -50,50 +94,28 @@ class HomeBottomNavBar extends StatelessWidget {
 
   Widget _buildNavItem(
     BuildContext context,
-    IconData icon,
-    String label,
+    _BottomNavDestination destination,
     int index,
+    int effectiveSelectedIndex,
   ) {
-    final isSelected = selectedIndex == index;
+    final isSelected = effectiveSelectedIndex == index;
 
     return Expanded(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            if (index == 1 || index == 3) {
-              return;
-            }
-
-            onIndexChanged(index);
-
-            if (index == 4) {
-              final homeBloc = context.read<HomeBloc>();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (newContext) => BlocProvider.value(
-                    value: homeBloc,
-                    child: ProfilePage(
-                      userName: userName,
-                      userRole: userRole,
-                    ),
-                  ),
-                ),
-              );
-            }
-          },
+          onTap: () => _handleTap(context, destination, index),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                icon,
+                destination.icon,
                 color: isSelected ? AppColors.accentDark : AppColors.textHint,
                 size: 26,
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                destination.label,
                 style: TextStyle(
                   color: isSelected ? AppColors.accentDark : AppColors.textHint,
                   fontSize: 11,
@@ -105,5 +127,50 @@ class HomeBottomNavBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleTap(
+    BuildContext context,
+    _BottomNavDestination destination,
+    int index,
+  ) async {
+    final homeBloc = context.read<HomeBloc>();
+
+    if (destination.opensProfile) {
+      onIndexChanged(0);
+      homeBloc.add(const ChangeNavigation(0));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: homeBloc,
+            child: ProfilePage(
+              userName: userName,
+              userRole: userRole,
+            ),
+          ),
+        ),
+      );
+      if (context.mounted) {
+        onIndexChanged(0);
+        homeBloc.add(const ChangeNavigation(0));
+      }
+      return;
+    }
+
+    if (destination.comingSoonMessage != null) {
+      onIndexChanged(0);
+      homeBloc.add(const ChangeNavigation(0));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(destination.comingSoonMessage!)),
+      );
+      return;
+    }
+
+    final route = destination.route;
+    if (route == null) return;
+
+    onIndexChanged(index);
+    homeBloc.add(SelectPage(route));
   }
 }

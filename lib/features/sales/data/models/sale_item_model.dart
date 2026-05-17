@@ -15,7 +15,7 @@ class SaleItemModel extends SaleItemEntity {
   factory SaleItemModel.fromJson(Map<String, dynamic> json) {
     final deviceObj = json['device'] as Map<String, dynamic>?;
     return SaleItemModel(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as int? ?? json['saleItemId'] as int? ?? 0,
       saleId: json['saleId'] as int? ?? 0,
       deviceId: json['deviceId'] as int?,
       serialNumber: deviceObj?['deviceSerialNumber'] as String?,

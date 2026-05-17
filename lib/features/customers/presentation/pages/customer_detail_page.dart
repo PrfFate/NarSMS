@@ -53,6 +53,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        titleSpacing: 0,
         iconTheme: const IconThemeData(color: Colors.black54),
         title: const Text(
           'Müşteri Detay',

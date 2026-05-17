@@ -9,6 +9,16 @@ import '../bloc/device_bloc.dart';
 import '../bloc/device_event.dart';
 import '../bloc/device_state.dart';
 
+String _translateShipmentStatus(String status) {
+  switch (status) {
+    case 'Pending': return 'Beklemede';
+    case 'InTransit': return 'Yolda';
+    case 'Delivered': return 'Teslim Edildi';
+    case 'Failed': return 'Başarısız';
+    default: return status;
+  }
+}
+
 class BackupDeviceDetailPage extends StatelessWidget {
   final DeviceEntity device;
   final bool isAssignedView;
@@ -45,10 +55,13 @@ class BackupDeviceDetailPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text(
             'Yedek Cihaz Detayı',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+            style:
+                TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
           elevation: 0,
+          centerTitle: false,
+          titleSpacing: 0,
           iconTheme: const IconThemeData(color: Colors.black87),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1.0),
@@ -110,12 +123,15 @@ class BackupDeviceDetailPage extends StatelessWidget {
                 child: Column(
                   children: [
                     if (!isAssignedView) ...[
-                      _buildDetailRow('Tedarikçi', device.supplierName ?? '---'),
-                      _buildDetailRow('Alış Fiyatı', '${device.purchasePrice ?? 0} ₺'),
+                      _buildDetailRow(
+                          'Tedarikçi', device.supplierName ?? '---'),
+                      _buildDetailRow(
+                          'Alış Fiyatı', '${device.purchasePrice ?? 0} ₺'),
                       _buildDetailRow(
                         'Satın Alma Tarihi',
                         device.purchaseDate != null
-                            ? DateFormat('dd.MM.yyyy').format(device.purchaseDate!)
+                            ? DateFormat('dd.MM.yyyy')
+                                .format(device.purchaseDate!)
                             : '---',
                       ),
                     ],
@@ -131,7 +147,8 @@ class BackupDeviceDetailPage extends StatelessWidget {
                       if (isAssignedView)
                         const Align(
                           alignment: Alignment.center,
-                          child: Text('Özellik Yok', style: TextStyle(color: Colors.grey)),
+                          child: Text('Özellik Yok',
+                              style: TextStyle(color: Colors.grey)),
                         ),
                     ],
                   ],
@@ -150,7 +167,8 @@ class BackupDeviceDetailPage extends StatelessWidget {
                       _buildDetailRow(
                         'Atama Tarihi',
                         device.assignmentDate != null
-                            ? DateFormat('dd.MM.yyyy HH:mm').format(device.assignmentDate!.toLocal())
+                            ? DateFormat('dd.MM.yyyy HH:mm')
+                                .format(device.assignmentDate!.toLocal())
                             : '---',
                       ),
                       if (device.notes != null && device.notes!.isNotEmpty) ...[
@@ -170,11 +188,14 @@ class BackupDeviceDetailPage extends StatelessWidget {
                 _buildInfoCard(
                   child: Column(
                     children: [
-                      _buildDetailRow('Sevkiyat No', '#${device.shipmentId ?? '---'}'),
+                      _buildDetailRow(
+                          'Sevkiyat No', '#${device.shipmentId ?? '---'}'),
                       _buildDetailRow(
                         'Durum',
-                        device.shipmentStatus == 'InTransit' ? 'Yolda' : device.shipmentStatus!,
-                        valueColor: device.shipmentStatus == 'InTransit' ? Colors.blue : null,
+                        _translateShipmentStatus(device.shipmentStatus!),
+                        valueColor: device.shipmentStatus == 'InTransit'
+                            ? Colors.blue
+                            : null,
                       ),
                     ],
                   ),
@@ -264,17 +285,20 @@ class BackupDeviceDetailPage extends StatelessWidget {
             onPressed: () {
               // Teslimat onaylama API yakında eklenecek
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Teslimat onaylama yakında eklenecek.')),
+                const SnackBar(
+                    content: Text('Teslimat onaylama yakında eklenecek.')),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[700],
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               elevation: 0,
             ),
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Teslimatı Onayla', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text('Teslimatı Onayla',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         );
       } else {
@@ -294,17 +318,19 @@ class BackupDeviceDetailPage extends StatelessWidget {
                 return;
               }
               context.read<DeviceBloc>().add(
-                ReturnBackupAssignment(assignmentId: assignmentId),
-              );
+                    ReturnBackupAssignment(assignmentId: assignmentId),
+                  );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[600],
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               elevation: 0,
             ),
             icon: const Icon(Icons.settings_backup_restore),
-            label: const Text('Cihazı Geri Al', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text('Cihazı Geri Al',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         );
       }
@@ -318,17 +344,20 @@ class BackupDeviceDetailPage extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Teslimat onaylama yakında eklenecek.')),
+              const SnackBar(
+                  content: Text('Teslimat onaylama yakında eklenecek.')),
             );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue[700],
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             elevation: 0,
           ),
           icon: const Icon(Icons.check_circle_outline),
-          label: const Text('Teslimatı Onayla', style: TextStyle(fontWeight: FontWeight.bold)),
+          label: const Text('Teslimatı Onayla',
+              style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       );
     } else {
@@ -349,11 +378,13 @@ class BackupDeviceDetailPage extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFF57C00),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             elevation: 0,
           ),
           icon: const Icon(Icons.person_add_alt_1),
-          label: const Text('Müşteriye Ata', style: TextStyle(fontWeight: FontWeight.bold)),
+          label: const Text('Müşteriye Ata',
+              style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       );
     }

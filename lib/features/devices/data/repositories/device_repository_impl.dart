@@ -17,6 +17,24 @@ class DeviceRepositoryImpl implements DeviceRepository {
 
   DeviceRepositoryImpl({required this.remoteDataSource});
 
+  Map<String, dynamic> _payload(Map<String, dynamic> data) {
+    final nested = data['data'];
+    if (nested is Map<String, dynamic>) return nested;
+    if (nested is Map) return Map<String, dynamic>.from(nested);
+    return data;
+  }
+
+  List<dynamic> _itemsFrom(Map<String, dynamic> data) {
+    final payload = _payload(data);
+    final items = payload['items'] ??
+        payload['data'] ??
+        payload['results'] ??
+        payload['values'];
+    if (items is List) return items;
+    if (data['items'] is List) return data['items'] as List;
+    return const [];
+  }
+
   @override
   Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevices({
     String? serialNumber,
@@ -40,9 +58,10 @@ class DeviceRepositoryImpl implements DeviceRepository {
         // Hata durumunda boş harita ile devam et
       }
 
-      final items = (data['items'] as List).map((item) {
+      final payload = _payload(data);
+      final items = _itemsFrom(data).map((item) {
         var mapItem = item as Map<String, dynamic>;
-        
+
         // Eğer backend supplierName yollamıyorsa ama ID varsa, ismi map'ten bul
         if (mapItem['supplierName'] == null && mapItem['supplierId'] != null) {
           final sId = mapItem['supplierId'] as int;
@@ -52,14 +71,24 @@ class DeviceRepositoryImpl implements DeviceRepository {
             mapItem['supplierName'] = supplierMap[sId];
           }
         }
-        
+
         return DeviceModel.fromJson(mapItem);
       }).toList();
 
-      int totalCountVal = data['totalCount'] as int? ?? data['totalItems'] as int? ?? data['count'] as int? ?? items.length;
-      int pageVal = data['page'] as int? ?? data['pageNumber'] as int? ?? data['currentPage'] as int? ?? (data['index'] != null ? (data['index'] as int) + 1 : page);
-      int pageSizeVal = data['pageSize'] as int? ?? data['size'] as int? ?? pageSize;
-      int totalPagesVal = data['totalPages'] as int? ?? data['pageCount'] as int? ?? data['pages'] as int? ?? (totalCountVal / pageSizeVal).ceil();
+      int totalCountVal = payload['totalCount'] as int? ??
+          payload['totalItems'] as int? ??
+          payload['count'] as int? ??
+          items.length;
+      int pageVal = payload['page'] as int? ??
+          payload['pageNumber'] as int? ??
+          payload['currentPage'] as int? ??
+          (payload['index'] != null ? (payload['index'] as int) + 1 : page);
+      int pageSizeVal =
+          payload['pageSize'] as int? ?? payload['size'] as int? ?? pageSize;
+      int totalPagesVal = payload['totalPages'] as int? ??
+          payload['pageCount'] as int? ??
+          payload['pages'] as int? ??
+          (totalCountVal / pageSizeVal).ceil();
 
       final result = PaginatedResult<DeviceEntity>(
         items: items,
@@ -78,7 +107,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchDevicesWithFilters({
+  Future<Either<Failure, PaginatedResult<DeviceEntity>>>
+      searchDevicesWithFilters({
     String? serialNumber,
     DeviceFilterModel? filter,
     int page = 1,
@@ -97,7 +127,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
         supplierMap = await remoteDataSource.getSuppliersMap();
       } catch (_) {}
 
-      final items = (data['items'] as List).map((item) {
+      final payload = _payload(data);
+      final items = _itemsFrom(data).map((item) {
         var mapItem = item as Map<String, dynamic>;
         if (mapItem['supplierName'] == null && mapItem['supplierId'] != null) {
           final sId = mapItem['supplierId'] as int;
@@ -109,10 +140,19 @@ class DeviceRepositoryImpl implements DeviceRepository {
         return DeviceModel.fromJson(mapItem);
       }).toList();
 
-      int totalCountVal = data['totalCount'] as int? ?? data['totalItems'] as int? ?? data['count'] as int? ?? items.length;
-      int pageVal = data['page'] as int? ?? data['pageNumber'] as int? ?? data['currentPage'] as int? ?? page;
-      int pageSizeVal = data['pageSize'] as int? ?? data['size'] as int? ?? pageSize;
-      int totalPagesVal = data['totalPages'] as int? ?? data['pageCount'] as int? ?? (totalCountVal / pageSizeVal).ceil();
+      int totalCountVal = payload['totalCount'] as int? ??
+          payload['totalItems'] as int? ??
+          payload['count'] as int? ??
+          items.length;
+      int pageVal = payload['page'] as int? ??
+          payload['pageNumber'] as int? ??
+          payload['currentPage'] as int? ??
+          page;
+      int pageSizeVal =
+          payload['pageSize'] as int? ?? payload['size'] as int? ?? pageSize;
+      int totalPagesVal = payload['totalPages'] as int? ??
+          payload['pageCount'] as int? ??
+          (totalCountVal / pageSizeVal).ceil();
 
       return Right(PaginatedResult<DeviceEntity>(
         items: items,
@@ -129,7 +169,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<DeviceEntity>>> searchBackupAssignments({
+  Future<Either<Failure, PaginatedResult<DeviceEntity>>>
+      searchBackupAssignments({
     bool isReturned = false,
     String? serialNumber,
     DeviceFilterModel? filter,
@@ -149,8 +190,14 @@ class DeviceRepositoryImpl implements DeviceRepository {
         return DeviceModel.fromJson(item as Map<String, dynamic>);
       }).toList();
 
-      int totalCountVal = data['totalCount'] as int? ?? data['totalItems'] as int? ?? data['count'] as int? ?? items.length;
-      int pageVal = data['page'] as int? ?? data['pageNumber'] as int? ?? data['currentPage'] as int? ?? (data['index'] != null ? (data['index'] as int) + 1 : page);
+      int totalCountVal = data['totalCount'] as int? ??
+          data['totalItems'] as int? ??
+          data['count'] as int? ??
+          items.length;
+      int pageVal = data['page'] as int? ??
+          data['pageNumber'] as int? ??
+          data['currentPage'] as int? ??
+          (data['index'] != null ? (data['index'] as int) + 1 : page);
 
       return Right(PaginatedResult<DeviceEntity>(
         items: items,
@@ -167,7 +214,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> assignBackupAssignment(int deviceId, Map<String, dynamic> requestData) async {
+  Future<Either<Failure, void>> assignBackupAssignment(
+      int deviceId, Map<String, dynamic> requestData) async {
     try {
       await remoteDataSource.assignBackupAssignment(deviceId, requestData);
       return const Right(null);
@@ -192,7 +240,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createDevice(Map<String, dynamic> requestData) async {
+  Future<Either<Failure, void>> createDevice(
+      Map<String, dynamic> requestData) async {
     try {
       await remoteDataSource.createDevice(requestData);
       return const Right(null);
@@ -204,7 +253,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> bulkCreateDevices(Map<String, dynamic> requestData) async {
+  Future<Either<Failure, void>> bulkCreateDevices(
+      Map<String, dynamic> requestData) async {
     try {
       await remoteDataSource.bulkCreateDevices(requestData);
       return const Right(null);
@@ -216,7 +266,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateDevice(int id, Map<String, dynamic> requestData) async {
+  Future<Either<Failure, void>> updateDevice(
+      int id, Map<String, dynamic> requestData) async {
     try {
       await remoteDataSource.updateDevice(id, requestData);
       return const Right(null);
@@ -252,16 +303,31 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResult<DeviceTypeEntity>>> getDeviceTypesPaged({int page = 1, int pageSize = 15}) async {
+  Future<Either<Failure, PaginatedResult<DeviceTypeEntity>>>
+      getDeviceTypesPaged({int page = 1, int pageSize = 15}) async {
     try {
-      final data = await remoteDataSource.getDeviceTypesPaged(page: page, pageSize: pageSize);
-      
-      final items = (data['items'] as List?)?.map((item) => DeviceTypeModel.fromJson(item)).toList() ?? [];
-      
-      int totalCountVal = data['totalCount'] as int? ?? data['totalItems'] as int? ?? data['count'] as int? ?? items.length;
-      int pageVal = data['page'] as int? ?? data['pageNumber'] as int? ?? data['currentPage'] as int? ?? (data['index'] != null ? (data['index'] as int) + 1 : page);
-      int pageSizeVal = data['pageSize'] as int? ?? data['size'] as int? ?? pageSize;
-      int totalPagesVal = data['totalPages'] as int? ?? data['pageCount'] as int? ?? data['pages'] as int? ?? (totalCountVal / pageSizeVal).ceil();
+      final data = await remoteDataSource.getDeviceTypesPaged(
+          page: page, pageSize: pageSize);
+
+      final items = (data['items'] as List?)
+              ?.map((item) => DeviceTypeModel.fromJson(item))
+              .toList() ??
+          [];
+
+      int totalCountVal = data['totalCount'] as int? ??
+          data['totalItems'] as int? ??
+          data['count'] as int? ??
+          items.length;
+      int pageVal = data['page'] as int? ??
+          data['pageNumber'] as int? ??
+          data['currentPage'] as int? ??
+          (data['index'] != null ? (data['index'] as int) + 1 : page);
+      int pageSizeVal =
+          data['pageSize'] as int? ?? data['size'] as int? ?? pageSize;
+      int totalPagesVal = data['totalPages'] as int? ??
+          data['pageCount'] as int? ??
+          data['pages'] as int? ??
+          (totalCountVal / pageSizeVal).ceil();
 
       final result = PaginatedResult<DeviceTypeEntity>(
         items: items,
@@ -292,7 +358,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateDeviceTypeEntity(int id, String name) async {
+  Future<Either<Failure, void>> updateDeviceTypeEntity(
+      int id, String name) async {
     try {
       await remoteDataSource.updateDeviceTypeEntity(id, name);
       return const Right(null);
@@ -340,7 +407,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createSupplier(Map<String, dynamic> data) async {
+  Future<Either<Failure, void>> createSupplier(
+      Map<String, dynamic> data) async {
     try {
       await remoteDataSource.createSupplier(data);
       return const Right(null);
@@ -352,7 +420,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSupplier(int id, Map<String, dynamic> data) async {
+  Future<Either<Failure, void>> updateSupplier(
+      int id, Map<String, dynamic> data) async {
     try {
       await remoteDataSource.updateSupplier(id, data);
       return const Right(null);
@@ -374,8 +443,10 @@ class DeviceRepositoryImpl implements DeviceRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
   @override
-  Future<Either<Failure, List<DeviceMovementEntity>>> getDeviceMovements(int deviceId) async {
+  Future<Either<Failure, List<DeviceMovementEntity>>> getDeviceMovements(
+      int deviceId) async {
     try {
       final movements = await remoteDataSource.getDeviceMovements(deviceId);
       return Right(movements);

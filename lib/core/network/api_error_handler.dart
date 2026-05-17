@@ -35,7 +35,12 @@ mixin ApiErrorHandler {
         final responseData = e.response?.data;
         
         if (responseData is Map<String, dynamic>) {
-          errorMessage = responseData['message'] ?? responseData['error'] ?? responseData['title'] ?? responseData['detail'] ?? 'Geçersiz istek parametreleri';
+          errorMessage = responseData['message'] ??
+              responseData['error'] ??
+              responseData['Error'] ??
+              responseData['title'] ??
+              responseData['detail'] ??
+              'Geçersiz istek parametreleri';
           
           // Eğer ASP.NET Core Validation errors varsa
           if (responseData['errors'] != null && responseData['errors'] is Map) {

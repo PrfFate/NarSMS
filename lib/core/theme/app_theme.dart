@@ -18,7 +18,8 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textWhite,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
       ),
       textTheme: const TextTheme(
         displayLarge: AppTextStyles.h1,
@@ -93,7 +94,8 @@ class AppTheme {
         backgroundColor: AppColors.primaryDark,
         foregroundColor: AppColors.textWhite,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(

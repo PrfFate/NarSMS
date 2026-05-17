@@ -8,7 +8,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/bloc/auth_event.dart';
 
 /// Uygulama giriş noktası.
 ///
@@ -24,7 +23,7 @@ void main() async {
   await initializeDependencies();
   runApp(
     BlocProvider<AuthBloc>(
-      create: (context) => getIt<AuthBloc>()..add(CheckAuthStatus()),
+      create: (context) => getIt<AuthBloc>(),
       child: const NarSmsApp(),
     ),
   );

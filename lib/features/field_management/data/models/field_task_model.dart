@@ -20,6 +20,8 @@ class FieldTaskModel extends FieldTaskEntity {
     required super.completedDate,
     required super.assignmentNotes,
     required super.completionNotes,
+    super.rejectionReason,
+    super.isReassigned,
     required super.taskTypes,
     required super.createdAt,
   });
@@ -44,6 +46,8 @@ class FieldTaskModel extends FieldTaskEntity {
       completedDate: DateTime.tryParse(json['completedDate'] as String? ?? ''),
       assignmentNotes: json['assignmentNotes'] as String? ?? '-',
       completionNotes: json['completionNotes'] as String? ?? '-',
+      rejectionReason: json['rejectionReason'] as String?,
+      isReassigned: json['isReassigned'] as bool? ?? false,
       taskTypes: (json['taskTypes'] as List? ?? const [])
           .map((e) =>
               FieldTaskTypeModel.fromJson(Map<String, dynamic>.from(e as Map)))

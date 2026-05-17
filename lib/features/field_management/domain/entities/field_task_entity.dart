@@ -17,6 +17,8 @@ class FieldTaskEntity {
   final DateTime? completedDate;
   final String assignmentNotes;
   final String completionNotes;
+  final String? rejectionReason;
+  final bool isReassigned;
   final List<FieldTaskTypeEntity> taskTypes;
   final DateTime? createdAt;
 
@@ -39,6 +41,8 @@ class FieldTaskEntity {
     required this.completedDate,
     required this.assignmentNotes,
     required this.completionNotes,
+    this.rejectionReason,
+    this.isReassigned = false,
     required this.taskTypes,
     required this.createdAt,
   });
@@ -90,8 +94,9 @@ String translateTaskStatus(String status) {
       return 'Tamamlandı';
     case 'canceled':
     case 'cancelled':
-    case 'rejected':
       return 'İptal Edildi';
+    case 'rejected':
+      return 'Reddedildi';
     default:
       return status;
   }

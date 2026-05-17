@@ -27,19 +27,38 @@ class ShippedSaleDetailPage extends StatefulWidget {
 }
 
 class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
+  late SaleEntity _sale;
   bool _isLoading = true;
   List<ShipmentEntity> _shipments = [];
   final Map<int, WarrantyEntity?> _warranties = {};
 
+  bool get _canReturnSale {
+    final status = _sale.approvalStatus?.toLowerCase().trim();
+    return status == 'shipped' ||
+        status == 'partiallyshipped' ||
+        status == 'delivered' ||
+        status == 'completed';
+  }
+
   @override
   void initState() {
     super.initState();
+    _sale = widget.sale;
     _loadExtraData();
   }
 
   Future<void> _loadExtraData() async {
     setState(() => _isLoading = true);
     final repo = getIt<SaleRepository>();
+
+    // 0. Güncel satış detayı (saleItemId dahil — web ile aynı veri)
+    final saleRes = await repo.getSaleById(widget.sale.id);
+    saleRes.fold(
+      (l) => debugPrint('Satış detayı çekilemedi: ${l.message}'),
+      (r) {
+        if (mounted) setState(() => _sale = r);
+      },
+    );
 
     // 1. Kargo Detayını Çek
     final shipmentRes = await repo.getShipmentBySaleId(widget.sale.id);
@@ -49,8 +68,8 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
     );
 
     // 2. Her bir cihaz için Garanti Bilgisini Çek
-    if (widget.sale.items != null) {
-      for (final item in widget.sale.items!) {
+    if (_sale.items != null) {
+      for (final item in _sale.items!) {
         if (item.deviceId != null) {
           final warrantyRes =
               await repo.getDeviceActiveWarranty(item.deviceId!);
@@ -75,7 +94,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
 
   void _openShipmentDialog(BuildContext context) async {
     final result = await Navigator.pushNamed(context, AppRouter.saleShip,
-        arguments: widget.sale);
+        arguments: _sale);
 
     if (result == true) {
       // Yenile
@@ -97,12 +116,25 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   }
 
   void _showReturnDialog(int saleItemId) {
+    if (saleItemId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Satış kalemi kimliği alınamadı. Sayfayı yenileyip tekrar deneyin.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final saleBloc = context.read<SaleBloc>();
     String selectedCondition = 'Sealed';
     final notesController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Cihaz İade Al'),
           content: StatefulBuilder(
@@ -145,7 +177,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('İptal'),
             ),
             ElevatedButton(
@@ -153,9 +185,9 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white),
               onPressed: () {
-                Navigator.pop(context);
-                context.read<SaleBloc>().add(ReturnSaleItem(
-                      saleId: widget.sale.id,
+                Navigator.pop(dialogContext);
+                saleBloc.add(ReturnSaleItem(
+                      saleId: _sale.id,
                       saleItemId: saleItemId,
                       condition: selectedCondition,
                       conditionNotes: notesController.text,
@@ -293,7 +325,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   }
 
   Widget _buildSaleItemsList({required bool canManageReturns}) {
-    final items = widget.sale.items ?? [];
+    final items = _sale.items ?? [];
     if (items.isEmpty) {
       return const Text('Kayıtlı satış kalemi bulunamadı.',
           style: TextStyle(color: Colors.grey));
@@ -369,11 +401,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
                         color: AppColors.navy),
                   ),
                   const SizedBox(height: 8),
-                  if (canManageReturns &&
-                      (widget.sale.approvalStatus == 'Delivered' ||
-                          widget.sale.approvalStatus == 'Completed' ||
-                          widget.sale.approvalStatus == 'Shipped' ||
-                          widget.sale.approvalStatus == 'PartiallyShipped'))
+                  if (canManageReturns && _canReturnSale)
                     if (item.isReturned)
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -443,7 +471,7 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
   }
 
   Widget _buildApprovalHistoryList() {
-    final history = widget.sale.approvalHistory ?? [];
+    final history = _sale.approvalHistory ?? [];
     if (history.isEmpty) {
       return const Text('Onay geçmişi bulunamadı.',
           style: TextStyle(color: Colors.grey));
@@ -551,8 +579,8 @@ class _ShippedSaleDetailPageState extends State<ShippedSaleDetailPage> {
     }
 
     final bool canShip = canShipForRole &&
-        (widget.sale.approvalStatus?.toLowerCase() == 'approved' ||
-            widget.sale.approvalStatus?.toLowerCase() == 'partiallyshipped');
+        (_sale.approvalStatus?.toLowerCase() == 'approved' ||
+            _sale.approvalStatus?.toLowerCase() == 'partiallyshipped');
 
     final bool canConfirmDelivery = canConfirmDeliveryForRole &&
         _shipments.any((s) =>

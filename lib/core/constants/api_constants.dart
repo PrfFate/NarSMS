@@ -11,9 +11,10 @@ class ApiConstants {
   // Auth endpoints
   static const String login = '$apiVersion/auth/login';
   static const String register = '$apiVersion/auth/register';
-  static const String refreshToken = '$apiVersion/auth/refresh-token';
+  static const String refreshToken = '$apiVersion/auth/refresh';
   static const String logout = '$apiVersion/auth/logout';
   static const String forgotPassword = '$apiVersion/auth/forgot-password';
+  static const String changePassword = '$apiVersion/auth/change-password';
 
   // Customer endpoints
   static const String customerPaged = '$apiVersion/Customer/paged';
@@ -50,6 +51,7 @@ class ApiConstants {
   // Sale endpoints
   static const String saleCreate = '$apiVersion/Sale';
   static const String saleSearch = '$apiVersion/sale/search';
+  static String saleById(int id) => '$apiVersion/Sale/$id';
   static String saleApprove(int id) => '$apiVersion/Sale/$id/approve';
   static String saleReject(int id) => '$apiVersion/Sale/$id/reject';
 
@@ -114,4 +116,7 @@ class ApiConstants {
   static const String fieldTasks = '$apiVersion/field-tasks';
   static const String fieldTasksMyTasks = '$apiVersion/field-tasks/my-tasks';
   static String fieldTaskAccept(int id) => '$apiVersion/field-tasks/$id/accept';
+  static String fieldTaskReject(int id) => '$apiVersion/field-tasks/$id/reject';
+  static String fieldTaskReassign(int id) =>
+      '$apiVersion/field-tasks/$id/reassign';
 }

@@ -36,8 +36,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     result.fold(
       (failure) => emit(HomeError(failure.message)),
       (user) {
+        final initialRoute = _isRouteAllowedForRole(
+          route: event.initialPageRoute,
+          role: user.roleName ?? '',
+        )
+            ? event.initialPageRoute
+            : _defaultRouteForRole(user.roleName ?? '');
+
         emit(HomeLoaded(
           selectedNavIndex: 0,
+          selectedPageRoute: initialRoute,
           userName: user.username ?? '',
           userRole: user.roleName ?? '',
           expandedMenus: const {},
@@ -197,7 +205,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   String _defaultRouteForRole(String role) {
-    return AppRouter.home;
+    return RoleAccessPolicy.initialRouteForRole(role);
   }
 
   bool _isRouteAllowedForRole({

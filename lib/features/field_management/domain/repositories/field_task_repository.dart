@@ -13,4 +13,11 @@ abstract class FieldTaskRepository {
   });
 
   Future<Either<Failure, void>> acceptTask(int taskId);
+
+  Future<Either<Failure, void>> rejectTask(int taskId, String reason);
+
+  Future<Either<Failure, void>> reassignTask(
+    int taskId,
+    int newAssignedToUserId,
+  );
 }

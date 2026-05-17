@@ -9,14 +9,6 @@ import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/home/presentation/bloc/home_event.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
-// Role-based dashboards
-import '../../features/roles/admin/pages/admin_dashboard_page.dart';
-import '../../features/roles/dealer/pages/dealer_dashboard_page.dart';
-import '../../features/roles/user/pages/user_dashboard_page.dart';
-import '../../features/roles/stock_manager/pages/stock_manager_dashboard_page.dart';
-import '../../features/roles/salesperson/pages/salesperson_dashboard_page.dart';
-import '../../features/roles/accounting/pages/accounting_dashboard_page.dart';
-
 // Field Management
 import '../../features/field_management/presentation/pages/pending_tasks_page.dart';
 import '../../features/field_management/presentation/pages/accepted_tasks_page.dart';
@@ -210,6 +202,16 @@ class AppRouter {
     return RoleAccessPolicy.initialRouteForRole(roleName);
   }
 
+  static MaterialPageRoute<dynamic> _homeShellRoute(String initialPageRoute) {
+    return MaterialPageRoute(
+      builder: (_) => BlocProvider(
+        create: (_) => getIt<HomeBloc>()
+          ..add(LoadUserInfo(initialPageRoute: initialPageRoute)),
+        child: const HomePage(),
+      ),
+    );
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
@@ -235,33 +237,25 @@ class AppRouter {
 
       // Role-based dashboards
       case adminDashboard:
-        return MaterialPageRoute(builder: (_) => const AdminDashboardPage());
+        return _homeShellRoute(adminDashboard);
 
       case dealerDashboard:
-        return MaterialPageRoute(builder: (_) => const DealerDashboardPage());
+        return _homeShellRoute(dealerDashboard);
 
       case userDashboard:
-        return MaterialPageRoute(builder: (_) => const UserDashboardPage());
+        return _homeShellRoute(userDashboard);
 
       case stockManagerDashboard:
-        return MaterialPageRoute(
-            builder: (_) => const StockManagerDashboardPage());
+        return _homeShellRoute(stockManagerDashboard);
 
       case salespersonDashboard:
-        return MaterialPageRoute(
-            builder: (_) => const SalespersonDashboardPage());
+        return _homeShellRoute(salespersonDashboard);
 
       case accountingDashboard:
-        return MaterialPageRoute(
-            builder: (_) => const AccountingDashboardPage());
+        return _homeShellRoute(accountingDashboard);
 
       case fielderDashboard:
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<HomeBloc>()..add(const LoadUserInfo()),
-            child: const HomePage(),
-          ),
-        );
+        return _homeShellRoute(fielderDashboard);
 
       // Field Management
       case pendingTasks:

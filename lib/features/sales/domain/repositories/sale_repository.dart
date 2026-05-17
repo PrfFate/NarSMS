@@ -20,7 +20,10 @@ abstract class SaleRepository {
     required int pageSize,
     String? customerName,
   });
-  
+
+  /// Satış detayını ID ile getirir (kalemler ve saleItemId dahil).
+  Future<Either<Failure, SaleEntity>> getSaleById(int id);
+
   Future<Either<Failure, void>> createSale(SaleCreateRequest request);
 
   /// Belirli bir satışa ait kargo detayını getirir.

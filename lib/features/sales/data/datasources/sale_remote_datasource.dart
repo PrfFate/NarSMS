@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/storage_constants.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/api_response_utils.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/shipment_model.dart';
@@ -19,7 +20,7 @@ abstract class SaleRemoteDataSource {
     required int pageSize,
     String? customerName,
   });
-  
+
   Future<void> createSale(SaleCreateRequest request);
 
   Future<List<ShipmentModel>> getShipmentBySaleId(int saleId);
@@ -39,6 +40,8 @@ abstract class SaleRemoteDataSource {
     required String condition,
     String? conditionNotes,
   });
+
+  Future<Map<String, dynamic>> getSaleById(int id);
 }
 
 /// [SaleRemoteDataSource] Dio HTTP istemcisi ile implementasyonu.
@@ -99,7 +102,8 @@ class SaleRemoteDataSourceImpl
       final data = response.data as Map<String, dynamic>;
       final isSuccess = data['isSuccess'] as bool? ?? true;
 
-      if (!isSuccess || (response.statusCode != 200 && response.statusCode != 201)) {
+      if (!isSuccess ||
+          (response.statusCode != 200 && response.statusCode != 201)) {
         throw ServerException(
           message: data['error']?.toString() ?? 'Satış oluşturulamadı',
           statusCode: response.statusCode,
@@ -340,6 +344,38 @@ class SaleRemoteDataSourceImpl
   }
 
   @override
+  Future<Map<String, dynamic>> getSaleById(int id) async {
+    try {
+      final response = await dioClient.dio.get(
+        ApiConstants.saleById(id),
+        options: _authOptions,
+      );
+
+      if (!ApiResponseUtils.isSuccessResponse(response)) {
+        throw ServerException(
+          message: ApiResponseUtils.errorMessageFrom(
+            response.data,
+            fallback: 'Satış detayı alınamadı',
+          ),
+          statusCode: response.statusCode,
+        );
+      }
+
+      final map = ApiResponseUtils.asMap(response.data);
+      if (map == null) {
+        throw ServerException(
+          message: 'Satış detayı alınamadı',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return ApiResponseUtils.unwrapPayload(map);
+    } on DioException catch (e) {
+      handleDioException(e);
+    }
+  }
+
+  @override
   Future<void> returnSaleItem({
     required int saleId,
     required int saleItemId,
@@ -350,26 +386,28 @@ class SaleRemoteDataSourceImpl
       final response = await dioClient.dio.post(
         ApiConstants.returnCreateAndComplete,
         data: {
-          "saleId": saleId,
-          "returnDate": DateTime.now().toUtc().toIso8601String(),
-          "items": [
+          'saleId': saleId,
+          'reason': conditionNotes?.trim().isNotEmpty == true
+              ? conditionNotes!.trim()
+              : 'Müşteri iadesi',
+          'returnDate': DateTime.now().toUtc().toIso8601String(),
+          'items': [
             {
-              "saleItemId": saleItemId,
-              "condition": condition,
-              "conditionNotes": conditionNotes ?? "İade"
+              'saleItemId': saleItemId,
+              'condition': condition,
+              'conditionNotes': conditionNotes ?? 'İade',
             }
-          ]
+          ],
         },
         options: _authOptions,
       );
 
-      final data = response.data as Map<String, dynamic>;
-      final isSuccess = data['isSuccess'] as bool? ?? true;
-
-      if (!isSuccess ||
-          (response.statusCode != 200 && response.statusCode != 201)) {
+      if (!ApiResponseUtils.isSuccessResponse(response)) {
         throw ServerException(
-          message: data['error']?.toString() ?? 'İade işlemi başarısız oldu',
+          message: ApiResponseUtils.errorMessageFrom(
+            response.data,
+            fallback: 'İade işlemi başarısız oldu',
+          ),
           statusCode: response.statusCode,
         );
       }

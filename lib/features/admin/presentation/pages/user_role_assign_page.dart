@@ -11,6 +11,19 @@ import '../../../../core/widgets/detail_info_row.dart';
 import '../../../../core/widgets/detail_section_card.dart';
 import 'users_management_page.dart';
 
+String _translateRole(String roleName) {
+  switch (roleName) {
+    case 'Admin': return 'Admin';
+    case 'StockManager': return 'Stok Yöneticisi';
+    case 'SaleManager': return 'Satış Yöneticisi';
+    case 'AccountingManager': return 'Muhasebe Yöneticisi';
+    case 'SalesConsultant': return 'Satış Danışmanı';
+    case 'Fielder': return 'Saha Görevlisi';
+    case 'PendingUser': return 'Onay Bekleyen';
+    default: return roleName;
+  }
+}
+
 class UserRoleAssignArgs {
   final UserListItem user;
   final List<RoleOption> roles;
@@ -300,7 +313,7 @@ class _UserRoleAssignPageState extends State<UserRoleAssignPage> {
                                 .map(
                                   (role) => DropdownMenuItem<int>(
                                     value: role.id,
-                                    child: Text(role.name),
+                                    child: Text(_translateRole(role.name)),
                                   ),
                                 )
                                 .toList(),

@@ -45,6 +45,14 @@ class SaleRepositoryImpl extends BaseRepository implements SaleRepository {
   }
 
   @override
+  Future<Either<Failure, SaleEntity>> getSaleById(int id) {
+    return runNetworkCall(() async {
+      final data = await remoteDataSource.getSaleById(id);
+      return SaleModel.fromJson(data).toEntity();
+    });
+  }
+
+  @override
   Future<Either<Failure, void>> createSale(SaleCreateRequest request) {
     return runNetworkCall(() => remoteDataSource.createSale(request));
   }
@@ -125,20 +133,15 @@ class SaleRepositoryImpl extends BaseRepository implements SaleRepository {
     required int saleItemId,
     required String condition,
     String? conditionNotes,
-  }) async {
-    try {
-      await remoteDataSource.returnSaleItem(
+  }) {
+    return runNetworkCall(
+      () => remoteDataSource.returnSaleItem(
         saleId: saleId,
         saleItemId: saleItemId,
         condition: condition,
         conditionNotes: conditionNotes,
-      );
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Beklenmeyen bir hata oluştu: ${e.toString()}'));
-    }
+      ),
+    );
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tasarim_app/config/routes/app_router.dart';
-import 'package:tasarim_app/core/auth/role_utils.dart';
 import 'package:tasarim_app/core/utils/page_title_notifier.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_bloc.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_event.dart';
 import 'package:tasarim_app/features/home/presentation/bloc/home_state.dart';
-import 'package:tasarim_app/features/home/presentation/widgets/home_bottom_nav_bar.dart';
 import 'package:tasarim_app/features/home/presentation/widgets/home_drawer_widget.dart';
 
 // Sayfa import'ları
@@ -41,7 +39,12 @@ import '../../../customers/presentation/bloc/customer_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../admin/presentation/pages/logging_page.dart';
 import '../../../admin/presentation/pages/users_management_page.dart';
+import '../../../roles/accounting/pages/accounting_dashboard_page.dart';
+import '../../../roles/dealer/pages/dealer_dashboard_page.dart';
+import '../../../roles/salesperson/pages/salesperson_dashboard_page.dart';
+import '../../../roles/user/pages/user_dashboard_page.dart';
 import 'dashboard_page.dart';
+import 'profile_page.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/sale_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/bloc/approval_bloc.dart';
 import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows_page.dart';
@@ -49,6 +52,13 @@ import 'package:tasarim_app/features/sales/presentation/pages/approval_workflows
 /// Route → Sayfa başlığı eşleştirmesi
 const Map<String, String> _routeTitles = {
   AppRouter.home: 'Dashboard',
+  AppRouter.adminDashboard: 'Dashboard',
+  AppRouter.dealerDashboard: 'Bayi Anasayfa',
+  AppRouter.userDashboard: 'Kullanıcı Anasayfa',
+  AppRouter.stockManagerDashboard: 'Dashboard',
+  AppRouter.salespersonDashboard: 'Satış Anasayfa',
+  AppRouter.accountingDashboard: 'Muhasebe Anasayfa',
+  AppRouter.fielderDashboard: 'Dashboard',
   // Cihazlar
   AppRouter.deviceList: 'Tüm Cihazlar',
   AppRouter.depotDevices: 'Depodaki Cihazlar',
@@ -73,7 +83,7 @@ const Map<String, String> _routeTitles = {
   AppRouter.acceptedTasks: 'Kabul Edilen Görevler',
   AppRouter.ongoingTasks: 'Devam Eden Görevler',
   AppRouter.completedTasks: 'Tamamlanan Görevler',
-  AppRouter.cancelledTasks: 'İptal Edilen Görevler',
+  AppRouter.cancelledTasks: 'Reddedilen Görevler',
   // Saha Görevlerim
   AppRouter.myAssignedTasks: 'Atanan Görevlerim',
   AppRouter.myAcceptedTasks: 'Kabul Ettiğim Görevlerim',
@@ -156,10 +166,7 @@ class HomePage extends StatelessWidget {
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
     // Route değişince başlığı güncelle
-    final title = state.selectedPageRoute == AppRouter.home &&
-            isFielderRole(state.userRole)
-        ? 'Sahacı Paneli'
-        : (_routeTitles[state.selectedPageRoute] ?? 'Admin Paneli');
+    final title = _routeTitles[state.selectedPageRoute] ?? 'Dashboard';
     PageTitleNotifier.instance.value = title;
 
     return Scaffold(
@@ -171,34 +178,56 @@ class HomePage extends StatelessWidget {
         shadowColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
+        leadingWidth: 48,
         shape: const Border(
           bottom: BorderSide(color: Colors.black12, width: 1),
         ),
         automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black87),
-              onPressed: () {
-                scaffoldKey.currentState?.openDrawer();
-              },
-            ),
-            ValueListenableBuilder<String>(
-              valueListenable: PageTitleNotifier.instance,
-              builder: (context, pageTitle, _) {
-                return Text(
-                  pageTitle,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black87),
+          onPressed: () {
+            scaffoldKey.currentState?.openDrawer();
+          },
+        ),
+        title: ValueListenableBuilder<String>(
+          valueListenable: PageTitleNotifier.instance,
+          builder: (context, pageTitle, _) {
+            return Text(
+              pageTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Color(0xFFF57C00),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            );
+          },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              tooltip: 'Profil',
+              icon: CircleAvatar(
+                radius: 16,
+                backgroundColor:
+                    const Color(0xFFF57C00).withValues(alpha: 0.12),
+                child: Text(
+                  _buildInitials(state.userName),
                   style: const TextStyle(
                     color: Color(0xFFF57C00),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
-                );
-              },
+                ),
+              ),
+              onPressed: () => _openProfile(context, state),
             ),
-          ],
-        ),
-        actions: const [],
+          ),
+        ],
       ),
       onDrawerChanged: (isOpened) {},
       drawerScrimColor: Colors.black26,
@@ -218,15 +247,36 @@ class HomePage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         },
       ),
-      bottomNavigationBar: HomeBottomNavBar(
-        selectedIndex: state.selectedNavIndex,
-        onIndexChanged: (index) {
-          context.read<HomeBloc>().add(ChangeNavigation(index));
-        },
-        userName: state.userName,
-        userRole: state.userRole,
+    );
+  }
+
+  void _openProfile(BuildContext context, HomeLoaded state) {
+    final homeBloc = context.read<HomeBloc>();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: homeBloc,
+          child: ProfilePage(
+            userName: state.userName,
+            userRole: state.userRole,
+          ),
+        ),
       ),
     );
+  }
+
+  String _buildInitials(String fullName) {
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   // Seçili route'a göre içerik döndür
@@ -349,6 +399,20 @@ class HomePage extends StatelessWidget {
         return const UsersManagementPage();
 
       // Dashboard (Home)
+      case AppRouter.adminDashboard:
+        return const DashboardPage();
+      case AppRouter.dealerDashboard:
+        return const DealerDashboardPage();
+      case AppRouter.userDashboard:
+        return const UserDashboardPage();
+      case AppRouter.stockManagerDashboard:
+        return const DashboardPage();
+      case AppRouter.salespersonDashboard:
+        return const SalespersonDashboardPage();
+      case AppRouter.accountingDashboard:
+        return const AccountingDashboardPage();
+      case AppRouter.fielderDashboard:
+        return const DashboardPage();
       case AppRouter.home:
       default:
         return const DashboardPage();

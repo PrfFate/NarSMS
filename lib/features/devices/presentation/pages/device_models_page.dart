@@ -27,9 +27,9 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
 
   void _loadDeviceTypes() {
     context.read<DeviceTypeBloc>().add(LoadDeviceTypesPaged(
-      page: _currentPage,
-      pageSize: _pageSize,
-    ));
+          page: _currentPage,
+          pageSize: _pageSize,
+        ));
   }
 
   void _onPageChanged(int page) {
@@ -44,8 +44,10 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Modeli Sil', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Modeli Sil',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Text('"$name" modelini silmek istediğinize emin misiniz?'),
           actions: [
             TextButton(
@@ -59,7 +61,8 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Sil', style: TextStyle(color: Colors.white)),
             ),
@@ -74,7 +77,9 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Cihaz Modelleri', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text('Cihaz Modelleri',
+            style:
+                TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -87,12 +92,14 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
         listener: (context, state) {
           if (state is DeviceTypeActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+              SnackBar(
+                  content: Text(state.message), backgroundColor: Colors.green),
             );
             _loadDeviceTypes(); // Yenile
           } else if (state is DeviceTypeError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text(state.message), backgroundColor: Colors.red),
             );
           }
         },
@@ -106,27 +113,32 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
                   const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () async {
-                      final result = await Navigator.pushNamed(context, AppRouter.deviceModelAdd);
+                      final result = await Navigator.pushNamed(
+                          context, AppRouter.deviceModelAdd);
                       if (result != null) {
                         _loadDeviceTypes();
                       }
                     },
                     icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text('Model Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    label: const Text('Model Ekle',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF57C00),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ],
               ),
             ),
-            
             Expanded(
               child: BlocBuilder<DeviceTypeBloc, DeviceTypeState>(
                 builder: (context, state) {
                   if (state is DeviceTypeLoading) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFF57C00)));
+                    return const Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFFF57C00)));
                   }
 
                   if (state is DeviceTypeLoaded) {
@@ -134,7 +146,8 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
 
                     if (types.isEmpty) {
                       return const Center(
-                        child: Text('Kayıtlı cihaz modeli bulunamadı.', style: TextStyle(color: Colors.grey)),
+                        child: Text('Kayıtlı cihaz modeli bulunamadı.',
+                            style: TextStyle(color: Colors.grey)),
                       );
                     }
 
@@ -142,29 +155,38 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
                       children: [
                         Expanded(
                           child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             itemCount: types.length,
                             itemBuilder: (context, index) {
                               final type = types[index];
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 8.0),
                                 elevation: 1,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
                                 child: ListTile(
                                   leading: DeviceImageWidget(
                                     deviceTypeName: type.name,
                                     size: 40,
                                   ),
-                                  title: Text(type.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  subtitle: Text('ID: ${type.id}', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                  title: Text(type.name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600)),
+                                  subtitle: Text('ID: ${type.id}',
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 13)),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+                                        icon: const Icon(Icons.edit_outlined,
+                                            color: Colors.black87),
                                         tooltip: 'Düzenle',
                                         onPressed: () async {
-                                          final result = await Navigator.pushNamed(
+                                          final result =
+                                              await Navigator.pushNamed(
                                             context,
                                             AppRouter.deviceModelAdd,
                                             arguments: type,
@@ -175,9 +197,11 @@ class _DeviceModelsPageState extends State<DeviceModelsPage> {
                                         },
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                        icon: const Icon(Icons.delete_outline,
+                                            color: Colors.redAccent),
                                         tooltip: 'Sil',
-                                        onPressed: () => _showDeleteDialog(type.id, type.name),
+                                        onPressed: () => _showDeleteDialog(
+                                            type.id, type.name),
                                       ),
                                     ],
                                   ),

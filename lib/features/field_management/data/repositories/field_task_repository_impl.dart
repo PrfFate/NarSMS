@@ -38,4 +38,19 @@ class FieldTaskRepositoryImpl extends BaseRepository
   Future<Either<Failure, void>> acceptTask(int taskId) {
     return runNetworkCall(() => remoteDataSource.acceptTask(taskId));
   }
+
+  @override
+  Future<Either<Failure, void>> rejectTask(int taskId, String reason) {
+    return runNetworkCall(() => remoteDataSource.rejectTask(taskId, reason));
+  }
+
+  @override
+  Future<Either<Failure, void>> reassignTask(
+    int taskId,
+    int newAssignedToUserId,
+  ) {
+    return runNetworkCall(
+      () => remoteDataSource.reassignTask(taskId, newAssignedToUserId),
+    );
+  }
 }

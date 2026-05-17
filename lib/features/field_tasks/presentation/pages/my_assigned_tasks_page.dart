@@ -14,6 +14,7 @@ class MyAssignedTasksPage extends StatelessWidget {
       emptyMessage: 'Atanan görev bulunamadı',
       endpoint: ApiConstants.fieldTasksMyTasks,
       enableAcceptActionInDetail: true,
+      enableRejectActionInDetail: true,
     );
   }
 }

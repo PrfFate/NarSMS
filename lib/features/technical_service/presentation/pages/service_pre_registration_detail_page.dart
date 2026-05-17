@@ -44,8 +44,7 @@ class _ServicePreRegistrationDetailPageState
     );
   }
 
-  bool get _isPending =>
-      widget.request.status?.toLowerCase() == 'pending';
+  bool get _isPending => widget.request.status?.toLowerCase() == 'pending';
 
   bool get _isInTransit =>
       widget.request.shipmentStatus?.toLowerCase() == 'intransit';
@@ -74,6 +73,7 @@ class _ServicePreRegistrationDetailPageState
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: false,
+          titleSpacing: 0,
           title: const Text(
             'Servis Kaydı Detay',
             style: TextStyle(
@@ -203,6 +203,14 @@ class _ServicePreRegistrationDetailPageState
       case 'delivered':
         color = Colors.green;
         label = 'TESLİM EDİLDİ';
+        break;
+      case 'pending':
+        color = Colors.orange;
+        label = 'BEKLEMEDE';
+        break;
+      case 'failed':
+        color = Colors.red;
+        label = 'BAŞARISIZ';
         break;
       default:
         color = Colors.grey;

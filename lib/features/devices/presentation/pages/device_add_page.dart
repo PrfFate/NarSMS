@@ -39,7 +39,7 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
   String? _selectedUpsGuc;
 
   // Options
-  final hafizaOptions = ['128GB', '256GB'];
+  final hafizaOptions = ['128GB', '256GB', '512GB'];
   final ramOptions = ['8GB', '16GB'];
   final ekranOptions = ['15.6', '18.5'];
   final islemciOptions = [
@@ -119,8 +119,8 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
           features
               .add({"featureName": "Hafıza", "featureValue": _selectedHafiza});
         if (_selectedEkran != null)
-          features
-              .add({"featureName": "Ekran", "featureValue": _selectedEkran});
+          features.add(
+              {"featureName": "Ekran Boyutu", "featureValue": _selectedEkran});
         if (_selectedIslemci != null)
           features.add(
               {"featureName": "İşlemci", "featureValue": _selectedIslemci});

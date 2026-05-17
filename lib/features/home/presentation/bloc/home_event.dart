@@ -8,7 +8,14 @@ abstract class HomeEvent extends Equatable {
 }
 
 class LoadUserInfo extends HomeEvent {
-  const LoadUserInfo();
+  final String initialPageRoute;
+
+  const LoadUserInfo({
+    this.initialPageRoute = '/home',
+  });
+
+  @override
+  List<Object?> get props => [initialPageRoute];
 }
 
 class ChangeNavigation extends HomeEvent {

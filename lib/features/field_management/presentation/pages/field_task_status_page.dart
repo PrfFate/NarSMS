@@ -18,6 +18,8 @@ class FieldTaskStatusPage extends StatefulWidget {
   final bool showPendingActions;
   final String endpoint;
   final bool enableAcceptActionInDetail;
+  final bool enableRejectActionInDetail;
+  final bool enableReassignActionInDetail;
 
   const FieldTaskStatusPage({
     super.key,
@@ -27,6 +29,8 @@ class FieldTaskStatusPage extends StatefulWidget {
     this.showPendingActions = false,
     this.endpoint = ApiConstants.fieldTasks,
     this.enableAcceptActionInDetail = false,
+    this.enableRejectActionInDetail = false,
+    this.enableReassignActionInDetail = false,
   });
 
   @override
@@ -241,6 +245,11 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
                     task: task,
                     canAcceptTask: widget.enableAcceptActionInDetail &&
                         task.status.toLowerCase() == 'pending',
+                    canRejectTask: widget.enableRejectActionInDetail &&
+                        task.status.toLowerCase() == 'pending',
+                    canReassignTask: widget.enableReassignActionInDetail &&
+                        task.status.toLowerCase() == 'rejected' &&
+                        !task.isReassigned,
                   ),
                 ),
               );
@@ -250,7 +259,8 @@ class _FieldTaskStatusPageState extends State<FieldTaskStatusPage> {
             },
             title: task.title,
             subtitle:
-                '${task.customerName} • ${task.assignedToUserName} • ${formatTaskDate(task.scheduledDate)}',
+                '${task.customerName} • ${task.assignedToUserName} • ${formatTaskDate(task.scheduledDate)}'
+                '${task.isReassigned ? ' • Yeniden atandı' : ''}',
             leadingText:
                 task.customerName.isNotEmpty ? task.customerName[0] : '?',
           );

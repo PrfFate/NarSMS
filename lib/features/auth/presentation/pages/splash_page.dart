@@ -12,17 +12,25 @@ import '../../../../config/routes/app_router.dart';
 /// kullanıcıyı ilgili sayfaya yönlendirir:
 /// - Oturum açıksa → [AppRouter.home]
 /// - Oturum açık değilse → [AppRouter.login]
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dispatch CheckAuthStatus event when the page is built.
-    // AuthBloc is expected to be provided higher up in the widget tree.
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<AuthBloc>().add(CheckAuthStatus());
     });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {

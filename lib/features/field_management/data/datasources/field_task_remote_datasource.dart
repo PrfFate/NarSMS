@@ -18,6 +18,10 @@ abstract class FieldTaskRemoteDataSource {
   });
 
   Future<void> acceptTask(int taskId);
+
+  Future<void> rejectTask(int taskId, String reason);
+
+  Future<void> reassignTask(int taskId, int newAssignedToUserId);
 }
 
 class FieldTaskRemoteDataSourceImpl implements FieldTaskRemoteDataSource {
@@ -85,6 +89,42 @@ class FieldTaskRemoteDataSourceImpl implements FieldTaskRemoteDataSource {
     try {
       await _dio.post(
         ApiConstants.fieldTaskAccept(taskId),
+        options: _authOptions(),
+      );
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final message =
+          e.response?.data?.toString() ?? e.message ?? 'Sunucu hatası';
+      throw ServerException(message: message, statusCode: statusCode);
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> rejectTask(int taskId, String reason) async {
+    try {
+      await _dio.post(
+        ApiConstants.fieldTaskReject(taskId),
+        data: {'rejectionReason': reason},
+        options: _authOptions(),
+      );
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final message =
+          e.response?.data?.toString() ?? e.message ?? 'Sunucu hatası';
+      throw ServerException(message: message, statusCode: statusCode);
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> reassignTask(int taskId, int newAssignedToUserId) async {
+    try {
+      await _dio.post(
+        ApiConstants.fieldTaskReassign(taskId),
+        data: {'newAssignedToUserId': newAssignedToUserId},
         options: _authOptions(),
       );
     } on DioException catch (e) {

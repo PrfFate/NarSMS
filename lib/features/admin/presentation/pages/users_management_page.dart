@@ -12,6 +12,19 @@ import '../../../../core/widgets/filter_bottom_sheet_scaffold.dart';
 import '../../../../core/widgets/search_input_widget.dart';
 import 'user_role_assign_page.dart';
 
+String _translateRole(String roleName) {
+  switch (roleName) {
+    case 'Admin': return 'Admin';
+    case 'StockManager': return 'Stok Yöneticisi';
+    case 'SaleManager': return 'Satış Yöneticisi';
+    case 'AccountingManager': return 'Muhasebe Yöneticisi';
+    case 'SalesConsultant': return 'Satış Danışmanı';
+    case 'Fielder': return 'Saha Görevlisi';
+    case 'PendingUser': return 'Onay Bekleyen';
+    default: return roleName;
+  }
+}
+
 class UsersManagementPage extends StatefulWidget {
   const UsersManagementPage({super.key});
 
@@ -273,7 +286,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                         color: isSelected ? AppColors.primary : Colors.grey,
                       ),
                       title: Text(
-                        role.name,
+                        _translateRole(role.name),
                         style: TextStyle(
                           color:
                               isSelected ? AppColors.primary : Colors.black87,
@@ -443,7 +456,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      user.roleName,
+                      _translateRole(user.roleName),
                       style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.primaryDark,

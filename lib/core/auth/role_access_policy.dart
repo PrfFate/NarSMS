@@ -5,15 +5,26 @@ class RoleAccessPolicy {
 
   static const String _home = '/home';
   static const String _pendingUser = '/pending-user';
-  static const String _fielderDashboard = '/fielder-dashboard';
 
   static String initialRouteForRole(String? roleName) {
     final role = normalizeRole(roleName);
     if (role == 'pendinguser' || role == 'pending') {
       return _pendingUser;
     }
+    if (role == 'admin' || role == 'administrator') {
+      return '/admin-dashboard';
+    }
+    if (role == 'stockmanager' || role == 'stock_manager') {
+      return '/stock-manager-dashboard';
+    }
+    if (role == 'salemanager' || role == 'sale_manager') {
+      return '/salesperson-dashboard';
+    }
+    if (role == 'accountingmanager' || role == 'accounting_manager') {
+      return '/accounting-dashboard';
+    }
     if (isFielderRole(role)) {
-      return _fielderDashboard;
+      return '/fielder-dashboard';
     }
     return _home;
   }
@@ -50,6 +61,7 @@ class RoleAccessPolicy {
 
   static const Set<String> _fielderHomeRoutes = {
     '/home',
+    '/fielder-dashboard',
     '/sales/pending',
     '/sales/shipped',
     '/sales/delivered',

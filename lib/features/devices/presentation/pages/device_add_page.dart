@@ -221,8 +221,6 @@ class _DeviceAddPageState extends State<DeviceAddPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle('Temel Bilgiler'),
-                      const SizedBox(height: 12),
                       CustomTextField(
                         controller: _serialNumberController,
                         label: 'Seri Numarası',

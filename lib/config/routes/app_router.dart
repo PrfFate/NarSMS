@@ -94,6 +94,9 @@ import '../../features/technical_service/domain/entities/service_request_entity.
 import '../../features/technical_service/presentation/bloc/technical_service_bloc.dart';
 import '../../features/technical_service/presentation/pages/service_pre_registration_add_page.dart';
 import '../../features/technical_service/presentation/pages/service_pre_registration_detail_page.dart';
+import '../../features/technical_service/presentation/pages/service_ongoing_detail_page.dart';
+import '../../features/technical_service/presentation/pages/service_final_check_detail_page.dart';
+import '../../features/technical_service/presentation/pages/service_completed_detail_page.dart';
 
 // Admin
 import '../../features/admin/presentation/pages/approval_mechanism_page.dart';
@@ -191,6 +194,12 @@ class AppRouter {
       '/technical-service/pre-registration/detail';
   static const String serviceRequestShipment =
       '/technical-service/pre-registration/shipment';
+  static const String serviceOngoingDetail =
+      '/technical-service/ongoing/detail';
+  static const String serviceFinalCheckDetail =
+      '/technical-service/final-checks/detail';
+  static const String serviceCompletedDetail =
+      '/technical-service/completed/detail';
 
   // Admin routes
   static const String approvalMechanism = '/admin/approval-mechanism';
@@ -580,17 +589,61 @@ class AppRouter {
       // Technical Service routes
       case servicePreRegistrations:
         return MaterialPageRoute(
-            builder: (_) => const ServicePreRegistrationsPage());
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServicePreRegistrationsPage(),
+          ),
+        );
 
       case serviceOngoing:
-        return MaterialPageRoute(builder: (_) => const ServiceOngoingPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServiceOngoingPage(),
+          ),
+        );
 
       case serviceFinalChecks:
         return MaterialPageRoute(
-            builder: (_) => const ServiceFinalChecksPage());
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServiceFinalChecksPage(),
+          ),
+        );
 
       case serviceCompleted:
-        return MaterialPageRoute(builder: (_) => const ServiceCompletedPage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<TechnicalServiceBloc>(),
+            child: const ServiceCompletedPage(),
+          ),
+        );
+      case serviceCompletedDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: getIt<TechnicalServiceBloc>(),
+            child: ServiceCompletedDetailPage(request: request),
+          ),
+        );
+
+      case serviceFinalCheckDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: getIt<TechnicalServiceBloc>(),
+            child: ServiceFinalCheckDetailPage(request: request),
+          ),
+        );
+
+      case serviceOngoingDetail:
+        final request = settings.arguments as ServiceRequestEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: getIt<TechnicalServiceBloc>(),
+            child: ServiceOngoingDetailPage(request: request),
+          ),
+        );
 
       // Admin routes
       case approvalMechanism:

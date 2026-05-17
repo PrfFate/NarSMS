@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'config/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
+import 'core/network/navigator_key.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -35,6 +36,7 @@ class NarSmsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'NarSMS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

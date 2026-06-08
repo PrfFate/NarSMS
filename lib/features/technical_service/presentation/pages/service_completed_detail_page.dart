@@ -186,11 +186,11 @@ class ServiceCompletedDetailPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withAlpha(20),
+                  color: const Color(0xFFF57C00).withAlpha(20),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.history,
-                    color: Colors.blue, size: 22),
+                    color: Color(0xFFF57C00), size: 22),
               ),
               const SizedBox(width: 12),
               const Text('Tüm Servis İşlemleri Geçmişi',

@@ -362,11 +362,11 @@ class _ServiceFinalCheckDetailPageState extends State<ServiceFinalCheckDetailPag
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withAlpha(20),
+                  color: const Color(0xFFF57C00).withAlpha(20),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.build_circle_outlined,
-                    color: Colors.blue, size: 22),
+                    color: Color(0xFFF57C00), size: 22),
               ),
               const SizedBox(width: 12),
               const Text('Yapılan İşlem Özeti',

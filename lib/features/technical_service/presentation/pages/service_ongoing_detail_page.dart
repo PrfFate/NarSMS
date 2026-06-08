@@ -238,9 +238,9 @@ class _ServiceOngoingDetailPageState extends State<ServiceOngoingDetailPage> {
                                   fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[600],
+                              backgroundColor: const Color(0xFFF57C00),
                               foregroundColor: Colors.white,
-                              disabledBackgroundColor: Colors.green[300],
+                              disabledBackgroundColor: const Color(0xFFF57C00).withAlpha(128),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               elevation: 2,
@@ -575,7 +575,7 @@ class _ServiceOngoingDetailPageState extends State<ServiceOngoingDetailPage> {
         label: const Text('Servisi Tamamla',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green[600],
+          backgroundColor: const Color(0xFFF57C00),
           foregroundColor: Colors.white,
           disabledBackgroundColor: Colors.grey[300],
           disabledForegroundColor: Colors.grey[500],

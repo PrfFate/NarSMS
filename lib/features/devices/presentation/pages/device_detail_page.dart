@@ -390,8 +390,8 @@ class DeviceDetailPage extends StatelessWidget {
               if (mov.customerName != null && mov.customerName!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text('Müşteri: ${mov.customerName!}',
-                    style: TextStyle(
-                        color: Colors.blue[700],
+                    style: const TextStyle(
+                        color: Color(0xFFF57C00),
                         fontSize: 13,
                         fontWeight: FontWeight.w500)),
               ],
